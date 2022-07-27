@@ -2,7 +2,7 @@
 
 ## How this SDK works
 
-In order to create a Arcaflow plugin, you must specify a **schema** for each step you want to support. This schema describes two things:
+In order to create an Arcaflow plugin, you must specify a **schema** for each step you want to support. This schema describes two things:
 
 1. What your input parameters are and what their type is
 2. What your output parameters are and what their type is
