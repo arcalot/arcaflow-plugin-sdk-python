@@ -1,0 +1,65 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9', '3.10', 'pypy3.9' ]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install build tools
+        run: python3 -m pip install --upgrade build
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Test
+        run: cd src && python3 -m unittest discover -v
+      - name: Run example plugin
+        run: ./example_plugin.py -f example.yaml
+      - name: Run example plugin test
+        run: ./test_example_plugin.py
+      - name: Update version number
+        if: startsWith(github.ref, 'refs/tags/')
+        run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
+      - name: Build
+        run: python3 -m build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist
+      - name: Install twine
+        run: pip install -U twine
+      - name: Publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{secrets.PYPI_TOKEN}}
+          TWINE_NON_INTERACTIVE: true
+        run: twine upload dist/*

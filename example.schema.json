@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "namespace_pattern": {
+      "type": "string",
+      "format": "regex",
+      "title": "namespace_pattern"
+    },
+    "pod_name_pattern": {
+      "type": "string",
+      "format": "regex",
+      "title": "pod_name_pattern"
+    }
+  },
+  "additionalProperties": false,
+  "required": [],
+  "title": "Pod scenario input",
+  "description": "Kill one or more pods matching the criteria",
+  "$id": "pod",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

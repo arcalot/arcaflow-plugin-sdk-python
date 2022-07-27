@@ -1,0 +1,3 @@
+# yaml-language-server: $schema=example.schema.json
+pod_name_pattern: nginx-.*
+namespace_pattern: default

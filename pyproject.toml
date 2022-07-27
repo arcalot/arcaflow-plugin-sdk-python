@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arcaflow_plugin_sdk"
+# Do not change, the version is automatically updated in CI.
+version = "0.0.0"
+authors = [
+]
+description = "Plugin SDK for the Arcaflow workflow engine"
+readme = "README.md"
+license = { text="Apache-2.0" }
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  'PyYAML >= 5.4',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/arcalot/arcaflow-python-sdk"
+"Bug Tracker" = "https://github.com/arcalot/arcaflow-python-sdk/issues"
