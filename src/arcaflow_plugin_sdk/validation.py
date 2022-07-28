@@ -11,8 +11,8 @@ Validator = Callable[[ValidatorT], ValidatorT]
 
 def min(param: int) -> Validator:
     """
-    This decorator creates a minimum length (strings), minimum number (int), or minimum element count (lists and maps)
-    validation.
+    This decorator creates a minimum length (strings), minimum number (int, float), or minimum element count (lists and
+    maps) validation.
     :param param: The minimum number
     :return: the validator
     """
@@ -24,13 +24,15 @@ def min(param: int) -> Validator:
             effective_t.min_length = param
         elif effective_t.type_id() == TypeID.INT:
             effective_t.min = param
+        elif effective_t.type_id() == TypeID.FLOAT:
+            effective_t.min = param
         elif effective_t.type_id() == TypeID.LIST:
             effective_t.min = param
         elif effective_t.type_id() == TypeID.MAP:
             effective_t.min = param
         else:
             raise BadArgumentException(
-                "min is valid only for STRING, INT, LIST, and MAP types, not for %s types." % t.type_id()
+                "min is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for %s types." % t.type_id()
             )
         if isinstance(t, Field):
             t.type = effective_t
@@ -41,8 +43,8 @@ def min(param: int) -> Validator:
 
 def max(param: int) -> Validator:
     """
-    This decorator creates a maximum length (strings), maximum number (int), or maximum element count (lists and maps)
-    validation.
+    This decorator creates a maximum length (strings), maximum number (int, float), or maximum element count (lists and
+    maps) validation.
     :param param: The maximum number
     :return: the validator
     """
@@ -54,13 +56,15 @@ def max(param: int) -> Validator:
             effective_t.max_length = param
         elif effective_t.type_id() == TypeID.INT:
             effective_t.max = param
+        elif effective_t.type_id() == TypeID.FLOAT:
+            effective_t.max = param
         elif effective_t.type_id() == TypeID.LIST:
             effective_t.max = param
         elif effective_t.type_id() == TypeID.MAP:
             effective_t.max = param
         else:
             raise BadArgumentException(
-                "max is valid only for STRING, INT, LIST, and MAP types, not for %s types." % t.type_id()
+                "max is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for %s types." % t.type_id()
             )
         if isinstance(t, Field):
             t.type = effective_t

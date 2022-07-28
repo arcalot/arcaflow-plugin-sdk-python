@@ -212,6 +212,7 @@ class MapTest(unittest.TestCase):
 class TestClass:
     a: str
     b: int
+    c: float
 
 
 class ObjectTest(unittest.TestCase):
@@ -225,30 +226,35 @@ class ObjectTest(unittest.TestCase):
             "b": schema.Field(
                 schema.IntType(),
                 required=True,
+            ),
+            "c": schema.Field(
+                schema.FloatType(),
+                required=True
             )
         }
     )
 
     def test_serialize(self):
-        o = TestClass("foo", 5)
+        o = TestClass("foo", 5, 3.14)
         d = self.t.serialize(o)
-        self.assertEqual({"a": "foo", "b": 5}, d)
+        self.assertEqual({"a": "foo", "b": 5, "c": 3.14}, d)
 
         o.b = None
         with self.assertRaises(schema.ConstraintException):
             self.t.serialize(o)
 
     def test_validate(self):
-        o = TestClass("a", 5)
+        o = TestClass("a", 5, 3.14)
         self.t.validate(o)
         o.b = None
         with self.assertRaises(schema.ConstraintException):
             self.t.validate(o)
 
     def test_unserialize(self):
-        o = self.t.unserialize({"a": "foo", "b": 5})
+        o = self.t.unserialize({"a": "foo", "b": 5, "c": 3.14})
         self.assertEqual("foo", o.a)
         self.assertEqual(5, o.b)
+        self.assertEqual(3.14, o.c)
 
         with self.assertRaises(schema.ConstraintException):
             self.t.unserialize({
@@ -265,6 +271,7 @@ class ObjectTest(unittest.TestCase):
                 "a": "foo",
                 "b": 5,
                 "c": 3.14,
+                "d": complex(3.14)
             })
 
     def test_field_override(self):

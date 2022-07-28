@@ -31,6 +31,13 @@ class ResolverTest(unittest.TestCase):
         resolved_type = _Resolver.resolve(test)
         self.assertEqual(schema.TypeID.INT, resolved_type.type_id())
 
+    def test_float(self):
+        test: float = 3.14
+        resolved_type = _Resolver.resolve(type(test))
+        self.assertEqual(schema.TypeID.FLOAT, resolved_type.type_id())
+        resolved_type = _Resolver.resolve(test)
+        self.assertEqual(schema.TypeID.FLOAT, resolved_type.type_id())
+
     def test_enum(self):
         class TestEnum(Enum):
             A = "a"
@@ -62,6 +69,7 @@ class ResolverTest(unittest.TestCase):
         class TestData:
             a: str
             b: int
+            c: float
 
         with self.assertRaises(SchemaBuildException):
             _Resolver.resolve(TestData)
@@ -70,6 +78,7 @@ class ResolverTest(unittest.TestCase):
         class TestData:
             a: str
             b: int
+            c: float
 
         resolved_type: schema.ObjectType
         resolved_type = _Resolver.resolve(TestData)
@@ -81,6 +90,9 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual("b", resolved_type.properties["b"].name)
         self.assertTrue(resolved_type.properties["b"].required)
         self.assertEqual(TypeID.INT, resolved_type.properties["b"].type.type_id())
+        self.assertEqual("c", resolved_type.properties["c"].name)
+        self.assertTrue(resolved_type.properties["c"].required)
+        self.assertEqual(TypeID.FLOAT, resolved_type.properties["c"].type.type_id())
 
         @dataclasses.dataclass
         class TestData:
@@ -172,6 +184,7 @@ class SerializationTest(unittest.TestCase):
             B: int
             C: Dict[str, int]
             D: List[str]
+            H: float
             E: typing.Optional[str] = None
             F: typing.Annotated[typing.Optional[str], validation.min(3)] = None
             G: typing.Optional[str] = dataclasses.field(default="", metadata={"id": "test-field", "name": "G"})
@@ -181,7 +194,8 @@ class SerializationTest(unittest.TestCase):
                 A="Hello world!",
                 B=5,
                 C={},
-                D=[]
+                D=[],
+                H=3.14
             ),
             self.fail,
         )
@@ -239,6 +253,16 @@ class SerializationTest(unittest.TestCase):
         @dataclasses.dataclass
         class TestData1:
             A: typing.Optional[int] = None
+
+        s = plugin.build_object_schema(TestData1)
+
+        unserialized = s.unserialize({})
+        self.assertIsNone(unserialized.A)
+
+    def test_float_optional(self):
+        @dataclasses.dataclass
+        class TestData1:
+            A: typing.Optional[float] = None
 
         s = plugin.build_object_schema(TestData1)
 

@@ -7,6 +7,8 @@ class _JSONSchema:
     def from_schema(cls, t: schema.AbstractType) -> dict:
         if t.type_id() == TypeID.INT:
             return cls.from_int(t)
+        elif t.type_id() == TypeID.FLOAT:
+            return cls.from_float(t)
         elif t.type_id() == TypeID.STRING:
             return cls.from_string(t)
         elif t.type_id() == TypeID.ENUM:
@@ -24,6 +26,17 @@ class _JSONSchema:
     def from_int(cls, t: schema.IntType) -> dict:
         result = {
             "type": "integer"
+        }
+        if t.min is not None:
+            result["minimum"] = t.min
+        if t.max is not None:
+            result["maximum"] = t.max
+        return result
+
+    @classmethod
+    def from_float(cls, t: schema.FloatType) -> dict:
+        result = {
+            "type": "number"
         }
         if t.min is not None:
             result["minimum"] = t.min
