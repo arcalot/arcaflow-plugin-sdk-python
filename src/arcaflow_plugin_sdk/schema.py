@@ -53,6 +53,7 @@ class TypeID(enum.Enum):
     STRING = "string"
     PATTERN = "pattern"
     INT = "integer"
+    FLOAT = "float"
     LIST = "list"
     MAP = "map"
     OBJECT = "object"
@@ -304,6 +305,45 @@ class IntType(AbstractType):
             raise ConstraintException(path, "Must be at most {}".format(self.max))
 
     def serialize(self, data: int, path: typing.Tuple[str] = tuple([])) -> Any:
+        self.validate(data, path)
+        return data
+
+
+@dataclass
+class FloatType(AbstractType):
+    """
+    IntType represents an integer type, both positive or negative. It is designed to take a 64 bit value.
+    """
+
+    min: Optional[float] = None
+    "Minimum value (inclusive) for this type."
+
+    max: Optional[float] = None
+    "Maximum value (inclusive) for this type."
+
+    def type_id(self) -> TypeID:
+        return TypeID.FLOAT
+
+    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> int:
+        if isinstance(data, str):
+            try:
+                data = float(data)
+            except ValueError as e:
+                raise ConstraintException(path, "Must be an float") from e
+
+        self.validate(data, path)
+        return data
+
+    def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
+        if not isinstance(data, float):
+            raise ConstraintException(path, "Must be a float, {} given".format(type(data).__name__))
+        integer = float(data)
+        if self.min is not None and integer < self.min:
+            raise ConstraintException(path, "Must be at least {}".format(self.min))
+        if self.max is not None and integer > self.max:
+            raise ConstraintException(path, "Must be at most {}".format(self.max))
+
+    def serialize(self, data: float, path: typing.Tuple[str] = tuple([])) -> Any:
         self.validate(data, path)
         return data
 

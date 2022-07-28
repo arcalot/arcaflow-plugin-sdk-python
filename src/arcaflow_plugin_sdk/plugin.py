@@ -139,6 +139,8 @@ class _Resolver:
             return cls._resolve_string(t, path)
         elif isinstance(t, int):
             return cls._resolve_int(t, path)
+        elif isinstance(t, float):
+            return cls._resolve_float(t, path)
         elif isinstance(t, list):
             return cls._resolve_list(t, path)
         elif isinstance(t, dict):
@@ -164,6 +166,8 @@ class _Resolver:
             return _Resolver._resolve_string_type(t, path)
         elif t == int:
             return _Resolver._resolve_int_type(t, path)
+        elif t == float:
+            return _Resolver._resolve_float_type(t, path)
         elif t == list:
             return _Resolver._resolve_list_type(t, path)
         elif t == dict:
@@ -251,14 +255,28 @@ class _Resolver:
         try:
             return schema.IntType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating string type") from e
+            raise SchemaBuildException(path, "Constraint exception while creating int type") from e
 
     @classmethod
     def _resolve_int_type(cls, t, path: typing.Tuple[str]) -> schema.IntType:
         try:
             return schema.IntType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating string type") from e
+            raise SchemaBuildException(path, "Constraint exception while creating int type") from e
+
+    @classmethod
+    def _resolve_float(cls, t, path: typing.Tuple[str]) -> schema.FloatType:
+        try:
+            return schema.FloatType()
+        except Exception as e:
+            raise SchemaBuildException(path, "Constraint exception while creating float type") from e
+
+    @classmethod
+    def _resolve_float_type(cls, t, path: typing.Tuple[str]) -> schema.FloatType:
+        try:
+            return schema.FloatType()
+        except Exception as e:
+            raise SchemaBuildException(path, "Constraint exception while creating float type") from e
 
     @classmethod
     def _resolve_annotated(cls, t, path: typing.Tuple[str]):
@@ -537,7 +555,6 @@ def _execute_file(step_id, s, options, stdout, stderr) -> int:
     finally:
         sys.stdout = original_stdout
         sys.stderr = original_stderr
-
 
 
 def _print_json_schema(step_id, s, options, stdout):

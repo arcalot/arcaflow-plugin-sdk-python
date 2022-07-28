@@ -38,6 +38,20 @@ class JSONSchemaTest(unittest.TestCase):
 
                 self.assertEqual(expected, jsonschema._JSONSchema.from_int(input))
 
+    def test_float(self):
+        test_cases: Dict[str, Tuple[schema.FloatType, Dict]] = {
+            "base": (schema.FloatType(), {"type": "number"}),
+            "min": (schema.FloatType(min=5), {"type": "number", "minimum": 5}),
+            "max": (schema.FloatType(max=5), {"type": "number", "maximum": 5}),
+        }
+
+        for name in test_cases.keys():
+            with self.subTest(name=name):
+                input = test_cases[name][0]
+                expected = test_cases[name][1]
+
+                self.assertEqual(expected, jsonschema._JSONSchema.from_float(input))
+
     def test_enum(self):
         class Color(enum.Enum):
             RED = "red"

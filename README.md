@@ -206,6 +206,7 @@ The SDK supports a wide range of types. Let's start with the basics:
 
 - `str`
 - `int`
+- `float`
 - Enums
 - `re.Pattern`
 - `typing.List[othertype]` (you must specify the type for the contents of the list)
@@ -235,8 +236,8 @@ class MyClass:
 
 This will create a minimum-value validation for the parameter of 5. The following annotations are supported for validation:
 
-- `validation.min()` for strings, ints, lists, and maps
-- `validation.max()` for strings, ints, lists, and maps
+- `validation.min()` for strings, ints, floats, lists, and maps
+- `validation.max()` for strings, ints, floats, lists, and maps
 - `validation.pattern()` for strings
 - `validation.required_if()` for any field on an object
 - `validation.required_if_not()` for any field on an object
@@ -357,6 +358,19 @@ t = schema.IntType()
 ```
 
 The int type supports the following parameters:
+
+- `min`: minimum value for the number (inclusive).
+- `max`: minimum value for the number (inclusive).
+
+### FloatType
+
+The int type indicates that the underlying type is an integer.
+
+```python
+t = schema.FloatType()
+```
+
+The float type supports the following parameters:
 
 - `min`: minimum value for the number (inclusive).
 - `max`: minimum value for the number (inclusive).
