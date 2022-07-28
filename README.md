@@ -73,7 +73,7 @@ Please use whichever works for the following commands. (Assuming it's at least P
 To start a new plugin project, create an empty folder and add a `requirements.txt` file with the following line:
 
 ```
-git+https://github.com/arcalot/arcaflow-plugin-sdk-python.git@main
+arcaflow-plugin-sdk
 ```
 
 Next, create a `venv` and activate it using the following commands:
