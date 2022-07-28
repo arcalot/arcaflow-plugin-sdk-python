@@ -231,6 +231,16 @@ class SerializationTest(unittest.TestCase):
         with self.assertRaises(schema.ConstraintException):
             s.unserialize({"B":"Foo"})
 
+    def test_int_optional(self):
+        @dataclasses.dataclass
+        class TestData1:
+            A: typing.Optional[int] = None
+
+        s = plugin.build_object_schema(TestData1)
+
+        unserialized = s.unserialize({})
+        self.assertIsNone(unserialized.A)
+
 
 if __name__ == '__main__':
     unittest.main()
