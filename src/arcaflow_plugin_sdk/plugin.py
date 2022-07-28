@@ -401,7 +401,7 @@ def run(
         argv: List[str] = tuple(argv),
         stdin: io.TextIOWrapper = stdin,
         stdout: io.TextIOWrapper = stdout,
-        stderr: io.TextIOWrapper = stderr,
+        stderr: io.TextIOWrapper = stderr
 ) -> int:
     """
     Run takes a schema and runs it as a command line utility. It returns the exit code of the program. It is intended
@@ -435,6 +435,13 @@ def run(
             help="Which step to run? One of: " + ', '.join(s.steps.keys()),
             metavar="STEPID",
         )
+        parser.add_option(
+            "-d",
+            "--debug",
+            action="store_true",
+            dest="debug",
+            help="Enable debug mode (print step output and stack traces)."
+        )
         (options, remaining_args) = parser.parse_args(list(argv[1:]))
         if len(remaining_args) > 0:
             raise _ExitException(
@@ -448,7 +455,7 @@ def run(
         else:
             step_id = list(s.steps.keys())[0]
         if options.filename is not None:
-            return _execute_file(step_id, s, options, stdout)
+            return _execute_file(step_id, s, options, stdout, stderr)
         elif options.json_schema is not None:
             return _print_json_schema(step_id, s, options, stdout)
         else:
@@ -480,9 +487,19 @@ def build_schema(*args: schema.StepSchema) -> schema.Schema:
     )
 
 
-def _execute_file(step_id, s, options, stdout) -> int:
+def _execute_file(step_id, s, options, stdout, stderr) -> int:
     filename: str = options.filename
     data = serialization.load_from_file(filename)
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    if options.debug:
+        # Redirect stdout to stderr for debug logging
+        sys.stdout = stderr
+        sys.stderr = stderr
+    else:
+        out_buffer = io.StringIO()
+        sys.stdout = out_buffer
+        sys.stderr = out_buffer
     try:
         output_id, output_data = s(step_id, data)
         output = {
@@ -490,6 +507,7 @@ def _execute_file(step_id, s, options, stdout) -> int:
             "output_data": output_data
         }
         stdout.write(yaml.dump(output, sort_keys=False))
+        return 0
     except InvalidInputException as e:
         stderr.write(
             "Invalid input encountered while executing step '{}' from file '{}':\n  {}\n\n".format(
@@ -498,10 +516,10 @@ def _execute_file(step_id, s, options, stdout) -> int:
                 e.__str__()
             )
         )
-        if os.getenv("ARCAFLOW_DEBUG") == "1":
+        if options.debug:
             traceback.print_exc(chain=True)
         else:
-            stderr.write("Set ARCAFLOW_DEBUG=1 to print a stack trace.")
+            stderr.write("Set --debug to print a stack trace.")
         return 65
     except InvalidOutputException as e:
         stderr.write(
@@ -511,11 +529,15 @@ def _execute_file(step_id, s, options, stdout) -> int:
                 e.__str__()
             )
         )
-        if os.getenv("ARCAFLOW_DEBUG") == "1":
+        if options.debug:
             traceback.print_exc(chain=True)
         else:
-            stderr.write("Set ARCAFLOW_DEBUG=1 to print a stack trace.")
+            stderr.write("Set --debug to print a stack trace.")
         return 70
+    finally:
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
 
 
 def _print_json_schema(step_id, s, options, stdout):

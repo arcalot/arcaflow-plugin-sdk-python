@@ -1,5 +1,7 @@
 import dataclasses
+import io
 import re
+import tempfile
 import typing
 import unittest
 from enum import Enum
@@ -33,6 +35,7 @@ class ResolverTest(unittest.TestCase):
         class TestEnum(Enum):
             A = "a"
             B = "b"
+
         resolved_type = _Resolver.resolve(TestEnum)
         self.assertEqual(schema.TypeID.ENUM, resolved_type.type_id())
 
@@ -84,6 +87,7 @@ class ResolverTest(unittest.TestCase):
             a: str = "foo"
             b: int = 5
             c: str = dataclasses.field(default="bar", metadata={"name": "C", "description": "A string"})
+
         resolved_type: schema.ObjectType
         resolved_type = _Resolver.resolve(TestData)
         self.assertEqual(schema.TypeID.OBJECT, resolved_type.type_id())
@@ -140,6 +144,7 @@ class ResolverTest(unittest.TestCase):
         class TestData2:
             a: typing.Annotated[typing.Optional[str], validation.required_if("b")] = None
             b: typing.Optional[str] = None
+
         t: schema.ObjectType
         t = _Resolver.resolve(TestData2)
         a = t.properties["a"]
@@ -169,7 +174,7 @@ class SerializationTest(unittest.TestCase):
             D: List[str]
             E: typing.Optional[str] = None
             F: typing.Annotated[typing.Optional[str], validation.min(3)] = None
-            G: typing.Optional[str] = dataclasses.field(default="", metadata={"id":"test-field", "name": "G"})
+            G: typing.Optional[str] = dataclasses.field(default="", metadata={"id": "test-field", "name": "G"})
 
         plugin.test_object_serialization(
             TestData1(
@@ -183,7 +188,6 @@ class SerializationTest(unittest.TestCase):
 
         @dataclasses.dataclass
         class KillPodConfig:
-
             namespace_pattern: re.Pattern
 
             name_pattern: typing.Annotated[
@@ -224,12 +228,12 @@ class SerializationTest(unittest.TestCase):
         self.assertIsNone(unserialized.A)
         self.assertIsNone(unserialized.B)
 
-        unserialized = s.unserialize({"A":"Foo"})
+        unserialized = s.unserialize({"A": "Foo"})
         self.assertEqual(unserialized.A, "Foo")
         self.assertIsNone(unserialized.B)
 
         with self.assertRaises(schema.ConstraintException):
-            s.unserialize({"B":"Foo"})
+            s.unserialize({"B": "Foo"})
 
     def test_int_optional(self):
         @dataclasses.dataclass
@@ -240,6 +244,53 @@ class SerializationTest(unittest.TestCase):
 
         unserialized = s.unserialize({})
         self.assertIsNone(unserialized.A)
+
+
+@dataclasses.dataclass
+class StdoutTestInput:
+    pass
+
+
+@dataclasses.dataclass
+class StdoutTestOutput:
+    pass
+
+
+@plugin.step(
+    "stdout-test",
+    "Stdout test",
+    "A test for writing to stdout.",
+    {"success": StdoutTestOutput}
+)
+def stdout_test_step(input: StdoutTestInput) -> typing.Tuple[str, StdoutTestOutput]:
+    print("Hello world!")
+    return "success", StdoutTestOutput()
+
+
+class StdoutTest(unittest.TestCase):
+    def test_capture_stdout(self):
+        s = plugin.build_schema(stdout_test_step)
+        tmp = tempfile.NamedTemporaryFile(suffix=".json")
+
+        def cleanup():
+            tmp.close()
+
+        self.addCleanup(cleanup)
+        tmp.write(bytes("{}", 'utf-8'))
+        tmp.flush()
+
+        i = io.StringIO()
+        o = io.StringIO()
+        e = io.StringIO()
+        exit_code = plugin.run(
+            s,
+            ["test.py", "-f", tmp.name, "--debug"],
+            i,
+            o,
+            e
+        )
+        self.assertEqual(0, exit_code)
+        self.assertEqual("Hello world!\n", e.getvalue())
 
 
 if __name__ == '__main__':
