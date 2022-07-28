@@ -498,10 +498,10 @@ def _execute_file(step_id, s, options, stdout) -> int:
                 e.__str__()
             )
         )
-        if os.getenv("WOLKENWALZE_DEBUG") == "1":
+        if os.getenv("ARCAFLOW_DEBUG") == "1":
             traceback.print_exc(chain=True)
         else:
-            stderr.write("Set WOLKENWALZE_DEBUG=1 to print a stack trace.")
+            stderr.write("Set ARCAFLOW_DEBUG=1 to print a stack trace.")
         return 65
     except InvalidOutputException as e:
         stderr.write(
@@ -511,10 +511,10 @@ def _execute_file(step_id, s, options, stdout) -> int:
                 e.__str__()
             )
         )
-        if os.getenv("WOLKENWALZE_DEBUG") == "1":
+        if os.getenv("ARCAFLOW_DEBUG") == "1":
             traceback.print_exc(chain=True)
         else:
-            stderr.write("Set WOLKENWALZE_DEBUG=1 to print a stack trace.")
+            stderr.write("Set ARCAFLOW_DEBUG=1 to print a stack trace.")
         return 70
 
 
