@@ -70,7 +70,7 @@ class _JSONSchema:
                     "type": "string",
                     "enum": [
                         "yes", "true", "on", "enable", "enabled", "1",
-                        "no", "false", "off", "disable", "disabledd", "0",
+                        "no", "false", "off", "disable", "disabled", "0",
                     ]
                 },
                 {
