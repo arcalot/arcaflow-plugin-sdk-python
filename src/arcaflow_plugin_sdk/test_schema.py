@@ -6,6 +6,8 @@ from arcaflow_plugin_sdk import schema
 import enum
 import unittest
 
+from arcaflow_plugin_sdk.schema import ConstraintException
+
 
 class Color(enum.Enum):
     GREEN = "green"
@@ -38,7 +40,54 @@ class EnumTest(unittest.TestCase):
             class BadEnum(enum.Enum):
                 A = "foo"
                 B = False
+
             schema.EnumType(BadEnum)
+
+
+class BoolTest(unittest.TestCase):
+    def test_unserialize(self):
+        t = schema.BoolType()
+        self.assertEqual(False, t.unserialize("false"))
+        self.assertEqual(False, t.unserialize("no"))
+        self.assertEqual(False, t.unserialize("off"))
+        self.assertEqual(False, t.unserialize("disable"))
+        self.assertEqual(False, t.unserialize("disabled"))
+        self.assertEqual(False, t.unserialize("0"))
+        self.assertEqual(False, t.unserialize(0))
+        self.assertEqual(False, t.unserialize(False))
+
+        self.assertEqual(True, t.unserialize("true"))
+        self.assertEqual(True, t.unserialize("yes"))
+        self.assertEqual(True, t.unserialize("Yes"))
+        self.assertEqual(True, t.unserialize("YES"))
+        self.assertEqual(True, t.unserialize("on"))
+        self.assertEqual(True, t.unserialize("enable"))
+        self.assertEqual(True, t.unserialize("enabled"))
+        self.assertEqual(True, t.unserialize("1"))
+        self.assertEqual(True, t.unserialize(1))
+        self.assertEqual(True, t.unserialize(True))
+        with self.assertRaises(ConstraintException):
+            t.unserialize(3.14)
+        with self.assertRaises(ConstraintException):
+            t.unserialize("")
+
+    def test_serialize(self):
+        t = schema.BoolType()
+        self.assertEqual(False, t.serialize(False))
+        self.assertEqual(True, t.serialize(True))
+        with self.assertRaises(ConstraintException):
+            t.serialize(3.14)
+        with self.assertRaises(ConstraintException):
+            t.serialize("yes")
+
+    def test_validate(self):
+        t = schema.BoolType()
+        t.validate(False)
+        t.validate(True)
+        with self.assertRaises(ConstraintException):
+            t.validate(3.14)
+        with self.assertRaises(ConstraintException):
+            t.validate("yes")
 
 
 class StringTest(unittest.TestCase):
@@ -171,7 +220,7 @@ class MapTest(unittest.TestCase):
         t.unserialize({})
         t.validate({})
         t.unserialize({"foo": "bar"})
-        t.validate({"foo":"bar"})
+        t.validate({"foo": "bar"})
         with self.assertRaises(schema.ConstraintException):
             t.unserialize({"foo": "bar", "baz": InvalidData("bar")})
         with self.assertRaises(schema.ConstraintException):
@@ -213,6 +262,7 @@ class TestClass:
     a: str
     b: int
     c: float
+    d: bool
 
 
 class ObjectTest(unittest.TestCase):
@@ -230,31 +280,36 @@ class ObjectTest(unittest.TestCase):
             "c": schema.Field(
                 schema.FloatType(),
                 required=True
+            ),
+            "d": schema.Field(
+                schema.BoolType(),
+                required=True
             )
         }
     )
 
     def test_serialize(self):
-        o = TestClass("foo", 5, 3.14)
+        o = TestClass("foo", 5, 3.14, True)
         d = self.t.serialize(o)
-        self.assertEqual({"a": "foo", "b": 5, "c": 3.14}, d)
+        self.assertEqual({"a": "foo", "b": 5, "c": 3.14, "d": True}, d)
 
         o.b = None
         with self.assertRaises(schema.ConstraintException):
             self.t.serialize(o)
 
     def test_validate(self):
-        o = TestClass("a", 5, 3.14)
+        o = TestClass("a", 5, 3.14, True)
         self.t.validate(o)
         o.b = None
         with self.assertRaises(schema.ConstraintException):
             self.t.validate(o)
 
     def test_unserialize(self):
-        o = self.t.unserialize({"a": "foo", "b": 5, "c": 3.14})
+        o = self.t.unserialize({"a": "foo", "b": 5, "c": 3.14, "d": True})
         self.assertEqual("foo", o.a)
         self.assertEqual(5, o.b)
         self.assertEqual(3.14, o.c)
+        self.assertEqual(True, o.d)
 
         with self.assertRaises(schema.ConstraintException):
             self.t.unserialize({
@@ -271,7 +326,8 @@ class ObjectTest(unittest.TestCase):
                 "a": "foo",
                 "b": 5,
                 "c": 3.14,
-                "d": complex(3.14)
+                "d": True,
+                "e": complex(3.14)
             })
 
     def test_field_override(self):
@@ -289,7 +345,7 @@ class ObjectTest(unittest.TestCase):
                 )
             }
         )
-        unserialized = s.unserialize({"test-data":"foo"})
+        unserialized = s.unserialize({"test-data": "foo"})
         self.assertEqual(unserialized.a, "foo")
         serialized = s.serialize(unserialized)
         self.assertEqual("foo", serialized["test-data"])

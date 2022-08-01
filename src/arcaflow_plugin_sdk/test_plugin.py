@@ -70,6 +70,7 @@ class ResolverTest(unittest.TestCase):
             a: str
             b: int
             c: float
+            d: bool
 
         with self.assertRaises(SchemaBuildException):
             _Resolver.resolve(TestData)
@@ -79,6 +80,7 @@ class ResolverTest(unittest.TestCase):
             a: str
             b: int
             c: float
+            d: bool
 
         resolved_type: schema.ObjectType
         resolved_type = _Resolver.resolve(TestData)
@@ -93,12 +95,16 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual("c", resolved_type.properties["c"].name)
         self.assertTrue(resolved_type.properties["c"].required)
         self.assertEqual(TypeID.FLOAT, resolved_type.properties["c"].type.type_id())
+        self.assertEqual("d", resolved_type.properties["d"].name)
+        self.assertTrue(resolved_type.properties["d"].required)
+        self.assertEqual(TypeID.BOOL, resolved_type.properties["d"].type.type_id())
 
         @dataclasses.dataclass
         class TestData:
             a: str = "foo"
             b: int = 5
             c: str = dataclasses.field(default="bar", metadata={"name": "C", "description": "A string"})
+            d: bool = True
 
         resolved_type: schema.ObjectType
         resolved_type = _Resolver.resolve(TestData)
@@ -114,6 +120,9 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual("A string", resolved_type.properties["c"].description)
         self.assertFalse(resolved_type.properties["c"].required)
         self.assertEqual(TypeID.STRING, resolved_type.properties["c"].type.type_id())
+        self.assertEqual("d", resolved_type.properties["d"].name)
+        self.assertFalse(resolved_type.properties["d"].required)
+        self.assertEqual(TypeID.BOOL, resolved_type.properties["d"].type.type_id())
 
     def test_optional(self):
         @dataclasses.dataclass
