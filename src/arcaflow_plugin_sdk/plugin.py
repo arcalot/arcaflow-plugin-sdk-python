@@ -137,6 +137,8 @@ class _Resolver:
             return cls._resolve_type(t, path)
         elif isinstance(t, str):
             return cls._resolve_string(t, path)
+        elif isinstance(t, bool):
+            return cls._resolve_bool(t, path)
         elif isinstance(t, int):
             return cls._resolve_int(t, path)
         elif isinstance(t, float):
@@ -164,6 +166,8 @@ class _Resolver:
             return _Resolver._resolve_pattern(t, path)
         elif t == str:
             return _Resolver._resolve_string_type(t, path)
+        elif t == bool:
+            return _Resolver._resolve_bool_type(t, path)
         elif t == int:
             return _Resolver._resolve_int_type(t, path)
         elif t == float:
@@ -235,6 +239,20 @@ class _Resolver:
             )
         except Exception as e:
             raise SchemaBuildException(path, "Failed to create object type") from e
+
+    @classmethod
+    def _resolve_bool_type(cls, t, path: typing.Tuple[str]) -> schema.BoolType:
+        try:
+            return schema.BoolType()
+        except Exception as e:
+            raise SchemaBuildException(path, "Constraint exception while creating bool type") from e
+
+    @classmethod
+    def _resolve_bool(cls, t, path: typing.Tuple[str]) -> schema.BoolType:
+        try:
+            return schema.BoolType()
+        except Exception as e:
+            raise SchemaBuildException(path, "Constraint exception while creating bool type") from e
 
     @classmethod
     def _resolve_string_type(cls, t, path: typing.Tuple[str]) -> schema.StringType:

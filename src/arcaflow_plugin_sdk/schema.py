@@ -54,6 +54,7 @@ class TypeID(enum.Enum):
     PATTERN = "pattern"
     INT = "integer"
     FLOAT = "float"
+    BOOL = "boolean"
     LIST = "list"
     MAP = "map"
     OBJECT = "object"
@@ -142,7 +143,8 @@ class EnumType(AbstractType, Generic[EnumT]):
                 BadArgumentException("Enum {} has no valid values.".format(type.__name__))
             for value in self.type:
                 if (not isinstance(value.value, str)) and (not isinstance(value.value, int)):
-                    raise BadArgumentException("{} on {} is not a valid enum value, must be str or int".format(value, type.__name__))
+                    raise BadArgumentException(
+                        "{} on {} is not a valid enum value, must be str or int".format(value, type.__name__))
                 if found_type is not None and value.value.__class__.__name__ != found_type:
                     raise BadArgumentException(
                         "Enum {} contains different value types. Please make all value types the same. (Found both {} "
@@ -190,6 +192,50 @@ class EnumType(AbstractType, Generic[EnumT]):
                 "'{}' is not a valid value for the enum '{}'".format(data, self.type.__name__)
             )
         return data.value
+
+
+class BoolType(AbstractType):
+
+    def type_id(self) -> TypeID:
+        return TypeID.BOOL
+
+    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
+        if isinstance(data, bool):
+            return data
+        if isinstance(data, int):
+            if data == 0:
+                return False
+            if data == 1:
+                return True
+            raise ConstraintException(path, "Boolean value expected, integer found ({})".format(data))
+        if isinstance(data, str):
+            lower_str = data.lower()
+            if lower_str == "yes" or \
+                    lower_str == "on" or \
+                    lower_str == "true" or \
+                    lower_str == "enable" or \
+                    lower_str == "enabled" or \
+                    lower_str == "1":
+                return True
+            if lower_str == "no" or \
+                    lower_str == "off" or \
+                    lower_str == "false" or \
+                    lower_str == "disable" or \
+                    lower_str == "disabled" or \
+                    lower_str == "0":
+                return False
+            raise ConstraintException(path, "Boolean value expected, string found ({})".format(data))
+
+        raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
+
+    def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
+        if not isinstance(data, bool):
+            raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
+
+    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
+        if isinstance(data, bool):
+            return data
+        raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
 
 
 @dataclass
@@ -613,7 +659,8 @@ class ObjectType(AbstractType, Generic[ObjectT]):
                     if not found:
                         raise ConstraintException(
                             tuple(new_path),
-                            "Field is required because none of '{}' are set".format("', '".join(property_field.required_if_not))
+                            "Field is required because none of '{}' are set".format(
+                                "', '".join(property_field.required_if_not))
                         )
 
                 for required_if in property_field.required_if:

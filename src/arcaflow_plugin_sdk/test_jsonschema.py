@@ -9,6 +9,21 @@ from arcaflow_plugin_sdk import schema, jsonschema
 
 
 class JSONSchemaTest(unittest.TestCase):
+    def test_bool(self):
+        s = jsonschema._JSONSchema.from_bool(schema.BoolType())
+        self.assertEqual(
+            s["anyOf"][0]["type"],
+            "boolean"
+        )
+        self.assertEqual(
+            s["anyOf"][1]["type"],
+            "string"
+        )
+        self.assertEqual(
+            s["anyOf"][2]["type"],
+            "integer"
+        )
+
     def test_string(self):
         test_cases: Dict[str, Tuple[schema.StringType, Dict]] = {
             "base": (schema.StringType(), {"type": "string"}),

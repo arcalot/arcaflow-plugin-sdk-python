@@ -11,6 +11,8 @@ class _JSONSchema:
             return cls.from_float(t)
         elif t.type_id() == TypeID.STRING:
             return cls.from_string(t)
+        elif t.type_id() == TypeID.BOOL:
+            return cls.from_bool(t)
         elif t.type_id() == TypeID.ENUM:
             return cls.from_enum(t)
         elif t.type_id() == TypeID.MAP:
@@ -55,6 +57,29 @@ class _JSONSchema:
             result["maxLength"] = t.max_length
         if t.pattern is not None:
             result["pattern"] = t.pattern.pattern
+        return result
+
+    @classmethod
+    def from_bool(cls, t: schema.BoolType) -> dict:
+        result = {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "string",
+                    "enum": [
+                        "yes", "true", "on", "enable", "enabled", "1",
+                        "no", "false", "off", "disable", "disabledd", "0",
+                    ]
+                },
+                {
+                    "type": "integer",
+                    "maximum": 1,
+                    "minumum": 0,
+                }
+            ]
+        }
         return result
 
     @classmethod
