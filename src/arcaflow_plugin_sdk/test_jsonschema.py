@@ -1,5 +1,6 @@
 import dataclasses
 import enum
+import pprint
 import re
 import typing
 import unittest
@@ -187,6 +188,78 @@ class JSONSchemaTest(unittest.TestCase):
                 expected = test_cases[name][1]
 
                 self.assertEqual(expected, jsonschema._JSONSchema.from_object(input))
+
+    def test_one_of(self):
+        @dataclasses.dataclass
+        class A:
+            a: str
+
+        @dataclasses.dataclass
+        class B:
+            b: str
+
+        @dataclasses.dataclass
+        class TestData:
+            a: typing.Union[A, B]
+
+        s = schema.ObjectType(
+            TestData,
+            {
+                "a": schema.Field(
+                    schema.OneOfType(
+                        "_type",
+                        schema.StringType(),
+                        {
+                            "a": schema.ObjectType(
+                                A,
+                                {
+                                    "a": schema.Field(schema.StringType())
+                                }
+                            ),
+                            "b": schema.ObjectType(
+                                B,
+                                {
+                                    "b": schema.Field(schema.StringType())
+                                }
+                            )
+                        }
+                    )
+                )
+            }
+        )
+
+        json_schema = jsonschema._JSONSchema.from_object(s)
+        self.assertEqual({
+            'additionalProperties': False,
+            'properties': {
+                'a': {
+                    'oneOf': [
+                        {
+                            'title': 'a',
+                            'additionalProperties': False,
+                            'properties': {
+                                '_type': {'const': 'a', 'type': 'string'},
+                                'a': {'type': 'string'},
+                            },
+                            'required': ['a', '_type'],
+                            'type': 'object'
+                        },
+                        {
+                            'title': 'b',
+                            'additionalProperties': False,
+                            'properties': {
+                                'b': {'type': 'string'},
+                                '_type': {'const': 'b', 'type': 'string'}
+                            },
+                            'required': ['b', '_type'],
+                            'type': 'object'
+                        }
+                    ]
+                }
+            },
+            'required': ['a'],
+            'type': 'object'
+        }, json_schema)
 
     def test_step_input(self):
         @dataclasses.dataclass

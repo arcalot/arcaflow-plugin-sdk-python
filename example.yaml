@@ -1,3 +1,5 @@
 # yaml-language-server: $schema=example.schema.json
-pod_name_pattern: nginx-.*
-namespace_pattern: default
+name:
+  _type: FullName
+  first_name: Arca
+  last_name: Lot

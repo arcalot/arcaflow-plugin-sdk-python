@@ -17,6 +17,8 @@ class _JSONSchema:
             return cls.from_enum(t)
         elif t.type_id() == TypeID.MAP:
             return cls.from_map(t)
+        elif t.type_id() == TypeID.ONEOF:
+            return cls.from_oneof(t)
         elif t.type_id() == TypeID.LIST:
             return cls.from_list(t)
         elif t.type_id() == TypeID.OBJECT:
@@ -80,6 +82,24 @@ class _JSONSchema:
                 }
             ]
         }
+        return result
+
+    @classmethod
+    def from_oneof(cls, t: schema.OneOfType) -> dict:
+        result = {
+            "oneOf": [
+            ]
+        }
+        for key, value in t.one_of.items():
+            s = cls.from_object(value)
+            if "title" not in s:
+                s["title"] = key
+            if t.discriminator_field_name not in value.properties:
+                s["properties"][t.discriminator_field_name] = {"type": "string", "const": key}
+                s["required"].append(t.discriminator_field_name)
+            else:
+                s["properties"][t.discriminator_field_name]["const"] = key
+            result["oneOf"].append(s)
         return result
 
     @classmethod

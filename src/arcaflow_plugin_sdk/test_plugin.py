@@ -9,7 +9,7 @@ from re import Pattern
 from typing import List, Dict
 from arcaflow_plugin_sdk import schema, validation, plugin
 from arcaflow_plugin_sdk.plugin import SchemaBuildException, _Resolver
-from arcaflow_plugin_sdk.schema import TypeID
+from arcaflow_plugin_sdk.schema import TypeID, OneOfType
 
 
 class ResolverTest(unittest.TestCase):
@@ -123,6 +123,28 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual("d", resolved_type.properties["d"].name)
         self.assertFalse(resolved_type.properties["d"].required)
         self.assertEqual(TypeID.BOOL, resolved_type.properties["d"].type.type_id())
+
+    def test_union(self):
+        @dataclasses.dataclass
+        class A:
+            a: str
+
+        @dataclasses.dataclass
+        class B:
+            b: str
+
+        @dataclasses.dataclass
+        class TestData:
+            a: typing.Union[A, B]
+
+        resolved_type: schema.ObjectType
+        resolved_type = _Resolver.resolve(TestData)
+        self.assertEqual(TypeID.ONEOF, resolved_type.properties["a"].type.type_id())
+        t: OneOfType = resolved_type.properties["a"].type
+        self.assertEqual(t.discriminator_field_name, "_type")
+        self.assertEqual(TypeID.STRING, t.discriminator_field_schema.type_id())
+        self.assertEqual(A, t.one_of["A"].type_class())
+        self.assertEqual(B, t.one_of["B"].type_class())
 
     def test_optional(self):
         @dataclasses.dataclass
