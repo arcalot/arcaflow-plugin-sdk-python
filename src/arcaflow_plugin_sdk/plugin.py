@@ -8,6 +8,7 @@ import re
 import sys
 import traceback
 import typing
+
 import yaml
 from dataclasses import fields
 from enum import Enum
@@ -17,7 +18,7 @@ from typing import List, Callable, TypeVar, Dict, Any, Type, get_origin, get_arg
 
 from arcaflow_plugin_sdk import schema, serialization, jsonschema
 from arcaflow_plugin_sdk.schema import BadArgumentException, Field, InvalidInputException, InvalidOutputException, \
-    ConstraintException
+    ConstraintException, TypeID
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
@@ -398,18 +399,53 @@ class _Resolver:
             raise SchemaBuildException(path, "Failed to create map type") from e
 
     @classmethod
-    def _resolve_union(cls, t, path: typing.Tuple[str]) -> Field:
+    def _resolve_union(cls, t, path: typing.Tuple[str]) -> schema.OneOfType:
         args = get_args(t)
-        if len(args) != 2:
-            raise SchemaBuildException(path, "Union types are not supported, except for typing.Optional.")
-        if args[1] is None:
-            raise SchemaBuildException(path, "Union types are not supported, except for typing.Optional.")
-        if args[0] is None:
+        if isinstance(None, args[0]):
             raise SchemaBuildException(path, "None types are not supported.")
-        new_path = list(path)
-        new_path.append("typing.Optional")
-        result = cls._resolve_field(args[0], tuple(path))
-        result.required = False
+        if isinstance(None, args[1]):
+            new_path = list(path)
+            new_path.append("typing.Optional")
+            result = cls._resolve_field(args[0], tuple(path))
+            result.required = False
+            return result
+        result = schema.OneOfType(
+            "_type",
+            schema.StringType(),
+            {}
+        )
+        for i in range(len(args)):
+            new_path = list(path)
+            new_path.append("typing.Union")
+            new_path.append(str(i))
+            f = cls._resolve_field(args[i], tuple(new_path))
+            if not f.required:
+                raise SchemaBuildException(
+                    tuple(new_path),
+                    "Union types cannot contain optional values."
+                )
+            if len(f.required_if) != 0:
+                raise SchemaBuildException(
+                    tuple(new_path),
+                    "Union types cannot simultaneously contain require_if fields"
+                )
+            if len(f.required_if_not) != 0:
+                raise SchemaBuildException(
+                    tuple(new_path),
+                    "Union types cannot simultaneously contain require_if_not fields"
+                )
+            if len(f.conflicts) != 0:
+                raise SchemaBuildException(
+                    tuple(new_path),
+                    "Union types cannot simultaneously contain conflicts fields"
+                )
+            if f.type.type_id() != TypeID.OBJECT:
+                raise SchemaBuildException(
+                    tuple(new_path),
+                    "Union types can only contain objects, {} found".format(f.type.type_id())
+                )
+            t:schema.ObjectType = f.type
+            result.one_of[t.type_class().__name__] = t
         return result
 
     @classmethod

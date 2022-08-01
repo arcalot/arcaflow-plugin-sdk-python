@@ -9,40 +9,36 @@ class ExamplePluginTest(unittest.TestCase):
     @staticmethod
     def test_serialization():
         plugin.test_object_serialization(
-            example_plugin.PodScenarioParams()
-        )
-
-        plugin.test_object_serialization(
-            example_plugin.PodScenarioResults(
-                [
-                    example_plugin.Pod(
-                        namespace="default",
-                        name="nginx-asdf"
-                    )
-                ]
+            example_plugin.InputParams(
+                name=example_plugin.FullName("Arca", "Lot")
             )
         )
 
         plugin.test_object_serialization(
-            example_plugin.PodScenarioError(
+            example_plugin.SuccessOutput(
+                message="Hello, Arca Lot!"
+            )
+        )
+
+        plugin.test_object_serialization(
+            example_plugin.ErrorOutput(
                 error="This is an error"
             )
         )
 
     def test_functional(self):
-        input = example_plugin.PodScenarioParams(
-            namespace_pattern=re.compile("foo"),
-            pod_name_pattern=re.compile("bar"),
-        )
+        input = example_plugin.InputParams(
+                name=example_plugin.FullName("Arca", "Lot")
+            )
 
-        output_id, output_data = example_plugin.pod_scenario(input)
+        output_id, output_data = example_plugin.hello_world(input)
 
         # The example plugin always returns an error:
-        self.assertEqual("error", output_id)
+        self.assertEqual("success", output_id)
         self.assertEqual(
             output_data,
-            example_plugin.PodScenarioError(
-                "Cannot kill pod bar in namespace foo, function not implemented"
+            example_plugin.SuccessOutput(
+                "Hello, Arca Lot!"
             )
         )
 

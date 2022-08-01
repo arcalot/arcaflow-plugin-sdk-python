@@ -6,7 +6,7 @@ from arcaflow_plugin_sdk import schema
 import enum
 import unittest
 
-from arcaflow_plugin_sdk.schema import ConstraintException
+from arcaflow_plugin_sdk.schema import Field, ConstraintException
 
 
 class Color(enum.Enum):
@@ -349,6 +349,197 @@ class ObjectTest(unittest.TestCase):
         self.assertEqual(unserialized.a, "foo")
         serialized = s.serialize(unserialized)
         self.assertEqual("foo", serialized["test-data"])
+
+
+class OneOfTest(unittest.TestCase):
+    def test_unserialize(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        s = schema.OneOfType(
+            "_type",
+            schema.StringType(),
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "a": Field(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": Field(
+                            schema.IntType()
+                        )
+                    }
+                )
+            }
+        )
+
+        with self.assertRaises(ConstraintException):
+            s.unserialize({"a": "Hello world!"})
+        with self.assertRaises(ConstraintException):
+            s.unserialize({"b": 42})
+
+        unserialized_data : OneOfData1 = s.unserialize({"_type": "a", "a": "Hello world!"})
+        self.assertIsInstance(unserialized_data, OneOfData1)
+        self.assertEqual(unserialized_data.a, "Hello world!")
+
+        unserialized_data2 : OneOfData2 = s.unserialize({"_type": "b", "b": 42})
+        self.assertIsInstance(unserialized_data2, OneOfData2)
+        self.assertEqual(unserialized_data2.b, 42)
+
+    def test_unserialize_embedded(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            type: str
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        s = schema.OneOfType(
+            "type",
+            schema.StringType(),
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": Field(
+                            schema.StringType(),
+                        ),
+                        "a": Field(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": Field(
+                            schema.IntType()
+                        )
+                    }
+                )
+            }
+        )
+
+        unserialized_data : OneOfData1 = s.unserialize({"type": "a", "a": "Hello world!"})
+        self.assertIsInstance(unserialized_data, OneOfData1)
+        self.assertEqual(unserialized_data.type, "a")
+        self.assertEqual(unserialized_data.a, "Hello world!")
+
+        unserialized_data2 : OneOfData2 = s.unserialize({"type": "b", "b": 42})
+        self.assertIsInstance(unserialized_data2, OneOfData2)
+        self.assertEqual(unserialized_data2.b, 42)
+
+    def test_validation(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            type: str
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        s = schema.OneOfType(
+            "type",
+            schema.StringType(),
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": Field(
+                            schema.StringType(),
+                        ),
+                        "a": Field(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": Field(
+                            schema.IntType()
+                        )
+                    }
+                )
+            }
+        )
+
+        with self.assertRaises(ConstraintException):
+            s.validate(OneOfData1(
+                None,
+                "Hello world!"
+            ))
+
+        with self.assertRaises(ConstraintException):
+            s.validate(OneOfData1(
+                "b",
+                "Hello world!"
+            ))
+
+        s.validate(OneOfData1(
+            "a",
+            "Hello world!"
+        ))
+
+    def test_serialize(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            type: str
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        s = schema.OneOfType(
+            "type",
+            schema.StringType(),
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": Field(
+                            schema.StringType(),
+                        ),
+                        "a": Field(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": Field(
+                            schema.IntType()
+                        )
+                    }
+                )
+            }
+        )
+
+        self.assertEqual(s.serialize(OneOfData1(
+            "a",
+            "Hello world!"
+        )), {"type": "a", "a": "Hello world!"})
+
+        self.assertEqual(s.serialize(OneOfData2(
+            42
+        )), {"type": "b", "b": 42})
+
 
 
 if __name__ == '__main__':

@@ -1,21 +1,67 @@
 {
   "type": "object",
   "properties": {
-    "namespace_pattern": {
-      "type": "string",
-      "format": "regex",
-      "title": "namespace_pattern"
-    },
-    "pod_name_pattern": {
-      "type": "string",
-      "format": "regex",
-      "title": "pod_name_pattern"
+    "name": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "[a-zA-Z]",
+              "title": "first_name"
+            },
+            "last_name": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "[a-zA-Z]",
+              "title": "last_name"
+            },
+            "_type": {
+              "type": "string",
+              "const": "FullName"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "first_name",
+            "last_name",
+            "_type"
+          ],
+          "title": "FullName"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "nick": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "[a-zA-Z]",
+              "title": "nick"
+            },
+            "_type": {
+              "type": "string",
+              "const": "Nickname"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "nick",
+            "_type"
+          ],
+          "title": "Nickname"
+        }
+      ],
+      "title": "name"
     }
   },
   "additionalProperties": false,
-  "required": [],
-  "title": "Pod scenario input",
-  "description": "Kill one or more pods matching the criteria",
-  "$id": "pod",
+  "required": [
+    "name"
+  ],
+  "title": "Hello world! input",
+  "description": "Says hello :)",
+  "$id": "hello-world",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

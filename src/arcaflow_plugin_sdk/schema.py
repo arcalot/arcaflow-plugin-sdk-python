@@ -20,7 +20,7 @@ class ConstraintException(Exception):
     def __str__(self):
         if len(self.path) == 0:
             return "Validation failed: {}".format(self.msg)
-        return "Validation failed for {}: {}".format(" -> ".join(self.path), self.msg)
+        return "Validation failed for '{}': {}".format(" -> ".join(self.path), self.msg)
 
 
 @dataclass
@@ -58,6 +58,7 @@ class TypeID(enum.Enum):
     LIST = "list"
     MAP = "map"
     OBJECT = "object"
+    ONEOF = "oneof"
 
     def is_map_key(self) -> bool:
         """
@@ -579,6 +580,9 @@ class ObjectType(AbstractType, Generic[ObjectT]):
     cls: Type[ObjectT]
     properties: Dict[str, Field]
 
+    def type_class(self) -> Type[ObjectT]:
+        return self.cls
+
     def type_id(self) -> TypeID:
         return TypeID.OBJECT
 
@@ -732,6 +736,123 @@ class ObjectType(AbstractType, Generic[ObjectT]):
                         "', '".join(object_property.required_if_not)
                     )
                 )
+
+
+OneOfT = TypeVar("OneOfT", bound=object)
+DiscriminatorT = TypeVar("DiscriminatorT", bound=typing.Union[str, int, Enum])
+
+
+@dataclass
+class OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
+    """
+    OneOfType is a type that can have multiple types of underlying objects. It only supports object types, and the
+    differentiation is done based on a special discriminator field.
+
+    Important rules:
+
+    - One object type must appear only once.
+    - If the discriminator field appears in the object type, it must have the same type as declared here, and must not
+      be optional.
+    - The discriminator field must be a string, int, or an enum.
+    """
+
+    discriminator_field_name: str
+    discriminator_field_schema: AbstractType[DiscriminatorT]
+    one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]
+
+    def __init__(
+            self,
+            discriminator_field_name: str,
+            discriminator_field_schema: AbstractType[DiscriminatorT],
+            one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]
+    ):
+        self.discriminator_field_name = discriminator_field_name
+        self.discriminator_field_schema = discriminator_field_schema
+        self.one_of = one_of
+
+    def type_id(self) -> TypeID:
+        return TypeID.ONEOF
+
+    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> OneOfT:
+        if not isinstance(data, dict):
+            raise ConstraintException(path, "Must be a dict, got {}".format(type(data).__name__))
+        new_path = list(path)
+        new_path.append(self.discriminator_field_name)
+        if self.discriminator_field_name not in data:
+            raise ConstraintException(tuple(new_path), "Required discriminator field not found")
+        unserialized_discriminator_field = self.discriminator_field_schema.unserialize(
+            data[self.discriminator_field_name], tuple(new_path)
+        )
+        if unserialized_discriminator_field not in self.one_of:
+            raise ConstraintException(
+                tuple(new_path),
+                "Invalid value for field: '{}' expected one of: '{}'".format(
+                    unserialized_discriminator_field,
+                    "', '".join(list(self.one_of.keys()))
+                )
+            )
+        sub_type = self.one_of[unserialized_discriminator_field]
+        if self.discriminator_field_name not in sub_type.properties:
+            del data[self.discriminator_field_name]
+        return sub_type.unserialize(data, path)
+
+    def validate(self, data: OneOfT, path: typing.Tuple[str] = tuple([])):
+        types = []
+        for discriminator, item_schema in self.one_of.items():
+            types.append(item_schema.type_class().__name__)
+            if isinstance(data, item_schema.type_class()):
+                item_schema.validate(data)
+                if self.discriminator_field_name in item_schema.properties:
+                    if getattr(data, self.discriminator_field_name) != discriminator:
+                        new_path = list(path)
+                        new_path.append(self.discriminator_field_name)
+                        raise ConstraintException(
+                            tuple(new_path),
+                            "Invalid value for '{}' on '{}', should be: '{}'".format(
+                                self.discriminator_field_name,
+                                item_schema.type_class().__name__,
+                                discriminator
+                            )
+                        )
+                return
+        raise ConstraintException(
+            tuple(path),
+            "Invalid type: '{}', expected one of '{}'".format(
+                type(data).__name__,
+                "', '".join(types)
+            )
+        )
+
+    def serialize(self, data: OneOfT, path: typing.Tuple[str] = tuple([])) -> Any:
+        types = []
+        for discriminator, item_schema in self.one_of.items():
+            types.append(item_schema.type_class().__name__)
+            if isinstance(data, item_schema.type_class()):
+                serialized_data = item_schema.serialize(data)
+                if self.discriminator_field_name in item_schema.properties:
+                    if getattr(data, self.discriminator_field_name) != discriminator:
+                        new_path = list(path)
+                        new_path.append(self.discriminator_field_name)
+                        raise ConstraintException(
+                            tuple(new_path),
+                            "Invalid value for '{}' on '{}', should be: '{}'".format(
+                                self.discriminator_field_name,
+                                item_schema.type_class().__name__,
+                                discriminator
+                            )
+                        )
+                else:
+                    serialized_data[self.discriminator_field_name] = self.discriminator_field_schema.serialize(
+                        discriminator
+                    )
+                return serialized_data
+        raise ConstraintException(
+            tuple(path),
+            "Invalid type: '{}', expected one of '{}'".format(
+                type(data).__name__,
+                "', '".join(types)
+            )
+        )
 
 
 StepInputT = TypeVar("StepInputT", bound=object)

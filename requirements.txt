@@ -1,2 +1,2 @@
+# Install the Arcaflow plugin SDK from the local directory
 .
-PyYAML >= 5.4

@@ -1,41 +1,58 @@
 #!/usr/bin/env python3
-
 import re
 import sys
 import typing
 from dataclasses import dataclass
-from typing import List
-from arcaflow_plugin_sdk import plugin
+from arcaflow_plugin_sdk import plugin, validation
 
 
 @dataclass
-class PodScenarioParams:
+class FullName:
+    """
+    A full name holds the first and last name of an individual.
+    """
+    first_name: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
+    last_name: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
+
+    def __str__(self) -> str:
+        """
+        :return: the string representation of this name
+        """
+        return self.first_name + " " + self.last_name
+
+
+@dataclass
+class Nickname:
+    """
+    A nickname is a simplified form of the name that only holds the preferred name of an individual.
+    """
+    nick: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
+
+    def __str__(self) -> str:
+        """
+        :return: the string representation of this name
+        """
+        return self.nick
+
+
+@dataclass
+class InputParams:
     """
     This is the data structure for the input parameters of the step defined below.
     """
-    namespace_pattern: re.Pattern = re.compile(".*")
-    pod_name_pattern: re.Pattern = re.compile(".*")
+    name: typing.Union[FullName, Nickname]
 
 
 @dataclass
-class Pod:
-    """
-    This is the data structure for a pod returned in the success case below.
-    """
-    namespace: str
-    name: str
-
-
-@dataclass
-class PodScenarioResults:
+class SuccessOutput:
     """
     This is the output data structure for the success case.
     """
-    pods_killed: List[Pod]
+    message: str
 
 
 @dataclass
-class PodScenarioError:
+class ErrorOutput:
     """
     This is the output data structure in the error  case.
     """
@@ -45,12 +62,12 @@ class PodScenarioError:
 # The following is a decorator (starting with @). We add this in front of our function to define the metadata for our
 # step.
 @plugin.step(
-    id="pod",
-    name="Pod scenario",
-    description="Kill one or more pods matching the criteria",
-    outputs={"success": PodScenarioResults, "error": PodScenarioError},
+    id="hello-world",
+    name="Hello world!",
+    description="Says hello :)",
+    outputs={"success": SuccessOutput, "error": ErrorOutput},
 )
-def pod_scenario(params: PodScenarioParams) -> typing.Tuple[str, typing.Union[PodScenarioResults, PodScenarioError]]:
+def hello_world(params: InputParams) -> typing.Tuple[str, typing.Union[SuccessOutput, ErrorOutput]]:
     """
     The function  is the implementation for the step. It needs the decorator above to make it into a  step. The type
     hints for the params are required.
@@ -60,17 +77,12 @@ def pod_scenario(params: PodScenarioParams) -> typing.Tuple[str, typing.Union[Po
     :return: the string identifying which output it is, as well the output structure
     """
 
-    # TODO add your implementation here
-
-    return "error", PodScenarioError(
-        "Cannot kill pod %s in namespace %s, function not implemented" % (
-            params.pod_name_pattern.pattern,
-            params.namespace_pattern.pattern
-        ))
+    return "success", SuccessOutput(
+        "Hello, {}!".format(params.name))
 
 
 if __name__ == "__main__":
     sys.exit(plugin.run(plugin.build_schema(
         # List your step functions here:
-        pod_scenario,
+        hello_world,
     )))

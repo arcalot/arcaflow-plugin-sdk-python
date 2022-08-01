@@ -37,9 +37,9 @@ In order to run the [example plugin](example_plugin.py) run the following steps:
 This should result in the following placeholder result being printed:
 
 ```yaml
-output_id: error
+output_id: success
 output_data:
-  error: Cannot kill pod nginx-.* in namespace default, function not implemented
+  message: Hello, Arca Lot!
 ```
 
 ---
