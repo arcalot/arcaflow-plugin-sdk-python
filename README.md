@@ -1,3 +1,6 @@
+[//]: # (Copyright ARCALOT Authors)
+[//]: # (SPDX-License-Identifier: Apache-2.0)
+
 # Python SDK for the Arcaflow workflow engine (WIP)
 
 ## How this SDK works

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright ARCALOT Authors
+# SPDX-License-Identifier: Apache-2.0
+
 import re
 import unittest
 import example_plugin

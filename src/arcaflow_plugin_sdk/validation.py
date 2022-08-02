@@ -1,3 +1,6 @@
+# Copyright ARCALOT Authors
+# SPDX-License-Identifier: Apache-2.0
+
 import typing
 from re import Pattern
 from typing import Callable, TypeVar

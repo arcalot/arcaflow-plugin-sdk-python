@@ -1,2 +1,5 @@
 # Install the Arcaflow plugin SDK from the local directory
+# Copyright ARCALOT Authors
+# SPDX-License-Identifier: Apache-2.0
+
 .

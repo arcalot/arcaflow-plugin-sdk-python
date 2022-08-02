@@ -1,4 +1,6 @@
 {
+  "_copyright": "Copyright ARCALOT Authors",
+  "_license": "SPDX-License-Identifier: Apache-2.0",
   "type": "object",
   "properties": {
     "name": {

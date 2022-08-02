@@ -1,4 +1,7 @@
 # yaml-language-server: $schema=example.schema.json
+# Copyright ARCALOT Authors
+# SPDX-License-Identifier: Apache-2.0
+
 name:
   _type: FullName
   first_name: Arca

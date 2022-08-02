@@ -1,3 +1,6 @@
+# Copyright ARCALOT Authors
+# SPDX-License-Identifier: Apache-2.0
+
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import TypeID
 
