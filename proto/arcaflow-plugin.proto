@@ -1,0 +1,269 @@
+syntax = "proto3";
+
+option go_package = "github.com/arcalot/arcaflow/plugin/protocol";
+
+package protocol;
+
+// Plugin is a service that offers one or more possible steps for execution.
+service Plugin {
+  // GetProtocolVersion requests the current protocol version (version 1 for the current file).
+  rpc GetProtocolVersion(GetProtocolVersionRequest) returns (GetProtocolVersionResponse) {}
+  // GetSchema returns the schema for this plugin. The calling side can then construct or validate data for the
+  // individual steps based on this schema.
+  rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
+  // Start starts a workflow with the given data. Only one workflow can be started at the same time.
+  rpc Start(StartRequest) returns (StartResponse){}
+  // Get returns a previously started workflow.
+  rpc Get(GetRequest) returns (GetResponse){}
+  // Wait waits for a workflow to complete instead of returning immediately.
+  rpc Wait(GetRequest) returns (GetResponse){}
+}
+
+// GetProtocolVersionRequest requests the protocol version supported by the plugin.
+message GetProtocolVersionRequest {
+
+}
+
+// GetProtocolVersionResponse returns the version supported by the plugin.
+message GetProtocolVersionResponse {
+  uint32 version = 1;
+}
+
+// GetSchemaRequest is a request for the entire schema of a plugin.
+message GetSchemaRequest {
+
+}
+
+// GetSchemaResponse contains the schema for the plugin.
+message GetSchemaResponse {
+  Schema schema = 1;
+}
+
+// Schema contains the steps supported by this schema.
+message Schema {
+  map<string, SchemaStep> steps = 1;
+}
+
+// SchemaStep outlines an individual step in a schema that can be called.
+message SchemaStep {
+  string name = 1;
+  string description = 2;
+  SchemaObject input = 3;
+  map<string, SchemaObject> outputs = 4;
+}
+
+// SchemaObject describes an object that can be passed as part of a start request or as a result data.
+message SchemaObject {
+  map<string, SchemaField> properties = 1;
+}
+
+// SchemaField describes a single field in a SchemaObject.
+message SchemaField {
+  SchemaType type = 1;
+  string name = 2;
+  string description = 3;
+  bool required = 4;
+  repeated string required_if = 5;
+  repeated string required_if_not = 6;
+  repeated string conflicts = 7;
+}
+
+// SchemaType is an overarching message that can contain any type supported in the type system.
+message SchemaType {
+  oneof type {
+    SchemaEnum enum = 1;
+    SchemaString string = 2;
+    SchemaPattern pattern = 3;
+    SchemaInt int = 4;
+    SchemaFloat float = 5;
+    SchemaBool bool = 6;
+    SchemaList list = 7;
+    SchemaMap map = 8;
+    SchemaObject object = 9;
+    SchemaOneOf one_of = 10;
+  }
+}
+
+// SchemaEnum is a type that can contain a fixed set of strings, or a fixed set of integers.
+message SchemaEnum {
+  oneof enum {
+    IntEnum int = 1;
+    StringEnum string = 2;
+  }
+  message IntEnum {
+    repeated int64 values = 1;
+  }
+  message StringEnum {
+    repeated string values = 2;
+  }
+}
+
+// SchemaBool is a boolean type. No additional fields can be provided.
+message SchemaBool {
+
+}
+
+// SchemaString is a textual type with the appropriate validation.
+message SchemaString {
+  optional int64 min_length = 1;
+  optional int64 max_length = 2;
+  optional string pattern = 3;
+}
+
+// SchemaPattern describes a text type that is a regular expression.
+message SchemaPattern {
+
+}
+
+// SchemaInt is a 64 bit signed integer number.
+message SchemaInt {
+  optional int64 min = 1;
+  optional int64 max = 2;
+}
+
+// SchemaFloat is a 64-bit signed floating point number.
+message SchemaFloat {
+  optional double min = 1;
+  optional double max = 2;
+}
+
+// SchemaList is a list type of a specified type.
+message SchemaList {
+  SchemaType type = 1;
+  optional int64 min = 2;
+  optional int64 max = 3;
+}
+
+// SchemaMap is a key-value type where both keys and values are of defined types.
+message SchemaMap {
+  SchemaMapKeyType key_type = 1;
+  SchemaType value_type = 2;
+  optional int64 min = 3;
+  optional int64 max = 4;
+
+  message SchemaMapKeyType {
+    oneof type {
+      SchemaEnum enum = 1;
+      SchemaString string = 2;
+      SchemaInt int = 3;
+    }
+  }
+}
+
+// SchemaOneOf is a flexible type that can hold multiple object types.
+message SchemaOneOf {
+  string discriminator = 1;
+  oneof one_of {
+    OneOfString string = 2;
+    OneOfInt int = 3;
+  }
+  message OneOfString {
+    map<string, SchemaObject> one_of = 1;
+  }
+  message OneOfInt {
+    map<int64, SchemaObject> one_of = 1;
+  }
+}
+
+// StartRequest is a request to start a step. Only one step can run at any given time.
+message StartRequest{
+  string step_id = 1;
+  DataObject input = 2;
+}
+
+// StartResponse is a response to a StartRequest. If successfully started, the execution_id can be used to look up the
+// the
+message StartResponse{
+  oneof start {
+    Started started = 1;
+    NoSuchStep no_such_step = 2;
+    InputDataError input_data_error = 3;
+    AlreadyInProgress already_in_progress = 4;
+  }
+  message Started {
+    string execution_id = 1;
+  }
+  message NoSuchStep {
+
+  }
+  message InputDataError {
+    repeated InvalidField invalid_fields = 1;
+  }
+  message InvalidField {
+    repeated string path = 1;
+    string error = 2;
+  }
+  message AlreadyInProgress {
+    string execution_id = 1;
+    string step_id = 2;
+  }
+}
+
+// GetRequest is a request to get the data from a given step execution.
+message GetRequest{
+  string execution_id = 1;
+}
+
+// GetResponse is a response to fetching a step recently executed.
+message GetResponse{
+  oneof response {
+    NotFoundResponse not_found = 1;
+    PendingResponse pending = 2;
+    CompleteResponse complete = 3;
+    CrashedResponse crashed = 4;
+  }
+  message NotFoundResponse {
+
+  }
+  message PendingResponse {
+    int64 start_time = 1;
+
+  }
+  message CompleteResponse {
+    int64 start_time = 1;
+    int64 end_time = 2;
+    string output_id = 3;
+    DataObject data = 44;
+  }
+  message CrashedResponse {
+    int64 start_time = 1;
+    int64 end_time = 2;
+    string error = 3;
+  }
+}
+
+// DataObject transports data intended for an object.
+message DataObject {
+  map<string, DataValue> values = 1;
+}
+
+// DataValue transports data intended for a data field.
+message DataValue {
+  oneof type {
+    string string = 1;
+    int64 int = 2;
+    bool bool = 3;
+    double float = 4;
+    DataMap map = 5;
+    DataList list = 6;
+  }
+}
+
+// DataMap transports data intended for a map of fixed types.
+message DataMap {
+  oneof map {
+    DataStringMap string = 1;
+    DataIntMap int = 2;
+  }
+  message DataStringMap {
+    map<string, DataValue> items = 1;
+  }
+  message DataIntMap {
+    map<int64, DataValue> items = 1;
+  }
+}
+
+// DataList transports data intended for lists of fixed types.
+message DataList {
+  repeated DataValue items = 1;
+}

@@ -9,6 +9,7 @@ import sys
 import traceback
 import typing
 
+import grpc
 import yaml
 from dataclasses import fields
 from enum import Enum
@@ -496,6 +497,12 @@ def run(
     try:
         parser = _CustomOptionParser()
         parser.add_option(
+            "-g",
+            "--grpc",
+            action="store_true",
+            help="Run GRPC over stdio.",
+        )
+        parser.add_option(
             "-f",
             "--file",
             dest="filename",
@@ -538,6 +545,8 @@ def run(
             return _execute_file(step_id, s, options, stdout, stderr)
         elif options.json_schema is not None:
             return _print_json_schema(step_id, s, options, stdout)
+        elif options.grcp is not None:
+            return _run_grpc(s, stdin, stdout, stderr)
         else:
             raise _ExitException(
                 64,
@@ -628,6 +637,8 @@ def _print_json_schema(step_id, s, options, stdout):
         raise _ExitException(64, "--json-schema must be one of 'input' or 'output'")
     stdout.write(json.dumps(data, indent="  "))
     return 0
+
+def _run_grpc(s, stdin, stdout, stderr):
 
 
 def test_object_serialization(
