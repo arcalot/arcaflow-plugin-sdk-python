@@ -20,7 +20,7 @@
             },
             "_type": {
               "type": "string",
-              "const": "FullName"
+              "const": "fullname"
             }
           },
           "additionalProperties": false,
@@ -29,7 +29,7 @@
             "last_name",
             "_type"
           ],
-          "title": "FullName"
+          "title": "fullname"
         },
         {
           "type": "object",
@@ -42,7 +42,7 @@
             },
             "_type": {
               "type": "string",
-              "const": "Nickname"
+              "const": "nickname"
             }
           },
           "additionalProperties": false,
@@ -50,7 +50,7 @@
             "nick",
             "_type"
           ],
-          "title": "Nickname"
+          "title": "nickname"
         }
       ],
       "title": "name"

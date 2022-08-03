@@ -7,7 +7,7 @@ import unittest
 from enum import Enum
 from re import Pattern
 from typing import List, Dict
-from arcaflow_plugin_sdk import schema, validation, plugin
+from arcaflow_plugin_sdk import schema, validation, plugin, annotations
 from arcaflow_plugin_sdk.plugin import SchemaBuildException, _Resolver
 from arcaflow_plugin_sdk.schema import TypeID, OneOfType
 
@@ -145,6 +145,34 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual(TypeID.STRING, t.discriminator_field_schema.type_id())
         self.assertEqual(A, t.one_of["A"].type_class())
         self.assertEqual(B, t.one_of["B"].type_class())
+
+    def test_union_custom_discriminator(self):
+        @dataclasses.dataclass
+        class A:
+            discriminator: int
+            a: str
+
+        @dataclasses.dataclass
+        class B:
+            discriminator: int
+            b: str
+
+        @dataclasses.dataclass
+        class TestData:
+            a: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[A, annotations.discriminator_value(1)],
+                    typing.Annotated[B, annotations.discriminator_value(2)],
+                ],
+                annotations.discriminator("discriminator")
+            ]
+
+        resolved_type: schema.ObjectType
+        resolved_type = _Resolver.resolve(TestData)
+        self.assertEqual(TypeID.ONEOF, resolved_type.properties["a"].type.type_id())
+        t: OneOfType = resolved_type.properties["a"].type
+        self.assertEqual(t.discriminator_field_name, "discriminator")
+        self.assertEqual(t.discriminator_field_schema.type_id(), TypeID.INT)
 
     def test_optional(self):
         @dataclasses.dataclass
