@@ -319,7 +319,7 @@ class _Resolver:
             except Exception as e:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Failed to execute Annotated argument",
+                    "Failed to execute Annotated argument: {}".format(e.__str__()),
                 ) from e
         return underlying_t
 
@@ -401,14 +401,20 @@ class _Resolver:
     @classmethod
     def _resolve_union(cls, t, path: typing.Tuple[str]) -> schema.OneOfType:
         args = get_args(t)
-        if isinstance(None, args[0]):
-            raise SchemaBuildException(path, "None types are not supported.")
-        if isinstance(None, args[1]):
-            new_path = list(path)
-            new_path.append("typing.Optional")
-            result = cls._resolve_field(args[0], tuple(path))
-            result.required = False
-            return result
+        try:
+            if isinstance(None, args[0]):
+                raise SchemaBuildException(path, "None types are not supported.")
+        except TypeError:
+            pass
+        try:
+            if isinstance(None, args[1]):
+                new_path = list(path)
+                new_path.append("typing.Optional")
+                result = cls._resolve_field(args[0], tuple(path))
+                result.required = False
+                return result
+        except TypeError:
+            pass
         result = schema.OneOfType(
             "_type",
             schema.StringType(),

@@ -3,7 +3,7 @@ import re
 import sys
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import plugin, validation
+from arcaflow_plugin_sdk import plugin, validation, annotations
 
 
 @dataclass
@@ -40,7 +40,13 @@ class InputParams:
     """
     This is the data structure for the input parameters of the step defined below.
     """
-    name: typing.Union[FullName, Nickname]
+    name: typing.Annotated[
+        typing.Union[
+            typing.Annotated[FullName, annotations.discriminator_value("fullname")],
+            typing.Annotated[Nickname, annotations.discriminator_value("nickname")],
+        ],
+        annotations.discriminator("_type")
+    ]
 
 
 @dataclass
