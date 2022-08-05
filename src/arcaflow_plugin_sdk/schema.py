@@ -534,8 +534,9 @@ class MapType(AbstractType, Generic[MapT]):
             self.value_type.validate(value, tuple(new_path))
 
     def serialize(self, data: MapT, path: typing.Tuple[str] = tuple([])) -> Any:
+        entries = self._validate(data, path)
         result = {}
-        for key in data.keys():
+        for key in entries.keys():
             key_path = list(path)
             key_path.append(str(key))
             key_path.append("key")

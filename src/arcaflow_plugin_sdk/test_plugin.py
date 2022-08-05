@@ -9,7 +9,7 @@ from re import Pattern
 from typing import List, Dict
 from arcaflow_plugin_sdk import schema, validation, plugin, annotations
 from arcaflow_plugin_sdk.plugin import SchemaBuildException, _Resolver
-from arcaflow_plugin_sdk.schema import TypeID, OneOfType
+from arcaflow_plugin_sdk.schema import TypeID, OneOfType, ConstraintException
 
 
 class ResolverTest(unittest.TestCase):
@@ -233,6 +233,14 @@ class ResolverTest(unittest.TestCase):
         t: schema.ObjectType = _Resolver.resolve(TestData)
         a = t.properties["test-field"]
         self.assertEqual(a.field_override, "a")
+
+    def test_unclear_error_message(self):
+        @dataclasses.dataclass
+        class TestData:
+            a: typing.Dict[str, str]
+        t: schema.ObjectType = _Resolver.resolve(TestData)
+        with self.assertRaises(ConstraintException):
+            t.serialize(TestData(type(dict[str, str])))
 
 
 class SerializationTest(unittest.TestCase):
