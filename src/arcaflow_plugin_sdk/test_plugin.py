@@ -65,6 +65,11 @@ class ResolverTest(unittest.TestCase):
         with self.assertRaises(SchemaBuildException):
             _Resolver.resolve(type(test))
 
+        resolved_type = _Resolver.resolve(dict[str, str])
+        self.assertEqual(schema.TypeID.MAP, resolved_type.type_id())
+        self.assertEqual(schema.TypeID.STRING, resolved_type.key_type.type_id())
+        self.assertEqual(schema.TypeID.STRING, resolved_type.value_type.type_id())
+
     def test_class(self):
         class TestData:
             a: str
@@ -189,7 +194,7 @@ class ResolverTest(unittest.TestCase):
         resolved_type: schema.StringType
         resolved_type = _Resolver.resolve(typing.Annotated[str, validation.min(3)])
         self.assertEqual(schema.TypeID.STRING, resolved_type.type_id())
-        self.assertEqual(3, resolved_type.min_length)
+        self.assertEqual(3, resolved_type._min_length)
 
         @dataclasses.dataclass
         class TestData:
@@ -201,7 +206,7 @@ class ResolverTest(unittest.TestCase):
         self.assertEqual(schema.TypeID.STRING, a.type.type_id())
         self.assertFalse(a.required)
         t: schema.StringType = a.type
-        self.assertEqual(3, t.min_length)
+        self.assertEqual(3, t._min_length)
 
         with self.assertRaises(SchemaBuildException):
             @dataclasses.dataclass

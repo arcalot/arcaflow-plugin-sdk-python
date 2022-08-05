@@ -1,4 +1,6 @@
+import dataclasses
 import enum
+import inspect
 import pprint
 import re
 import typing
@@ -126,18 +128,17 @@ class AbstractType(Generic[TypeT]):
 EnumT = TypeVar("EnumT", bound=Enum)
 
 
-@dataclass
 class EnumType(AbstractType, Generic[EnumT]):
     """
     EnumType is a type that can take only a limited set of values provided by a Python Enum. The validation and
     unserialization will take the enum itself, or the underlying basic value as a possible value.
     """
 
-    type: Type[EnumT]
-    value_type: object
+    _type: Type[EnumT]
+    _value_type: object
 
     def __init__(self, type: Type[EnumT]):
-        self.type = type
+        self._type = type
         try:
             found_type = None
             if len(self.type) == 0:
@@ -152,9 +153,17 @@ class EnumType(AbstractType, Generic[EnumT]):
                         "and {} values.)".format(type.__name__, value.value.__class__.__name__, found_type)
                     )
                 found_type = value.value.__class__.__name__
-                self.value_type = value.value.__class__
+                self._value_type = value.value.__class__
         except TypeError as e:
             raise BadArgumentException("{} is not a valid enum, not iterable".format(type.__name__)) from e
+
+    @property
+    def type(self) -> Type[EnumT]:
+        return self._type
+
+    @property
+    def value_type(self) -> object:
+        return self._value_type
 
     def type_id(self) -> TypeID:
         return TypeID.ENUM
@@ -196,7 +205,6 @@ class EnumType(AbstractType, Generic[EnumT]):
 
 
 class BoolType(AbstractType):
-
     def type_id(self) -> TypeID:
         return TypeID.BOOL
 
@@ -245,14 +253,98 @@ class StringType(AbstractType):
     StringType represents a string of characters for human consumption.
     """
 
-    min_length: Optional[int] = None
+    _min_length: Optional[int] = None
     "Minimum length of the string (inclusive, optional)."
 
-    max_length: Optional[int] = None
+    _max_length: Optional[int] = None
     "Maximum length of the string (inclusive, optional)."
 
-    pattern: Optional[Pattern] = None
+    _pattern: Optional[Pattern] = None
     "Regular expression the string must match (optional)."
+
+    def __init__(
+            self,
+            min_length: Optional[int] = None,
+            max_length: Optional[int] = None,
+            pattern: Optional[Pattern] = None
+    ):
+        self._min_length = min_length
+        self._max_length = max_length
+        self._pattern = pattern
+        self._validate(min_length, max_length, pattern)
+
+    def _validate(
+            self,
+            min_length: Optional[int] = None,
+            max_length: Optional[int] = None,
+            pattern: Optional[Pattern] = None
+    ):
+        if min_length is not None:
+            if not isinstance(min_length, int):
+                raise BadArgumentException(
+                    "min_length on strings must be an integer, {} given".format(type(min_length))
+                )
+            if min_length < 0:
+                raise BadArgumentException(
+                    "min_length on strings must be larger than or equal to 0, {} given".format(min_length)
+                )
+        if max_length is not None:
+            if not isinstance(max_length, int):
+                raise BadArgumentException(
+                    "max_length on strings must be an integer, {} given".format(type(max_length))
+                )
+            if max_length < 0:
+                raise BadArgumentException(
+                    "max_length on strings must be larger than or equal to 0, {} given".format(max_length)
+                )
+        if min_length is not None and max_length is not None and max < min:
+            raise BadArgumentException(
+                "The max_length parameter must be larger than or equal to the min_length parameter on StringType,"
+                "min_length: {} and max_length: {} given".format(min_length, max_length)
+            )
+        if pattern is not None and not isinstance(pattern, re.Pattern):
+            raise BadArgumentException(
+                "patterns on strings must be an instances of re.Pattern, {} given".format(type(pattern).__name__)
+            )
+
+    @property
+    def min_length(self) -> typing.Optional[int]:
+        return self._min_length
+
+    @min_length.setter
+    def min_length(self, min_length: typing.Optional[int]):
+        self._validate(
+            min_length,
+            self._max_length,
+            self._pattern
+        )
+        self._min_length = min_length
+
+    @property
+    def max_length(self) -> typing.Optional[int]:
+        return self._max_length
+
+    @max_length.setter
+    def max_length(self, max_length: typing.Optional[int]):
+        self._validate(
+            self._min_length,
+            max_length,
+            self._pattern
+        )
+        self._max_length = max_length
+
+    @property
+    def pattern(self) -> typing.Optional[re.Pattern]:
+        return self._pattern
+
+    @pattern.setter
+    def pattern(self, pattern: typing.Optional[re.Pattern]):
+        self._validate(
+            self._min_length,
+            self._max_length,
+            pattern
+        )
+        self._pattern = pattern
 
     def type_id(self) -> TypeID:
         return TypeID.STRING
@@ -267,20 +359,20 @@ class StringType(AbstractType):
         if not isinstance(data, str):
             raise ConstraintException(path, "Must be a string, {} given".format(type(data)))
         string: str = data
-        if self.min_length is not None and len(string) < self.min_length:
+        if self._min_length is not None and len(string) < self._min_length:
             raise ConstraintException(
                 path,
-                "String must be at least {} characters, {} given".format(self.min_length, len(string))
+                "String must be at least {} characters, {} given".format(self._min_length, len(string))
             )
-        if self.max_length is not None and len(string) > self.max_length:
+        if self._max_length is not None and len(string) > self._max_length:
             raise ConstraintException(
                 path,
-                "String must be at most {} characters, {} given".format(self.max_length, len(string))
+                "String must be at most {} characters, {} given".format(self._max_length, len(string))
             )
-        if self.pattern is not None and not self.pattern.match(string):
+        if self._pattern is not None and not self._pattern.match(string):
             raise ConstraintException(
                 path,
-                "String must match the pattern {}".format(self.pattern.__str__())
+                "String must match the pattern {}".format(self._pattern.__str__())
             )
 
     def serialize(self, data: str, path: typing.Tuple[str] = tuple([])) -> any:
@@ -288,7 +380,6 @@ class StringType(AbstractType):
         return data
 
 
-@dataclass
 class PatternType(AbstractType):
     """
     PatternType represents a regular expression.
@@ -317,17 +408,56 @@ class PatternType(AbstractType):
         return data.pattern
 
 
-@dataclass
 class IntType(AbstractType):
     """
     IntType represents an integer type, both positive or negative. It is designed to take a 64 bit value.
     """
 
-    min: Optional[int] = None
+    _min: Optional[int] = None
     "Minimum value (inclusive) for this type."
 
-    max: Optional[int] = None
+    _max: Optional[int] = None
     "Maximum value (inclusive) for this type."
+
+    def __init__(self, min: Optional[int] = None, max: Optional[int] = None):
+        self._min = min
+        self._max = max
+        self._validate(min, max)
+
+    def _validate(self, min: Optional[int], max: Optional[int]):
+        if min is not None:
+            if not isinstance(min, int):
+                raise BadArgumentException(
+                    "min on integers must be an integer, {} given".format(type(min))
+                )
+        if max is not None:
+            if not isinstance(max, int):
+                raise BadArgumentException(
+                    "max on integers must be an integer, {} given".format(type(max))
+                )
+        if min is not None and max is not None and max < min:
+            raise BadArgumentException(
+                "The max parameter must be larger than or equal to the min parameter on IntType, min: {} and max: {} "
+                "given".format(min, max)
+            )
+
+    @property
+    def min(self) -> typing.Optional[int]:
+        return self._min
+
+    @min.setter
+    def min(self, min: typing.Optional[int]):
+        self._validate(min, self._max)
+        self._min = min
+
+    @property
+    def max(self) -> typing.Optional[int]:
+        return self._max
+
+    @max.setter
+    def max(self, max: typing.Optional[int]):
+        self._validate(self._min, max)
+        self.max = max
 
     def type_id(self) -> TypeID:
         return TypeID.INT
@@ -362,11 +492,37 @@ class FloatType(AbstractType):
     IntType represents an integer type, both positive or negative. It is designed to take a 64 bit value.
     """
 
-    min: Optional[float] = None
+    _min: Optional[float] = None
     "Minimum value (inclusive) for this type."
 
-    max: Optional[float] = None
+    _max: Optional[float] = None
     "Maximum value (inclusive) for this type."
+
+    def __init__(self, min: Optional[float] = None, max: Optional[float] = None):
+        self._min = min
+        self._max = max
+
+        if min is not None and not isinstance(min, float) and not isinstance(min, float):
+            raise BadArgumentException(
+                "min on floats must be a float, {} given".format(type(min))
+            )
+        if max is not None and not isinstance(max, float):
+            raise BadArgumentException(
+                "max on floats must be a float, {} given".format(type(max))
+            )
+        if min is not None and max is not None and max < min:
+            raise BadArgumentException(
+                "The max parameter must be larger than or equal to the min parameter on FloatType, min: {} and max: {} "
+                "given".format(min, max)
+            )
+
+    @property
+    def min(self) -> typing.Optional[float]:
+        return self._min
+
+    @property
+    def max(self) -> typing.Optional[float]:
+        return self._max
 
     def type_id(self) -> TypeID:
         return TypeID.FLOAT
@@ -404,14 +560,59 @@ class ListType(AbstractType, Generic[ListT]):
     ListType is a strongly typed list that can have elements of only one type.
     """
 
-    type: AbstractType
+    _type: AbstractType
     "The underlying type of the items in this list."
 
-    min: Optional[int] = None
+    _min: Optional[int] = None
     "Minimum number of elements (inclusive) in this list."
 
-    max: Optional[int] = None
+    _max: Optional[int] = None
     "Maximum number of elements (inclusive) in this list."
+
+    def __init__(self, t: AbstractType, min: Optional[int] = None, max: Optional[int] = None):
+        self._type = t
+        self._min = min
+        self._max = max
+
+        if not isinstance(t, AbstractType):
+            raise BadArgumentException(
+                "The type parameter to ListType() must be an AbstractType, {} given".format(type(t).__name__)
+            )
+        if min is not None:
+            if not isinstance(min, int):
+                raise BadArgumentException(
+                    "The min parameter of ListType must be an integer, {} given".format(type(min).__name__)
+                )
+            if min < 0:
+                raise BadArgumentException(
+                    "The min parameter of ListType must be >=0, {} given".format(min)
+                )
+        if max is not None:
+            if not isinstance(max, int):
+                raise BadArgumentException(
+                    "The max parameter of ListType must be an integer, {} given".format(type(max).__name__)
+                )
+            if max < 0:
+                raise BadArgumentException(
+                    "The max parameter of ListType must be >=0, {} given".format(max)
+                )
+        if min is not None and max is not None and max < min:
+            raise BadArgumentException(
+                "The max parameter must be larger than or equal to the min parameter on ListType, min: {} and max: {} "
+                "given".format(min, max)
+            )
+
+    @property
+    def type(self) -> AbstractType:
+        return self._type
+
+    @property
+    def min(self) -> typing.Optional[int]:
+        return self._min
+
+    @property
+    def max(self) -> typing.Optional[int]:
+        return self._max
 
     def type_id(self) -> TypeID:
         return TypeID.LIST
@@ -460,16 +661,16 @@ class MapType(AbstractType, Generic[MapT]):
     MapType is a key-value dict with fixed types for both.
     """
 
-    key_type: AbstractType
+    _key_type: AbstractType
     "Type definition for the keys in this map. Must be a type that can serve as a map key."
 
-    value_type: AbstractType
+    _value_type: AbstractType
     "Type definition for the values in this map."
 
-    min: Optional[int] = None
+    _min: Optional[int] = None
     "Minimum number of elements (inclusive) in this map."
 
-    max: Optional[int] = None
+    _max: Optional[int] = None
     "Maximum number of elements (inclusive) in this map."
 
     def __init__(self, key_type: AbstractType, value_type: AbstractType, min: Optional[int] = None,
@@ -480,12 +681,60 @@ class MapType(AbstractType, Generic[MapT]):
         :param min: Minimum number of elements (inclusive) in this map.
         :param max: Maximum number of elements (inclusive) in this map.
         """
-        self.key_type = key_type
-        self.value_type = value_type
-        self.min = min
-        self.max = max
-        if not self.key_type.type_id().is_map_key():
-            raise Exception(self.key_type.type_id().__str__() + " is not a valid map key")
+        self._key_type = key_type
+        self._value_type = value_type
+        self._min = min
+        self._max = max
+        if not isinstance(key_type, AbstractType):
+            raise BadArgumentException(
+                "The key_type parameter for MapType must be an AbstractType, {} given".format(type(key_type).__name__)
+            )
+        if not isinstance(value_type, AbstractType):
+            raise BadArgumentException(
+                "The value_type parameter for MapType must be an AbstractType, "
+                "{} given".format(type(value_type).__name__)
+            )
+        if not key_type.type_id().is_map_key():
+            raise BadArgumentException("{} is not a valid map key".format(key_type.type_id().__str__()))
+        if min is not None:
+            if not isinstance(min, int):
+                raise BadArgumentException(
+                    "The min parameter on MapType must be an integer, {} given".format(type(min).__name__)
+                )
+            if min < 0:
+                raise BadArgumentException(
+                    "The min parameter on MapType must be larger than or equal to 0, {} given".format(min)
+                )
+        if max is not None:
+            if not isinstance(max, int):
+                raise BadArgumentException(
+                    "The min parameter on MapType must be an integer, {} given".format(type(max).__name__)
+                )
+            if max < 0:
+                raise BadArgumentException(
+                    "The max parameter on MapType must be larger than or equal to 0, {} given".format(max)
+                )
+        if min is not None and max is not None and min > max:
+            raise BadArgumentException(
+                "The max parameter must be larger than or equal to the min parameter on "
+                "MapType, min: {}, max: {} given".format(min, max)
+            )
+
+    @property
+    def key_type(self) -> AbstractType:
+        return self._key_type
+
+    @property
+    def value_type(self) -> AbstractType:
+        return self._value_type
+
+    @property
+    def max(self) -> typing.Optional[int]:
+        return self._max
+
+    @property
+    def min(self) -> typing.Optional[int]:
+        return self._min
 
     def type_id(self) -> TypeID:
         return TypeID.MAP
@@ -553,19 +802,263 @@ class MapType(AbstractType, Generic[MapT]):
 FieldT = TypeVar("FieldT")
 
 
-@dataclass
 class Field(Generic[FieldT]):
     """
     Field is a field in an object and contains object-related validation information.
     """
-    type: AbstractType[FieldT]
-    name: str = ""
-    description: str = ""
-    required: bool = True
-    required_if: List[str] = frozenset([])
-    required_if_not: List[str] = frozenset([])
-    conflicts: List[str] = frozenset([])
-    field_override: str = ""
+    _type: AbstractType[FieldT]
+    _name: str = ""
+    _description: str = ""
+    _required: bool = True
+    _required_if: List[str] = frozenset([])
+    _required_if_not: List[str] = frozenset([])
+    _conflicts: List[str] = frozenset([])
+    _field_override: str = ""
+
+    def __init__(
+            self,
+            t: AbstractType[FieldT],
+            name: str = "",
+            description: str = "",
+            required: bool = True,
+            required_if: List[str] = frozenset([]),
+            required_if_not: List[str] = frozenset([]),
+            conflicts: List[str] = frozenset([]),
+            field_override: str = "",
+    ):
+        self._type = t
+        self._name = name
+        self._description = description
+        self._required = required
+        self._required_if = required_if
+        self._required_if_not = required_if_not
+        self._conflicts = conflicts
+        self._field_override = field_override
+        self._validate(
+            t,
+            name,
+            description,
+            required,
+            required_if,
+            required_if_not,
+            conflicts,
+            field_override
+        )
+
+    def _validate(
+        self,
+        t: AbstractType[FieldT],
+        name: str = "",
+        description: str = "",
+        required: bool = True,
+        required_if: List[str] = frozenset([]),
+        required_if_not: List[str] = frozenset([]),
+        conflicts: List[str] = frozenset([]),
+        field_override: str = "",
+    ):
+        if not isinstance(t, AbstractType):
+            raise BadArgumentException(
+                "The 'type' argument to 'Field' must be an 'AbstractType', '{}' given".format(type(t).__name__)
+            )
+        if not isinstance(name, str):
+            raise BadArgumentException(
+                "The 'name' argument to 'Field' must be a 'string', '{}' given".format(type(t).__name__)
+            )
+        if not isinstance(description, str):
+            raise BadArgumentException(
+                "The 'description' argument to 'Field' must be a 'string', '{}' given".format(type(t).__name__)
+            )
+        if not isinstance(required, bool):
+            raise BadArgumentException(
+                "The 'required' argument to 'Field' must be a 'bool', '{}' given".format(type(t).__name__)
+            )
+        if not isinstance(required_if, list) and not isinstance(required_if, frozenset):
+            raise BadArgumentException(
+                "The 'required_if argument' to 'Field' must be a 'list', '{}' given".format(type(required_if).__name__)
+            )
+        if not isinstance(required_if_not, list) and not isinstance(required_if_not, frozenset):
+            raise BadArgumentException(
+                "The 'required_if_not' argument to 'Field' must be a 'list', '{}' given".format(
+                    type(required_if_not).__name__)
+            )
+        if not isinstance(conflicts, list) and not isinstance(conflicts, frozenset):
+            raise BadArgumentException(
+                "The 'conflicts' argument to 'Field' must be a 'list', '{}' given".format(type(conflicts).__name__)
+            )
+        for i in range(len(required_if)):
+            if not isinstance(required_if[i], str):
+                raise BadArgumentException(
+                    "Item '{}' in the 'required_if' parameter of 'Field' must be an 'str', '{}' given".format(
+                        i,
+                        type(required_if[i])
+                    )
+                )
+        for i in range(len(required_if_not)):
+            if not isinstance(required_if_not[i], str):
+                raise BadArgumentException(
+                    "Item '{}' in the 'required_if_not' parameter of 'Field' must be an 'str', '{}' given".format(
+                        i,
+                        type(required_if_not[i])
+                    )
+                )
+        for i in range(len(conflicts)):
+            if not isinstance(conflicts[i], str):
+                raise BadArgumentException(
+                    "Item '{}' in the conflicts parameter of 'Field' must be an 'str', '{}' given".format(
+                        i,
+                        type(conflicts[i])
+                    )
+                )
+        if field_override is not None:
+            if not isinstance(field_override, str):
+                raise BadArgumentException(
+                    "The 'field_override' argument to 'Field' must be an 'str', '{}' given".format(
+                        type(field_override).__name__)
+                )
+
+    @property
+    def type(self) -> AbstractType[FieldT]:
+        return self._type
+
+    @type.setter
+    def type(self, t: AbstractType[FieldT]):
+        self._validate(
+            t,
+            self._name,
+            self._description,
+            self._required,
+            self._required_if,
+            self._required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._type = t
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        self._validate(
+            self._type,
+            name,
+            self._description,
+            self._required,
+            self._required_if,
+            self._required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._name = name
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def description(self, description: str):
+        self._validate(
+            self._type,
+            self._name,
+            description,
+            self._required,
+            self._required_if,
+            self._required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._description = description
+
+    @property
+    def required(self) -> bool:
+        return self._required
+
+    @required.setter
+    def required(self, required: bool):
+        self._validate(
+            self._type,
+            self._name,
+            self._description,
+            required,
+            self._required_if,
+            self._required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._required = required
+
+    @property
+    def required_if(self) -> List[str]:
+        return self._required_if
+
+    @required_if.setter
+    def required_if(self, required_if: List[str]):
+        self._validate(
+            self._type,
+            self._name,
+            self._description,
+            self._required,
+            required_if,
+            self._required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._required_if = required_if
+
+    @property
+    def required_if_not(self) -> List[str]:
+        return self._required_if_not
+
+    @required_if_not.setter
+    def required_if_not(self, required_if_not: List[str]):
+        self._validate(
+            self._type,
+            self._name,
+            self._description,
+            self._required,
+            self._required_if,
+            required_if_not,
+            self._conflicts,
+            self._field_override
+        )
+        self._required_if_not = required_if_not
+
+    @property
+    def conflicts(self) -> List[str]:
+        return self._conflicts
+
+    @conflicts.setter
+    def conflicts(self, conflicts: List[str]):
+        self._validate(
+            self._type,
+            self._name,
+            self._description,
+            self._required,
+            self._required_if,
+            self._required_if_not,
+            conflicts,
+            self._field_override
+        )
+        self._conflicts = conflicts
+
+    @property
+    def field_override(self) -> str:
+        return self._field_override
+
+    @field_override.setter
+    def field_override(self, field_override: str):
+        self._validate(
+            self._type,
+            self._name,
+            self._description,
+            self._required,
+            self._required_if,
+            self._required_if_not,
+            self._conflicts,
+            field_override
+        )
+        self._field_override = field_override
 
 
 ObjectT = TypeVar("ObjectT", bound=object)
@@ -578,11 +1071,87 @@ class ObjectType(AbstractType, Generic[ObjectT]):
     The type currently does not validate if the properties match the provided class.
     """
 
-    cls: Type[ObjectT]
-    properties: Dict[str, Field]
+    _cls: Type[ObjectT]
+    _properties: Dict[str, Field]
+
+    def __init__(self, cls: Type[ObjectT], properties: Dict[str, Field]):
+        self._cls = cls
+        self._properties = properties
+
+        if not isinstance(cls, type):
+            raise BadArgumentException(
+                "The passed class argument '{}' is not a type. Please pass a type.".format(type(cls).__name__)
+            )
+        if not isinstance(properties, dict):
+            raise BadArgumentException(
+                "The properties parameter to 'ObjectType' must be a 'dict', '{}' given".format(
+                    type(properties).__name__
+                )
+            )
+        try:
+            dataclasses.fields(cls)
+        except:
+            raise BadArgumentException(
+                "The passed class '{}' is not a dataclass. Please use a dataclass.".format(cls.__name__)
+            )
+        cls_dict = cls.__dict__
+        params = inspect.signature(cls.__init__).parameters.items()
+        if len(params) != len(properties) + 1:
+            raise BadArgumentException(
+                "The '{}' class has an invalid number of parameters in the '__init__' function. Expected: {} got: {}\n"
+                "The '__init__' parameters must match your declared parameters exactly so the Arcaflow plugin SDK can "
+                "inject the data values."
+            )
+        params_iter = iter(params)
+        if len(properties) > 0:
+            attribute_annotations = cls_dict["__annotations__"]
+            next(params_iter)
+            i = 0
+            for property_id, property in properties.items():
+                field_id = property_id
+                if property.field_override != "":
+                    field_id = property.field_override
+                if field_id not in attribute_annotations:
+                    raise BadArgumentException(
+                        "The '{}' class does not contain a field called '{}' as required by the property '{}'.".format(
+                            cls.__name__,
+                            field_id,
+                            property_id,
+                        )
+                    )
+                param = next(params_iter)
+                param_name = param[0]
+                param_value: inspect.Parameter = param[1]
+                if param_name != field_id:
+                    raise BadArgumentException(
+                        "Mismatching parameter name {} in the '__init__' function of '{}'. Expected: {} got: {} "
+                        "Please make sure the parameters for your custom '__init__' function are in the same order as "
+                        "you declared them in the dataclass.".format(i, cls.__name__, field_id, param_name)
+                    )
+                if param_value.annotation != attribute_annotations[field_id]:
+                    raise BadArgumentException(
+                        "Mismatching parameter type declarations for '{}' in the '__init__' function of '{}'. "
+                        "Expected: {} got: {}. Please make sure that your '__init__' parameters have the same type "
+                        "declarations as the properties declared on your dataclass.".format(
+                            param_name,
+                            cls.__name__,
+                            attribute_annotations[field_id].__name__,
+                            param_value.annotation.__name__
+                        )
+                    )
+                i = i+1
+
+
+    @property
+    def cls(self) -> Type[ObjectT]:
+        return self._cls
+
+    @property
+    def properties(self) -> Dict[str, Field]:
+        return self._properties
 
     def type_class(self) -> Type[ObjectT]:
-        return self.cls
+        return self._cls
 
     def type_id(self) -> TypeID:
         return TypeID.OBJECT
@@ -757,9 +1326,9 @@ class OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     - The discriminator field must be a string, int, or an enum.
     """
 
-    discriminator_field_name: str
-    discriminator_field_schema: AbstractType[DiscriminatorT]
-    one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]
+    _discriminator_field_name: str
+    _discriminator_field_schema: AbstractType[DiscriminatorT]
+    _one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]
 
     def __init__(
             self,
@@ -767,9 +1336,95 @@ class OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
             discriminator_field_schema: AbstractType[DiscriminatorT],
             one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]
     ):
-        self.discriminator_field_name = discriminator_field_name
-        self.discriminator_field_schema = discriminator_field_schema
-        self.one_of = one_of
+        self._discriminator_field_name = discriminator_field_name
+        self._discriminator_field_schema = discriminator_field_schema
+        self._one_of = one_of
+
+        self._validate(discriminator_field_name, discriminator_field_schema, one_of)
+
+    @property
+    def discriminator_field_name(self) -> str:
+        return self._discriminator_field_name
+
+    @discriminator_field_name.setter
+    def discriminator_field_name(self, discriminator_field_name: str):
+        self._validate(
+            discriminator_field_name,
+            self._discriminator_field_schema,
+            self._one_of
+        )
+        self._discriminator_field_name = discriminator_field_name
+
+    @property
+    def discriminator_field_schema(self) -> AbstractType[DiscriminatorT]:
+        return self._discriminator_field_schema
+
+    @discriminator_field_schema.setter
+    def discriminator_field_schema(self, discriminator_field_schema: AbstractType[DiscriminatorT]):
+        self._validate(
+            self._discriminator_field_name,
+            discriminator_field_schema,
+            self._one_of
+        )
+        self._discriminator_field_schema = discriminator_field_schema
+
+    @property
+    def one_of(self) -> Dict[DiscriminatorT, ObjectType[OneOfT]]:
+        return self._one_of
+
+    @one_of.setter
+    def one_of(self, one_of: Dict[DiscriminatorT, ObjectType[OneOfT]]):
+        self._validate(
+            self._discriminator_field_name,
+            self._discriminator_field_schema,
+            one_of
+        )
+        self._one_of = one_of
+
+    def _validate(self, discriminator_field_name, discriminator_field_schema, one_of):
+        if not isinstance(discriminator_field_name, str):
+            raise BadArgumentException(
+                "The discriminator_field_name parameter for OneOfType must be an str, "
+                "{} given".format(type(discriminator_field_name).__name__)
+            )
+        if not isinstance(discriminator_field_schema, AbstractType):
+            raise BadArgumentException(
+                "The discriminator_field_schema parameter for OneOfType must be an AbstractType, "
+                "{} given".format(type(discriminator_field_schema).__name__)
+            )
+        if not isinstance(one_of, dict):
+            raise BadArgumentException(
+                "The one_of parameter for OneOfType must be a dict, "
+                "{} given".format(type(discriminator_field_schema).__name__)
+            )
+        for key, value in one_of.items():
+            try:
+                discriminator_field_schema.validate(key)
+            except ConstraintException as e:
+                raise BadArgumentException(
+                    "Invalid discriminator field value for OneOfType: {} ({})".format(key, e.__str__())
+                ) from e
+            if discriminator_field_name in value.properties:
+                if value.properties[discriminator_field_name].type.type_id() != discriminator_field_schema.type_id():
+                    raise BadArgumentException(
+                        "Discriminator field type mismatch. The OneOfType declared {} but the {} schema has {} for "
+                        "the discriminator field type.".format(
+                            discriminator_field_schema.type_id(),
+                            key,
+                            value.properties[discriminator_field_name].type.type_id()
+                        )
+                    )
+                try:
+                    value.properties[discriminator_field_name].type.validate(key)
+                except ConstraintException as e:
+                    raise BadArgumentException(
+                        "The discriminator value of {} for the OneOfType failed validation of the defined "
+                        "subobject: {}".format(
+                            key,
+                            e.__str__()
+                        )
+                    ) from e
+
 
     def type_id(self) -> TypeID:
         return TypeID.ONEOF

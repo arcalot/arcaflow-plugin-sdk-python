@@ -57,8 +57,8 @@ class JSONSchemaTest(unittest.TestCase):
     def test_float(self):
         test_cases: Dict[str, Tuple[schema.FloatType, Dict]] = {
             "base": (schema.FloatType(), {"type": "number"}),
-            "min": (schema.FloatType(min=5), {"type": "number", "minimum": 5}),
-            "max": (schema.FloatType(max=5), {"type": "number", "maximum": 5}),
+            "min": (schema.FloatType(min=5.0), {"type": "number", "minimum": 5.0}),
+            "max": (schema.FloatType(max=5.0), {"type": "number", "maximum": 5.0}),
         }
 
         for name in test_cases.keys():
@@ -265,6 +265,7 @@ class JSONSchemaTest(unittest.TestCase):
         @dataclasses.dataclass
         class Request:
             a: str
+            b: str
 
         @dataclasses.dataclass
         class Response:

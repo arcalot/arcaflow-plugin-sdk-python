@@ -25,7 +25,6 @@ def discriminator(discriminator_field_name: str) -> Discriminator:
         if not isinstance(t, OneOfType):
             raise BadArgumentException("discriminator is only valid for fields on object types with union members")
         oneof: OneOfType = t
-        oneof.discriminator_field_name = discriminator_field_name
 
         one_of: typing.Dict[DiscriminatorT, ObjectType[OneOfT]] = {}
         discriminator_field_schema: typing.Optional[schema.AbstractType] = None

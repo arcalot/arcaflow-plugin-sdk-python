@@ -6,7 +6,8 @@ from arcaflow_plugin_sdk import schema
 import enum
 import unittest
 
-from arcaflow_plugin_sdk.schema import Field, ConstraintException
+from arcaflow_plugin_sdk.plugin import SchemaBuildException
+from arcaflow_plugin_sdk.schema import Field, ConstraintException, BadArgumentException
 
 
 class Color(enum.Enum):
@@ -350,6 +351,48 @@ class ObjectTest(unittest.TestCase):
         serialized = s.serialize(unserialized)
         self.assertEqual("foo", serialized["test-data"])
 
+    def test_init_mismatches(self):
+        @dataclasses.dataclass
+        class TestData1:
+            a: str
+            b: str
+
+            def __init__(self, b: str, a: str):
+                self.a = a
+                self.b = b
+
+        @dataclasses.dataclass
+        class TestData2:
+            a: str
+            b: str
+
+            def __init__(self, c: str, a: str):
+                self.a = a
+                self.b = c
+
+        @dataclasses.dataclass
+        class TestData3:
+            a: str
+            b: str
+
+            def __init__(self, a: str, b: int):
+                self.a = a
+                self.b = str(b)
+
+        for name, cls in {"order-mismatch": TestData1, "name-mismatch": TestData2, "type-mismatch": TestData3}.items():
+            with self.subTest(name):
+                with self.assertRaises(BadArgumentException):
+                    schema.ObjectType(
+                        cls,
+                        {
+                            "a": schema.Field(
+                                schema.StringType(),
+                            ),
+                            "b": schema.Field(
+                                schema.StringType(),
+                            )
+                        }
+                    )
 
 class OneOfTest(unittest.TestCase):
     def test_unserialize(self):
