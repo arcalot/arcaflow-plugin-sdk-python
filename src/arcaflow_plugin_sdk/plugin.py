@@ -163,7 +163,7 @@ class _Resolver:
     def _resolve_type(cls, t, path: typing.Tuple[str]):
         if issubclass(t, Enum):
             return _Resolver._resolve_enum(t, path)
-        if t == re.Pattern:
+        elif t == re.Pattern:
             return _Resolver._resolve_pattern(t, path)
         elif t == str:
             return _Resolver._resolve_string_type(t, path)
@@ -175,6 +175,8 @@ class _Resolver:
             return _Resolver._resolve_float_type(t, path)
         elif t == list:
             return _Resolver._resolve_list_type(t, path)
+        elif get_origin(t) == dict:
+            return _Resolver._resolve_dict_annotation(t, path)
         elif t == dict:
             return _Resolver._resolve_dict_type(t, path)
         return _Resolver._resolve_class(t, path)
@@ -239,7 +241,7 @@ class _Resolver:
                 final_fields,
             )
         except Exception as e:
-            raise SchemaBuildException(path, "Failed to create object type") from e
+            raise SchemaBuildException(path, "Failed to create object type: {}".format(e.__str__())) from e
 
     @classmethod
     def _resolve_bool_type(cls, t, path: typing.Tuple[str]) -> schema.BoolType:
