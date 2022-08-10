@@ -7,7 +7,9 @@ import pprint
 import re
 import sys
 import traceback
+import types
 import typing
+from types import GenericAlias
 
 import yaml
 from dataclasses import fields
@@ -19,6 +21,8 @@ from typing import List, Callable, TypeVar, Dict, Any, Type, get_origin, get_arg
 from arcaflow_plugin_sdk import schema, serialization, jsonschema
 from arcaflow_plugin_sdk.schema import BadArgumentException, Field, InvalidInputException, InvalidOutputException, \
     ConstraintException, TypeID
+
+_issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 
 InputT = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
@@ -224,9 +228,37 @@ class _Resolver:
         try:
             fields_list = fields(t)
         except TypeError as e:
+            unsupported_types = {
+                tuple: "tuples",
+                complex: "complex numbers",
+                bytes: "bytes",
+                bytearray: "bytearrays",
+                range: "banges",
+                memoryview: "memoryviews",
+                set: "sets",
+                frozenset: "frozensets",
+                GenericAlias: "generic aliases",
+                types.ModuleType: "modules",
+            }
+            for unsupported_type, unsupported_type_name in unsupported_types.items():
+                if isinstance(t, unsupported_type) or t == unsupported_type:
+                    raise SchemaBuildException(
+                        path,
+                        "{} are not supported by the Arcaflow typing system and cannot be used in input or output data"
+                        "types. Please use one of the supported types, or file an issue at {} with your use case to "
+                        "get them included.".format(
+                            unsupported_type_name,
+                            _issue_url
+                        )
+                    )
             raise SchemaBuildException(
                 path,
-                "The passed class is not a dataclass. Please use the @dataclasses.dataclass decorator on your class.",
+                "{} is not a dataclass or a supported type. Please use the @dataclasses.dataclass decorator on your "
+                "class or use a supported native type. If this is a native Python type and you want to request support "
+                "for it in the Arcaflow SDK, please open an issue at {} to get it included.".format(
+                    t.__name__,
+                    _issue_url
+                ),
             ) from e
 
         for f in fields_list:
