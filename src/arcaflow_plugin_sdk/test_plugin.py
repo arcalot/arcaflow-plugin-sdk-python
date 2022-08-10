@@ -13,6 +13,11 @@ from arcaflow_plugin_sdk.schema import TypeID, OneOfType, ConstraintException
 
 
 class ResolverTest(unittest.TestCase):
+    def test_non_dataclass(self):
+        with self.assertRaises(SchemaBuildException) as ctx:
+            _Resolver.resolve(complex)
+        self.assertIn("complex numbers are not supported", ctx.exception.msg)
+
     def test_regexp(self):
         resolved_type = _Resolver.resolve(Pattern)
         self.assertEqual(schema.TypeID.PATTERN, resolved_type.type_id())
