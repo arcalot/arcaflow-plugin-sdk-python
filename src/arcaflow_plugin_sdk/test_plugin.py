@@ -346,6 +346,17 @@ class SerializationTest(unittest.TestCase):
         unserialized = s.unserialize({})
         self.assertIsNone(unserialized.A)
 
+    def test_build_object_schema_wrapping(self):
+        @dataclasses.dataclass
+        class TestData1:
+            A: int
+        s = plugin.build_object_schema(TestData1)
+
+        with self.assertRaises(ConstraintException) as ctx:
+            s.unserialize({})
+
+        self.assertIn("TestData1", ctx.exception.__str__())
+
 
 @dataclasses.dataclass
 class StdoutTestInput:
