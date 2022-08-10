@@ -297,7 +297,7 @@ class StringType(AbstractType):
                 raise BadArgumentException(
                     "max_length on strings must be larger than or equal to 0, {} given".format(max_length)
                 )
-        if min_length is not None and max_length is not None and max < min:
+        if min_length is not None and max_length is not None and max_length < min_length:
             raise BadArgumentException(
                 "The max_length parameter must be larger than or equal to the min_length parameter on StringType,"
                 "min_length: {} and max_length: {} given".format(min_length, max_length)
@@ -457,7 +457,7 @@ class IntType(AbstractType):
     @max.setter
     def max(self, max: typing.Optional[int]):
         self._validate(self._min, max)
-        self.max = max
+        self._max = max
 
     def type_id(self) -> TypeID:
         return TypeID.INT
@@ -610,9 +610,25 @@ class ListType(AbstractType, Generic[ListT]):
     def min(self) -> typing.Optional[int]:
         return self._min
 
+    @min.setter
+    def min(self, min: int):
+        if not isinstance(min, int):
+            raise BadArgumentException(
+                "The min parameter must be an integer, {} given".format(type(min).__name__)
+            )
+        self._min = min
+
     @property
     def max(self) -> typing.Optional[int]:
         return self._max
+
+    @max.setter
+    def max(self, max: int):
+        if not isinstance(max, int):
+            raise BadArgumentException(
+                "The max parameter must be an integer, {} given".format(type(min).__name__)
+            )
+        self._max = max
 
     def type_id(self) -> TypeID:
         return TypeID.LIST
@@ -732,9 +748,25 @@ class MapType(AbstractType, Generic[MapT]):
     def max(self) -> typing.Optional[int]:
         return self._max
 
+    @max.setter
+    def max(self, max: int):
+        if not isinstance(max, int):
+            raise BadArgumentException(
+                "The max parameter must be an integer, {} given".format(type(min).__name__)
+            )
+        self._max = max
+
     @property
     def min(self) -> typing.Optional[int]:
         return self._min
+
+    @min.setter
+    def min(self, min: int):
+        if not isinstance(min, int):
+            raise BadArgumentException(
+                "The min parameter must be an integer, {} given".format(type(min).__name__)
+            )
+        self._min = min
 
     def type_id(self) -> TypeID:
         return TypeID.MAP
