@@ -27,7 +27,16 @@ def load_from_file(file_name: str) -> Any:
 
 
 class LoadFromFileException(Exception):
-    msg: str
+    _msg: str
+
+    def __init__(self, msg: str):
+        if len(msg) == 0:
+            msg = "Failed to load configuration file"
+        self._msg = msg
+
+    @property
+    def msg(self) -> str:
+        return self._msg
 
     def __str__(self) -> str:
         return self.msg
