@@ -20,7 +20,7 @@ from typing import List, Callable, TypeVar, Dict, Any, Type, get_origin, get_arg
 
 from arcaflow_plugin_sdk import schema, serialization, jsonschema
 from arcaflow_plugin_sdk.schema import BadArgumentException, Field, InvalidInputException, InvalidOutputException, \
-    ConstraintException, TypeID
+    ConstraintException, TypeID, ObjectT, TypeT
 
 _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 
@@ -67,13 +67,13 @@ def step(
 
         new_responses: Dict[str, schema.ObjectType] = {}
         for response_id in list(outputs.keys()):
-            new_responses[response_id] = build_object_schema(outputs[response_id])
+            new_responses[response_id] = build_object_schema(outputs[response_id], True)
 
         return schema.StepSchema(
             id,
             name,
             description,
-            input=build_object_schema(input_param.annotation),
+            input=build_object_schema(input_param.annotation, True),
             outputs=new_responses,
             handler=func,
         )
@@ -496,16 +496,38 @@ class _Resolver:
             raise SchemaBuildException(path, "Failed to create pattern type") from e
 
 
-def build_object_schema(t) -> schema.ObjectType:
+class _ObjectTypeWrapper(schema.ObjectType):
+    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> ObjectT:
+        new_path = list(path)
+        new_path.append(self.cls.__name__)
+        return super().unserialize(data, tuple(new_path))
+
+    def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
+        new_path = list(path)
+        new_path.append(self.cls.__name__)
+        return super().validate(data, tuple(new_path))
+
+    def serialize(self, data: ObjectT, path: typing.Tuple[str] = tuple([])) -> Any:
+        new_path = list(path)
+        new_path.append(self.cls.__name__)
+        return super().serialize(data, tuple(new_path))
+
+
+def build_object_schema(t, _skip_object_wrapping: bool = False) -> schema.ObjectType:
     """
-    This function builds a schema for a single object. You typically don't need to call this outside of tests.
-    :param t: the type to build a schema for
+    This function builds a schema for a single object. This is useful when serializing input parameters into a file
+    for underlying tools to use, or unserializing responses from underlying tools into output data types.
+
+    :param t: the type to build a schema for.
+    :param _skip_object_wrapping: skip adding a wrapper object to include the type name in the path of any errors.
     :return: the built object schema
     """
     r = _Resolver.resolve(t)
     if not isinstance(r, schema.ObjectType):
         raise SchemaBuildException(tuple([]), "Response type is not an object.")
-    return r
+    if _skip_object_wrapping:
+        return r
+    return _ObjectTypeWrapper(r.cls, r.properties)
 
 
 def run(
