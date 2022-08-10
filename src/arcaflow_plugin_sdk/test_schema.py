@@ -7,7 +7,7 @@ import enum
 import unittest
 
 from arcaflow_plugin_sdk.plugin import SchemaBuildException
-from arcaflow_plugin_sdk.schema import Field, ConstraintException, BadArgumentException
+from arcaflow_plugin_sdk.schema import Field, ConstraintException, BadArgumentException, TypeID
 
 
 class Color(enum.Enum):
@@ -92,6 +92,15 @@ class BoolTest(unittest.TestCase):
 
 
 class StringTest(unittest.TestCase):
+    def test_validator_assignment(self):
+        t = schema.StringType()
+        t.min_length = 1
+        t.max_length = 2
+        t.pattern = re.compile("^[a-z]$")
+        self.assertEqual(1, t.min_length)
+        self.assertEqual(2, t.max_length)
+        self.assertEqual("^[a-z]$", t.pattern.pattern)
+
     def test_validation(self):
         t = schema.StringType()
         t.unserialize("")
@@ -133,6 +142,13 @@ class StringTest(unittest.TestCase):
 
 
 class IntTest(unittest.TestCase):
+    def test_assignment(self):
+        t = schema.IntType()
+        t.min = 1
+        t.max = 2
+        self.assertEqual(1, t.min)
+        self.assertEqual(2, t.max)
+
     def unserialize(self):
         t = schema.IntType()
         self.assertEqual(0, t.unserialize(0))
@@ -163,6 +179,13 @@ class IntTest(unittest.TestCase):
 
 
 class ListTest(unittest.TestCase):
+    def test_assignement(self):
+        t = schema.ListType(schema.StringType())
+        t.min = 1
+        t.max = 2
+        self.assertEqual(1, t.min)
+        self.assertEqual(2, t.max)
+
     def test_validation(self):
         @dataclasses.dataclass
         class BadData:
@@ -209,6 +232,16 @@ class ListTest(unittest.TestCase):
 
 
 class MapTest(unittest.TestCase):
+    def test_assignment(self):
+        t = schema.MapType(
+            schema.StringType(),
+            schema.StringType()
+        )
+        t.min = 1
+        t.max = 2
+        self.assertEqual(1, t.min)
+        self.assertEqual(2, t.max)
+
     def test_type_validation(self):
         @dataclasses.dataclass(frozen=True)
         class InvalidData:
@@ -394,7 +427,42 @@ class ObjectTest(unittest.TestCase):
                         }
                     )
 
+
 class OneOfTest(unittest.TestCase):
+    def test_assignment(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        s = schema.OneOfType(
+            "_type",
+            schema.StringType(),
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "a": Field(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": Field(
+                            schema.IntType()
+                        )
+                    }
+                )
+            }
+        )
+        s.discriminator_field_name = "foo"
+        self.assertEqual("foo", s.discriminator_field_name)
+
     def test_unserialize(self):
         @dataclasses.dataclass
         class OneOfData1:
@@ -432,11 +500,11 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s.unserialize({"b": 42})
 
-        unserialized_data : OneOfData1 = s.unserialize({"_type": "a", "a": "Hello world!"})
+        unserialized_data: OneOfData1 = s.unserialize({"_type": "a", "a": "Hello world!"})
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2 : OneOfData2 = s.unserialize({"_type": "b", "b": 42})
+        unserialized_data2: OneOfData2 = s.unserialize({"_type": "b", "b": 42})
         self.assertIsInstance(unserialized_data2, OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
 
@@ -476,12 +544,12 @@ class OneOfTest(unittest.TestCase):
             }
         )
 
-        unserialized_data : OneOfData1 = s.unserialize({"type": "a", "a": "Hello world!"})
+        unserialized_data: OneOfData1 = s.unserialize({"type": "a", "a": "Hello world!"})
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.type, "a")
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2 : OneOfData2 = s.unserialize({"type": "b", "b": 42})
+        unserialized_data2: OneOfData2 = s.unserialize({"type": "b", "b": 42})
         self.assertIsInstance(unserialized_data2, OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
 
@@ -582,7 +650,6 @@ class OneOfTest(unittest.TestCase):
         self.assertEqual(s.serialize(OneOfData2(
             42
         )), {"type": "b", "b": 42})
-
 
 
 if __name__ == '__main__':
