@@ -1,3 +1,4 @@
+import io
 import json
 from typing import Any
 
@@ -24,6 +25,32 @@ def load_from_file(file_name: str) -> Any:
             raise LoadFromFileException("Failed to load YAML from {}: {}".format(file_name, e.__str__())) from e
     else:
         raise LoadFromFileException("Unsupported file extension: {}".format(file_name))
+
+
+def load_from_stdin(stdin: io.TextIOWrapper) -> Any:
+    """
+    This function reads from the standard input and returns a Python data structure.
+    :param stdin: the standard input
+    :return: the decoded structure.
+    """
+    stdin_data = stdin.buffer.read().decode("utf-8")
+    if stdin_data.startswith("{"):
+        try:
+            return json.loads(stdin_data)
+        except BaseException as e:
+            raise LoadFromStdinException("Failed to load JSON from stdin: {}".format(e.__str__())) from e
+    else:
+        try:
+            return yaml.safe_load(stdin_data)
+        except BaseException as e:
+            raise LoadFromStdinException("Failed to load YAML from stdin: {}".format(e.__str__())) from e
+
+
+class LoadFromStdinException(Exception):
+    msg: str
+
+    def __str__(self) -> str:
+        return self.msg
 
 
 class LoadFromFileException(Exception):

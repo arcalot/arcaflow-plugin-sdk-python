@@ -553,7 +553,7 @@ def run(
             "-f",
             "--file",
             dest="filename",
-            help="Configuration file to read configuration from.",
+            help="Configuration file to read configuration from. Pass - to read from stdin.",
             metavar="FILE",
         )
         parser.add_option(
@@ -589,7 +589,7 @@ def run(
         else:
             step_id = list(s.steps.keys())[0]
         if options.filename is not None:
-            return _execute_file(step_id, s, options, stdout, stderr)
+            return _execute_file(step_id, s, options, stdin, stdout, stderr)
         elif options.json_schema is not None:
             return _print_json_schema(step_id, s, options, stdout)
         else:
@@ -621,9 +621,19 @@ def build_schema(*args: schema.StepSchema) -> schema.Schema:
     )
 
 
-def _execute_file(step_id, s, options, stdout, stderr) -> int:
+def _execute_file(
+        step_id: str,
+        s: schema.StepSchema,
+        options,
+        stdin: io.TextIOWrapper,
+        stdout: io.TextIOWrapper,
+        stderr: io.TextIOWrapper
+) -> int:
     filename: str = options.filename
-    data = serialization.load_from_file(filename)
+    if filename == "-":
+        data = serialization.load_from_stdin(stdin)
+    else:
+        data = serialization.load_from_file(filename)
     original_stdout = sys.stdout
     original_stderr = sys.stderr
     if options.debug:
