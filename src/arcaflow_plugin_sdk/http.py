@@ -4,7 +4,7 @@ from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
 from twisted.web.resource import Resource
 
-from arcaflow_plugin_sdk import schema, _openapi
+from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import InvalidInputException, InvalidOutputException
 
 _INDEX_HTML = """
@@ -34,7 +34,7 @@ _INDEX_HTML = """
 class _StepHandler(resource.Resource):
     isLeaf = True
 
-    def __init__(self, s: schema.Schema, step_id: str):
+    def __init__(self, s: schema.SchemaType, step_id: str):
         super().__init__()
         self.schema = s
         self.step_id = step_id
@@ -79,29 +79,41 @@ class _SchemaHandler(resource.Resource):
         paths = {}
         defs = {}
         for step_id, step in self.schema.steps.items():
-            step_input_schema, step_defs = _openapi.OpenAPI.from_object(step.input)
-            defs = {**defs, **step_defs}
+            step_input_schema = step.input.to_openapi()
+            defs = {**defs, **step_input_schema["components"]["schemas"]}
+            del step_input_schema["components"]
 
-            outputSchemas = []
-            outputMappings = {}
+            one_of = []
+            discriminator_mapping = {}
             for output_id, output_schema in step.outputs.items():
-                s, o = _openapi.OpenAPI.from_object(output_schema)
-                o[output_schema.type_class().__name__]["properties"]["_output_id"] = {
+                step_output_schema = output_schema.to_openapi()
+                defs = {**defs, **step_output_schema["components"]["schemas"]}
+                del step_output_schema["components"]
+
+                ref_id = step_output_schema["$ref"].replace("#/components/schemas/", "")
+
+                defs[ref_id + "_output_" + output_id] = defs[ref_id]
+                defs[ref_id + "_output_" + output_id]["properties"]["_output_id"] = {
                     "type": "string",
-                    "const": output_id
                 }
-                o[output_schema.type_class().__name__]["required"].append("_output_id")
-                outputSchemas.append(s)
-                outputMappings[output_id] = s["$ref"]
-                defs = {**defs, **o}
+                defs[ref_id + "_output_" + output_id]["required"].append("_output_id")
+                one_of.append({"$ref": "#/components/schemas/" + ref_id + "_output_" + output_id})
+
+                discriminator_mapping[output_id] = "#/components/schemas/" + ref_id + "_output_" + output_id
+            output_openapi = {
+                "oneOf": one_of,
+                "discriminator": {
+                    "propertyName": "_output_id",
+                    "mapping": discriminator_mapping,
+                }
+            }
 
             paths["/{}".format(step_id)] = {
                 "post": {
-                    "summary": step.name,
-                    "description": step.description,
+                    "summary": step.display.name,
+                    "description": step.display.description,
                     "operationId": step.id,
                     "requestBody": {
-                        "name": "request",
                         "required": True,
                         "content": {
                             "application/json": {
@@ -114,13 +126,7 @@ class _SchemaHandler(resource.Resource):
                             "description": "Execution complete",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "oneOf": outputSchemas,
-                                        "discriminator": {
-                                            "propertyName": "_output_id",
-                                            "mapping": outputMappings
-                                        }
-                                    }
+                                    "schema": output_openapi
                                 }
                             }
                         }
@@ -128,11 +134,6 @@ class _SchemaHandler(resource.Resource):
                 }
             }
         data = {
-            "consumes": "application/json",
-            "produces": "application/json",
-            "schemes": [
-                "http",
-            ],
             "openapi": "3.0.3",
             "info": {
                 "title": "HTTP API",
@@ -140,7 +141,7 @@ class _SchemaHandler(resource.Resource):
                 "version": "0.0.0",
             },
             "paths": paths,
-            "components":{
+            "components": {
                 "schemas": defs
             }
         }

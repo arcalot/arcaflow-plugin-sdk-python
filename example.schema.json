@@ -1,65 +1,190 @@
 {
+  "$defs": {
+    "InputParams": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/FullName_discriminated_string_fullname"
+            },
+            {
+              "$ref": "#/$defs/Nickname_discriminated_string_nickname"
+            }
+          ],
+          "examples": [
+            {
+              "_type": "fullname",
+              "first_name": "Arca",
+              "last_name": "Lot"
+            },
+            {
+              "_type": "nickname",
+              "nick": "Arcalot"
+            }
+          ],
+          "title": "Name",
+          "description": "Who do we say hello to?"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {}
+    },
+    "FullName": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Arca"
+          ],
+          "title": "First name"
+        },
+        "last_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Lot"
+          ],
+          "title": "Last name"
+        },
+        "_type": {
+          "type": "string",
+          "const": "fullname"
+        }
+      },
+      "required": [
+        "_type",
+        "first_name",
+        "last_name"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {},
+      "title": "Full name"
+    },
+    "FullName_discriminated_string_fullname": {
+      "type": "object",
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Arca"
+          ],
+          "title": "First name"
+        },
+        "last_name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Lot"
+          ],
+          "title": "Last name"
+        },
+        "_type": {
+          "type": "string",
+          "const": "fullname"
+        }
+      },
+      "required": [
+        "_type",
+        "first_name",
+        "last_name"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {},
+      "title": "Full name"
+    },
+    "Nickname": {
+      "type": "object",
+      "properties": {
+        "nick": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Arcalot"
+          ],
+          "title": "Nickname"
+        },
+        "_type": {
+          "type": "string",
+          "const": "nickname"
+        }
+      },
+      "required": [
+        "_type",
+        "nick"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {},
+      "title": "Nick"
+    },
+    "Nickname_discriminated_string_nickname": {
+      "type": "object",
+      "properties": {
+        "nick": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-zA-Z]+$",
+          "examples": [
+            "Arcalot"
+          ],
+          "title": "Nickname"
+        },
+        "_type": {
+          "type": "string",
+          "const": "nickname"
+        }
+      },
+      "required": [
+        "_type",
+        "nick"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {},
+      "title": "Nick"
+    }
+  },
   "type": "object",
   "properties": {
     "name": {
       "oneOf": [
         {
-          "type": "object",
-          "properties": {
-            "first_name": {
-              "type": "string",
-              "minLength": 1,
-              "pattern": "[a-zA-Z]",
-              "title": "first_name"
-            },
-            "last_name": {
-              "type": "string",
-              "minLength": 1,
-              "pattern": "[a-zA-Z]",
-              "title": "last_name"
-            },
-            "_type": {
-              "type": "string",
-              "const": "fullname"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "first_name",
-            "last_name",
-            "_type"
-          ],
-          "title": "fullname"
+          "$ref": "#/$defs/FullName_discriminated_string_fullname"
         },
         {
-          "type": "object",
-          "properties": {
-            "nick": {
-              "type": "string",
-              "minLength": 1,
-              "pattern": "[a-zA-Z]",
-              "title": "nick"
-            },
-            "_type": {
-              "type": "string",
-              "const": "nickname"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "nick",
-            "_type"
-          ],
-          "title": "nickname"
+          "$ref": "#/$defs/Nickname_discriminated_string_nickname"
         }
       ],
-      "title": "name"
+      "examples": [
+        {
+          "_type": "fullname",
+          "first_name": "Arca",
+          "last_name": "Lot"
+        },
+        {
+          "_type": "nickname",
+          "nick": "Arcalot"
+        }
+      ],
+      "title": "Name",
+      "description": "Who do we say hello to?"
     }
   },
-  "additionalProperties": false,
   "required": [
     "name"
   ],
+  "additionalProperties": false,
+  "dependentRequired": {},
   "title": "Hello world! input",
   "description": "Says hello :)",
   "$id": "hello-world",

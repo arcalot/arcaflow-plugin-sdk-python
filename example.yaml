@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=example.schema.json
-name:
-  _type: fullname
+name: 
   first_name: Arca
   last_name: Lot
+  _type: fullname

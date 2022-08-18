@@ -3,7 +3,7 @@ import re
 import sys
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import plugin, validation, annotations
+from arcaflow_plugin_sdk import plugin, validation, annotations, schema
 
 
 @dataclass
@@ -11,8 +11,20 @@ class FullName:
     """
     A full name holds the first and last name of an individual.
     """
-    first_name: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
-    last_name: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
+    first_name: typing.Annotated[
+        str,
+        validation.min(1),
+        validation.pattern(re.compile("^[a-zA-Z]+$")),
+        schema.example("Arca"),
+        schema.name("First name"),
+    ]
+    last_name: typing.Annotated[
+        str,
+        validation.min(1),
+        validation.pattern(re.compile("^[a-zA-Z]+$")),
+        schema.example("Lot"),
+        schema.name("Last name"),
+    ]
 
     def __str__(self) -> str:
         """
@@ -26,7 +38,13 @@ class Nickname:
     """
     A nickname is a simplified form of the name that only holds the preferred name of an individual.
     """
-    nick: typing.Annotated[str, validation.min(1), validation.pattern(re.compile("[a-zA-Z]"))]
+    nick: typing.Annotated[
+        str,
+        validation.min(1),
+        validation.pattern(re.compile("^[a-zA-Z]+$")),
+        schema.example("Arcalot"),
+        schema.name("Nickname"),
+    ]
 
     def __str__(self) -> str:
         """
@@ -42,10 +60,29 @@ class InputParams:
     """
     name: typing.Annotated[
         typing.Union[
-            typing.Annotated[FullName, annotations.discriminator_value("fullname")],
-            typing.Annotated[Nickname, annotations.discriminator_value("nickname")],
+            typing.Annotated[
+                FullName,
+                annotations.discriminator_value("fullname"),
+                schema.name("Full name"),
+            ],
+            typing.Annotated[
+                Nickname,
+                annotations.discriminator_value("nickname"),
+                schema.name("Nick"),
+            ],
         ],
-        annotations.discriminator("_type")
+        schema.name("Name"),
+        schema.description("Who do we say hello to?"),
+        annotations.discriminator("_type"),
+        schema.example({
+            "_type": "fullname",
+            "first_name": "Arca",
+            "last_name": "Lot",
+        }),
+        schema.example({
+            "_type": "nickname",
+            "nick": "Arcalot",
+        }),
     ]
 
 
