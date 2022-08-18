@@ -4,3 +4,5 @@ dist
 *.egg-info
 build
 docs/_build
+_trial_temp
+_trial_temp.lock
