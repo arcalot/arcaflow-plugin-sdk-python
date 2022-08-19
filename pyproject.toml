@@ -19,6 +19,7 @@ classifiers = [
 ]
 dependencies = [
   'PyYAML >= 5.4',
+  'twisted >= 22.4.0'
 ]
 
 [project.urls]

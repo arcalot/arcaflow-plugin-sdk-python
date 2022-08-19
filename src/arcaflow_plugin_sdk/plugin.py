@@ -18,7 +18,7 @@ from sys import argv, stdin, stdout, stderr
 from optparse import OptionParser
 from typing import List, Callable, TypeVar, Dict, Any, Type, get_origin, get_args
 
-from arcaflow_plugin_sdk import schema, serialization, jsonschema
+from arcaflow_plugin_sdk import schema, serialization, jsonschema, http
 from arcaflow_plugin_sdk.schema import BadArgumentException, Field, InvalidInputException, InvalidOutputException, \
     ConstraintException, TypeID, ObjectT, TypeT
 
@@ -563,6 +563,12 @@ def run(
             metavar="KIND",
         )
         parser.add_option(
+            "--http",
+            dest="http",
+            help="Run a HTTP microservice.",
+            metavar="LISTEN_PORT",
+        )
+        parser.add_option(
             "-s",
             "--step",
             dest="step",
@@ -582,21 +588,42 @@ def run(
                 64,
                 "Unable to parse arguments: [" + ', '.join(remaining_args) + "]\n" + parser.get_usage()
             )
-        if len(s.steps) > 1 and options.step is None:
-            raise _ExitException(64, "-s|--step is required\n" + parser.get_usage())
-        if options.step is not None:
-            step_id = options.step
-        else:
-            step_id = list(s.steps.keys())[0]
+        action = None
         if options.filename is not None:
-            return _execute_file(step_id, s, options, stdin, stdout, stderr)
-        elif options.json_schema is not None:
-            return _print_json_schema(step_id, s, options, stdout)
-        else:
+            action = "file"
+        if options.json_schema is not None:
+            if action is not None:
+                raise _ExitException(
+                    64,
+                    "--file and --json-schema cannot be used together"
+                )
+            action = "json-schema"
+        if options.http is not None:
+            if action is not None:
+                raise _ExitException(
+                    64,
+                    "--{} and --http cannot be used together".format(action)
+                )
+            action = "http"
+        if action is None:
             raise _ExitException(
                 64,
-                "one of -f|--filename or --json-schema is required\n{}".format(parser.get_usage()),
+                "At least one of --file, --json-schema, or --http must be specified"
             )
+
+        if action == "file" or action == "json-schema":
+            if len(s.steps) > 1 and options.step is None:
+                raise _ExitException(64, "-s|--step is required\n" + parser.get_usage())
+            if options.step is not None:
+                step_id = options.step
+            else:
+                step_id = list(s.steps.keys())[0]
+        if action == "file":
+            return _execute_file(step_id, s, options, stdin, stdout, stderr)
+        elif action == "json-schema":
+            return _print_json_schema(step_id, s, options, stdout)
+        elif action == "http":
+            return _run_server(options.http, s, stdin, stdout, stderr)
     except serialization.LoadFromFileException as e:
         stderr.write(e.msg + '\n')
         return 64
@@ -692,6 +719,12 @@ def _print_json_schema(step_id, s, options, stdout):
         raise _ExitException(64, "--json-schema must be one of 'input' or 'output'")
     stdout.write(json.dumps(data, indent="  "))
     return 0
+
+
+def _run_server(listen, s, stdin, stdout, stderr):
+    stdout.write("Starting HTTP server at {}...\n".format(listen))
+    stdout.write("Warning! This mode is experimental and may change or be discontinued at any time!\n")
+    http.run(listen, s)
 
 
 def test_object_serialization(
