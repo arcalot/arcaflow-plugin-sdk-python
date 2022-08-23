@@ -1136,7 +1136,9 @@ class ObjectType(AbstractType, Generic[ObjectT]):
             )
         params_iter = iter(params)
         if len(properties) > 0:
-            attribute_annotations = cls_dict["__annotations__"]
+            attribute_annotations = cls_dict.get("__annotations__", {})
+            self.add_parent_annotations(cls, attribute_annotations)
+
             next(params_iter)
             i = 0
             for property_id, property in properties.items():
@@ -1145,10 +1147,11 @@ class ObjectType(AbstractType, Generic[ObjectT]):
                     field_id = property.field_override
                 if field_id not in attribute_annotations:
                     raise BadArgumentException(
-                        "The '{}' class does not contain a field called '{}' as required by the property '{}'.".format(
+                        "The '{}' class does not contain a field called '{}' as required by the property '{}'. Fields: '{}'".format(
                             cls.__name__,
                             field_id,
                             property_id,
+                            attribute_annotations
                         )
                     )
                 param = next(params_iter)
@@ -1173,6 +1176,21 @@ class ObjectType(AbstractType, Generic[ObjectT]):
                     )
                 i = i+1
 
+    def add_parent_annotations(self, class_type: Type[ObjectT], dictionary, original_class: Type[ObjectT] = None, level: int = 64):
+        if level <= 0:
+            raise BadArgumentException(
+                "Parent class type '{}' has too many parents/bases (>64)".format(original_class.__name__)
+            )
+        for base_cls in class_type.__bases__:
+            base_cls_dict = base_cls.__dict__
+
+            if "__annotations__" in base_cls_dict:
+                # Found annotations. Now don't overwrite child class values.
+                for k, v in base_cls_dict["__annotations__"].items():
+                    if k not in dictionary:
+                        dictionary[k] = v
+            # Check parent
+            self.add_parent_annotations(base_cls, dictionary, class_type if original_class == None else original_class, level - 1)
 
     @property
     def cls(self) -> Type[ObjectT]:
