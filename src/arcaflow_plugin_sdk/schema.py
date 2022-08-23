@@ -1136,7 +1136,7 @@ class ObjectType(AbstractType, Generic[ObjectT]):
             )
         params_iter = iter(params)
         if len(properties) > 0:
-            attribute_annotations = cls_dict["__annotations__"] if "__annotations__" in cls_dict else {}
+            attribute_annotations = cls_dict.get("__annotations__", {})
             self.add_parent_annotations(cls, attribute_annotations)
 
             next(params_iter)

@@ -427,6 +427,25 @@ class ObjectTest(unittest.TestCase):
                         }
                     )
 
+    def test_baseclass_field(self):
+        @dataclasses.dataclass
+        class TestParent:
+            a: str
+
+        @dataclasses.dataclass
+        class TestSubclass(TestParent):
+            pass
+
+        # If a is missing from 'TestSubclass', it will fail.
+        s = schema.ObjectType(
+            TestSubclass,
+            {
+                "a": schema.Field(
+                    schema.StringType(),
+                )
+            }
+        )
+
 
 class OneOfTest(unittest.TestCase):
     def test_assignment(self):
