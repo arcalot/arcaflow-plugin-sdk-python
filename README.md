@@ -57,6 +57,17 @@ If your plugin defines more than one step, you may need to pass the `--step` par
 
 **Note:** The Arcaflow schema system supports a few features that cannot be represented in JSON schema. The generated schema is for editor integration only.
 
+
+## Generating documentation
+1. Checkout this repository
+2. Create a `venv` in the current directory with `python3 -m venv $(pwd)/venv`
+3. Activate the `venv` by running `source venv/bin/activate`
+4. Run `pip install -r requirements.txt`
+5. Run `pip install sphinx`
+6. Run `sphinx-apidoc -o docs/ -f -a src/`
+7. Run `make -C docs html`
+
+
 ---
 
 ## Developing your plugin
