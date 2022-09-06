@@ -788,6 +788,22 @@ class SerializationTest(unittest.TestCase):
 
         self.assertIn("TestData1", ctx.exception.__str__())
 
+    def test_default_value(self):
+        class TestEnum(enum.Enum):
+            A = "a"
+
+        @dataclasses.dataclass
+        class A:
+            a: TestEnum = TestEnum.A
+
+        s = schema.build_object_schema(A)
+
+        data = s.unserialize({"a": "a"})
+        s.validate(data)
+        serialized_data = s.serialize(data)
+
+        self.assertEqual(serialized_data, {"a": "a"})
+
 
 class SchemaBuilderTest(unittest.TestCase):
     def test_non_dataclass(self):
