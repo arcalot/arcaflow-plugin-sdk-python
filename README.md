@@ -65,7 +65,7 @@ If your plugin defines more than one step, you may need to pass the `--step` par
 4. Run `pip install -r requirements.txt`
 5. Run `pip install sphinx`
 6. Run `pip install sphinx-rtd-theme`
-7. Run `sphinx-apidoc -o docs/ -f -a src/`
+7. Run `sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Python SDK for Arcaflow"`
 8. Run `make -C docs html`
 
 
