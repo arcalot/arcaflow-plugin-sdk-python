@@ -5444,7 +5444,13 @@ class _SchemaBuilder:
             else:
                 default = t.default_factory()
             if default is not None:
-                underlying_type.default = json.dumps(default)
+                try:
+                    underlying_type.default = json.dumps(underlying_type.type.serialize(default))
+                except ConstraintException as e:
+                    raise SchemaBuildException(
+                        path,
+                        "Failed to serialize default value: {}".format(e.__str__())
+                    )
         elif not underlying_type.required:
             raise SchemaBuildException(
                 path,
