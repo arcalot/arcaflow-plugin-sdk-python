@@ -123,6 +123,12 @@ def run(
             metavar="FILE",
         )
         parser.add_option(
+            "--schema",
+            dest="schema",
+            action="store_true",
+            help="Print Arcaflow schema.",
+        )
+        parser.add_option(
             "--json-schema",
             dest="json_schema",
             help="Print JSON schema for either the input or the output.",
@@ -161,9 +167,16 @@ def run(
             if action is not None:
                 raise _ExitException(
                     64,
-                    "--file and --json-schema cannot be used together"
+                    "--{} and --json-schema cannot be used together".format(action)
                 )
             action = "json-schema"
+        if options.schema is not None:
+            if action is not None:
+                raise _ExitException(
+                    64,
+                    "--{} and --schema cannot be used together".format(action)
+                )
+            action = "schema"
         if options.http is not None:
             if action is not None:
                 raise _ExitException(
@@ -188,6 +201,8 @@ def run(
             return _execute_file(step_id, s, options, stdin, stdout, stderr)
         elif action == "json-schema":
             return _print_json_schema(step_id, s, options, stdout)
+        elif action == "schema":
+            return _print_schema(s, options, stdout)
         elif action == "http":
             return _run_server(options.http, s, stdin, stdout, stderr)
     except serialization.LoadFromFileException as e:
@@ -321,6 +336,11 @@ def _print_json_schema(step_id, s, options, stdout):
     return 0
 
 
+def _print_schema(s, options, stdout):
+    stdout.write(yaml.dump(schema.SCHEMA_SCHEMA.serialize(s)))
+    return 0
+
+
 def _run_server(listen, s, stdin, stdout, stderr):
     stdout.write("Starting HTTP server at {}...\n".format(listen))
     stdout.write("Warning! This mode is experimental and may change or be discontinued at any time!\n")
@@ -329,7 +349,6 @@ def _run_server(listen, s, stdin, stdout, stderr):
 
 
 test_object_serialization = schema.test_object_serialization
-
 
 if __name__ == "__main__":
     import doctest
