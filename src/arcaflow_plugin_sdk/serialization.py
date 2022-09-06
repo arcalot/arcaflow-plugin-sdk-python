@@ -8,6 +8,7 @@ import yaml
 def load_from_file(file_name: str) -> Any:
     """
     This function loads a YAML or JSON structure from a file.
+
     :param file_name: File name ending in JSON or YAML.
     :return: the decoded structure.
     """
@@ -30,6 +31,7 @@ def load_from_file(file_name: str) -> Any:
 def load_from_stdin(stdin: io.TextIOWrapper) -> Any:
     """
     This function reads from the standard input and returns a Python data structure.
+
     :param stdin: the standard input
     :return: the decoded structure.
     """
