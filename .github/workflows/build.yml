@@ -32,7 +32,7 @@ jobs:
         run: cd src && python3 -m unittest discover -v
       - name: Document
         run: |
-          sphinx-apidoc -o docs/ -f -a src/
+          sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Python SDK for Arcaflow"
           make -C docs html
       - name: Run example plugin
         run: ./example_plugin.py -f example.yaml

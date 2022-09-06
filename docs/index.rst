@@ -5,7 +5,7 @@ Welcome to Python SDK for Arcaflow's documentation!
    :maxdepth: 4
    :caption: Contents:
 
-   arcaflow_plugin_sdk
+   modules
 
 
 Indices and tables
