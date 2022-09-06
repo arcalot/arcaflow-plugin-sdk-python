@@ -33,8 +33,8 @@ def step(
     schema.StepType
 ]:
     """
-    @plugin.step is a decorator that takes a function with a single parameter and creates a schema for it that you can
-    use with plugin.build_schema.
+    ``@plugin.step`` is a decorator that takes a function with a single parameter and creates a schema for it that you can
+    use with ``plugin.build_schema``.
 
     :param id: The identifier for the step.
     :param name: The human-readable name for the step.
@@ -106,6 +106,7 @@ def run(
     """
     Run takes a schema and runs it as a command line utility. It returns the exit code of the program. It is intended
     to be used as an entry point for your plugin.
+
     :param s: the schema to run
     :param argv: command line arguments
     :param stdin: standard input
@@ -200,28 +201,32 @@ def run(
 
 def build_schema(*args: schema.StepType) -> schema.SchemaType:
     """
-    This function takes functions annotated with @plugin.step and creates a schema from them.
+    This function takes functions annotated with ``@plugin.step`` and creates a schema from them.
+
     :param args: the steps to be added to the schema
     :return: a callable schema
 
-    Example
-    =======
+    **Example**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import plugin
     >>> from dataclasses import dataclass
 
     Create an input dataclass:
+
     >>> @dataclass
     ... class InputData:
     ...    name: str
 
     Create an output dataclass:
+
     >>> @dataclass
     ... class OutputData:
     ...    message: str
 
     Create the plugin:
+
     >>> @plugin.step(
     ...     id="hello-world",
     ...     name="Hello world!",
@@ -232,9 +237,11 @@ def build_schema(*args: schema.StepType) -> schema.SchemaType:
     ...     return "success", OutputData("Hello, {}!".format(params.name))
 
     Create the schema from one or more step functions:
+
     >>> plugin_schema = plugin.build_schema(hello_world)
 
     You can now call the step schema directly with data validation:
+
     >>> plugin_schema("hello-world", {"name": "Arca Lot"})
     ('success', {'message': 'Hello, Arca Lot!'})
     """

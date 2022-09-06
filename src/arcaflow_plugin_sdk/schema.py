@@ -50,7 +50,7 @@ When working with schemas in practice you will want to work with types unless yo
 Build
 -----
 
-This region holds the tools to automatically build a schema from annotations. Use build_object_schema to build a schema
+This region holds the tools to automatically build a schema from annotations. Use ``build_object_schema`` to build a schema
 from a dataclass.
 
 Note that the built schema will be a type, not a schema, so it is possible to use these schemas for serializing and
@@ -89,7 +89,7 @@ _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 @dataclass
 class ConstraintException(Exception):
     """
-    ConstraintException indicates that the passed data violated one or more constraints defined in the schema.
+    ``ConstraintException`` indicates that the passed data violated one or more constraints defined in the schema.
     The message holds the exact path of the problematic field, as well as a message explaining the error.
     If this error is not easily understood, please open an issue on the Arcaflow plugin SDK.
     """
@@ -105,7 +105,7 @@ class ConstraintException(Exception):
 @dataclass
 class NoSuchStepException(Exception):
     """
-    NoSuchStepException indicates that the given step is not supported by the plugin.
+    ``NoSuchStepException`` indicates that the given step is not supported by the plugin.
     """
     step: str
 
@@ -129,7 +129,7 @@ class BadArgumentException(Exception):
 @dataclass
 class InvalidAnnotationException(Exception):
     """
-    InvalidAnnotationException indicates that an annotation was used on a type it does not support.
+    ``InvalidAnnotationException`` indicates that an annotation was used on a type it does not support.
     """
 
     annotation: str
@@ -159,7 +159,7 @@ class SchemaBuildException(Exception):
 class InvalidInputException(Exception):
     """
     This exception indicates that the input data for a given step didn't match the schema. The embedded
-    ConstraintException holds the details of this failure.
+    ``ConstraintException`` holds the details of this failure.
     """
     constraint: ConstraintException
 
@@ -206,25 +206,29 @@ def id(id: str):
     The id annotation can be used to change the serialized name of an object field. This is useful when a field
     must be serialized to a name that is not a valid Python field.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from dataclasses import dataclass
     >>> from arcaflow_plugin_sdk import schema
 
     Define your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[str, schema.id("some-field")]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Now unserialize your data:
+
     >>> unserialized_data = s.unserialize({"some-field": "foo"})
 
     This should now print "foo":
+
     >>> print(unserialized_data.some_field)
     foo
 
@@ -247,22 +251,25 @@ def name(name: str):
     The name annotation can be applied on any dataclass field, or on Union types to add a human-readable name to the
     field. It is used as a form field or as part of a dropdown box in a form.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from dataclasses import dataclass
     >>> from arcaflow_plugin_sdk import schema
 
     Define your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[str, schema.name("Some field")]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Print field name:
+
     >>> s["YourDataClass"].properties["some_field"].display.name
     'Some field'
 
@@ -286,22 +293,25 @@ def description(description: str):
     description to the field. It can contain line breaks and links for formatting. It is used as a form field
     description text or as part of a dropdown box in a form.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from dataclasses import dataclass
     >>> from arcaflow_plugin_sdk import schema
 
     Define your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[str, schema.description("This is a string field")]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Print field description:
+
     >>> s["YourDataClass"].properties["some_field"].display.description
     'This is a string field'
 
@@ -324,22 +334,25 @@ def icon(icon: str):
     The icon annotation can be applied to any dataclass field, or on Union types to add a 64x64 pixel SVG icon to the
     item on display. However, the SVG must not contain any external sources or namespaces in order to work correctly.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from dataclasses import dataclass
     >>> from arcaflow_plugin_sdk import schema
 
     Define your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[str, schema.icon("<svg></svg>")]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Print field icon:
+
     >>> s["YourDataClass"].properties["some_field"].display.icon
     '<svg></svg>'
     """
@@ -359,22 +372,25 @@ def units(units: typing.ForwardRef("Units")):
     This annotation lets you add unit definitions to int and float fields. This helps with determining how to treat that
     number, but also contains scaling information for creating a nicely formatted string, such as 5m30s.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from dataclasses import dataclass
     >>> from arcaflow_plugin_sdk import schema
 
     Define your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[int, schema.units(schema.UNIT_BYTE)]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Print format data:
+
     >>> s["YourDataClass"].properties["some_field"].type.units.format_short(5)
     '5B'
     """
@@ -407,15 +423,16 @@ def example(example: typing.Any) -> typing.Callable[
     This annotation provides the option to add an example to a type.
     :param example: the example as raw type, serializable by json.dumps. Do not use dataclasses
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclass:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -424,9 +441,11 @@ def example(example: typing.Any) -> typing.Callable[
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     Print field description:
+
     >>> s["YourDataClass"].properties["some_field"].examples
     ['{"foo": "bar"}']
     """
@@ -475,15 +494,16 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
     :param discriminator_field_name: the name of the discriminator field.
     :return: the callable decorator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class A:
     ...     a: str
@@ -498,9 +518,11 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     You can now deserialize a dataset:
+
     >>> unserialized_data = s.unserialize({"some_field": {"foo": "A", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
@@ -560,15 +582,16 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
     :param discriminator_value: The value for the discriminator field.
     :return: The callable decorator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class A:
     ...     a: str
@@ -583,9 +606,11 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     You can now deserialize a dataset:
+
     >>> unserialized_data = s.unserialize({"some_field": {"_type": "Foo", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
@@ -628,15 +653,16 @@ def min(param: typing.Union[int, float]) -> Validator:
     :param: The minimum number
     :return: the validator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -645,9 +671,11 @@ def min(param: typing.Union[int, float]) -> Validator:
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     The unserialization will validate the field:
+
     >>> unserialized_data = s.unserialize({"some_field": 4})
     Traceback (most recent call last):
     ...
@@ -685,15 +713,16 @@ def max(param: int) -> Validator:
     :param param: The maximum number
     :return: the validator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -702,9 +731,11 @@ def max(param: int) -> Validator:
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     The unserialization will validate the field:
+
     >>> unserialized_data = s.unserialize({"some_field": 6})
     Traceback (most recent call last):
     ...
@@ -746,15 +777,16 @@ def pattern(pattern: Pattern) -> Validator:
     :param pattern: The regular expression.
     :return: the validator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -763,9 +795,11 @@ def pattern(pattern: Pattern) -> Validator:
     ...     ]
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     The unserialization will validate the field:
+
     >>> unserialized_data = s.unserialize({"some_field": "asdf1234"})
     Traceback (most recent call last):
     ...
@@ -805,15 +839,16 @@ def required_if(required_if: str) -> Validator:
     :param required_if: The other field to use.
     :return: the validator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -823,14 +858,17 @@ def required_if(required_if: str) -> Validator:
     ...     some_other_field: typing.Optional[str] = None
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     This is a valid unserialization because both fields are unset:
+
     >>> unserialized_data = s.unserialize({})
     >>> unserialized_data.some_field
     >>> unserialized_data.some_other_field
 
     This is not valid because only some_other_field is set:
+
     >>> unserialized_data = s.unserialize({"some_other_field":"foo"})
     Traceback (most recent call last):
     ...
@@ -838,6 +876,7 @@ def required_if(required_if: str) -> Validator:
 required because 'some_other_field' is set
 
     This is valid again:
+
     >>> unserialized_data = s.unserialize({"some_other_field":"foo", "some_field": "bar"})
     >>> unserialized_data.some_field
     'bar'
@@ -871,15 +910,16 @@ def required_if_not(required_if_not: str) -> Validator:
     :param required_if_not: The other field to use.
     :return: the validator
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -889,9 +929,11 @@ def required_if_not(required_if_not: str) -> Validator:
     ...     some_other_field: typing.Optional[str] = None
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     This is not valid because neither of the fields are set:
+
     >>> unserialized_data = s.unserialize({})
     Traceback (most recent call last):
     ...
@@ -899,16 +941,19 @@ def required_if_not(required_if_not: str) -> Validator:
 required because 'some_other_field' is not set
 
     This is valid because the some_other_field is set:
+
     >>> unserialized_data = s.unserialize({"some_other_field":"foo"})
     >>> unserialized_data.some_other_field
     'foo'
 
     This is also valid because some_field is set:
+
     >>> unserialized_data = s.unserialize({"some_field": "bar"})
     >>> unserialized_data.some_field
     'bar'
 
     Both fields can also be set:
+
     >>> unserialized_data = s.unserialize({"some_field": "bar", "some_other_field":"foo"})
     >>> unserialized_data.some_other_field
     'foo'
@@ -941,15 +986,16 @@ def conflicts(conflicts: str) -> Validator:
     :param conflicts: The field to conflict with.
     :return: the validator
 
-        Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
     >>> import typing
 
     Your dataclasses:
+
     >>> @dataclass
     ... class YourDataClass:
     ...     some_field: typing.Annotated[
@@ -959,12 +1005,15 @@ def conflicts(conflicts: str) -> Validator:
     ...     some_other_field: typing.Optional[str] = None
 
     Build your schema:
+
     >>> s = schema.build_object_schema(YourDataClass)
 
     This is valid because neither field is set:
+
     >>> unserialized_data = s.unserialize({})
 
     This is not valid because both fields are set:
+
     >>> unserialized_data = s.unserialize({"some_field": "bar", "some_other_field":"foo"})
     Traceback (most recent call last):
     ...
@@ -972,6 +1021,7 @@ def conflicts(conflicts: str) -> Validator:
 conflicts 'some_other_field', set one of the two, not both
 
     This is valid because only the some_other_field is set:
+
     >>> unserialized_data = s.unserialize({"some_other_field":"foo"})
     >>> unserialized_data.some_other_field
     'foo'
@@ -1096,8 +1146,7 @@ def _id_typeize(input: str) -> str:
     """
     This function creates an ID-safe representation of a string.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk.schema import _id_typeize
     >>> _id_typeize("Hello world!")
@@ -1159,8 +1208,7 @@ class Unit:
     A unit is a description of a single scale of measurement, such as a "second". If there are multiple scales, such as
     "minute", "second", etc. then multiple of these unit classes can be composed into units.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> u = Unit(
@@ -1204,8 +1252,7 @@ class Unit:
         """
         This function formats an amount according to this unit.
 
-        Example
-        =======
+        **Example:**
 
         >>> from arcaflow_plugin_sdk import schema
         >>> u = Unit(
@@ -1230,8 +1277,7 @@ class Unit:
         """
         This function formats an amount according to this unit.
 
-        Example
-        =======
+        **Example:**
 
         >>> from arcaflow_plugin_sdk import schema
         >>> u = Unit(
@@ -1262,13 +1308,14 @@ class Units:
     """
     Units holds several scales of magnitude of the same unit, for example 5m30s.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Define your unit:
+
     >>> t = Units(
     ...     Unit(
     ...         "ns",
@@ -1305,6 +1352,7 @@ class Units:
     ... )
 
     Format your time:
+
     >>> t.format_short(305000000)
     '5m5s'
 
@@ -1353,21 +1401,24 @@ class Units:
 
         :raises UnitParseException: if the data string fails to parse.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Parse a time string:
+
         >>> schema.UNIT_TIME.parse("5m5s")
         305000000
 
         Parse percentages:
+
         >>> schema.UNIT_PERCENT.parse("1.1%")
         1.1
 
         Parse bytes:
+
         >>> schema.UNIT_BYTE.parse("5MB")
         5242880
         """
@@ -1432,17 +1483,19 @@ class Units:
         This function takes an integer and formats it so that it is the most readable based on the current set of
         units.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Use the pre-defined units to format a number:
+
         >>> schema.UNIT_BYTE.format_short(1025)
         '1kB1B'
 
         You can also format floats:
+
         >>> schema.UNIT_PERCENT.format_short(1.1)
         '1.1%'
         """
@@ -1463,17 +1516,19 @@ class Units:
         This function takes an integer and formats it so that it is the most readable based on the current set of
         units.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Use the pre-defined units to format a number:
+
         >>> schema.UNIT_BYTE.format_long(1025)
         '1 kilobyte 1 byte'
 
         You can also format floats:
+
         >>> schema.UNIT_PERCENT.format_long(1.1)
         '1.1 percent'
         """
@@ -1597,8 +1652,7 @@ class DisplayValue:
     """
     This class holds the fields related to displaying an item in a user interface.
 
-    Example
-    =======
+    **Example:**
 
     >>> d = DisplayValue(
     ...     name="Foo",
@@ -1641,8 +1695,7 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use StringEnumType.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.StringEnumSchema({
@@ -1697,8 +1750,7 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`IntEnumType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.IntEnumSchema({
@@ -1750,8 +1802,7 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This class holds schema information for strings. This dataclass only has the ability to hold the configuration but
     cannot serialize, unserialize or validate. For that functionality please use :class:`StringType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> import re
@@ -1825,8 +1876,7 @@ class PatternSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     hold the configuration but cannot serialize, unserialize or validate. For that functionality please use
     :class:`PatternType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.PatternSchema()
@@ -1851,8 +1901,7 @@ class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This class holds the schema information for 64-bit integers. This dataclass only has the ability to hold the
     configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`IntType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.IntSchema(
@@ -1916,8 +1965,7 @@ class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     hold the configuration but cannot serialize, unserialize or validate. For that functionality please use
     :class:`FloatType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.FloatSchema(
@@ -1980,8 +2028,7 @@ class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This class holds the schema information for boolean types. This dataclass only has the ability to hold the
     configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`BoolType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.FloatSchema(
@@ -2046,8 +2093,7 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This class holds the schema definition for lists. This dataclass only has the ability to hold the configuration but
     cannot serialize, unserialize or validate. For that functionality please use :class:`ListType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.ListSchema(
@@ -2108,8 +2154,7 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This class holds the schema definition for key-value associations. This dataclass only has the ability to hold the
     configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`MapType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.MapSchema(
@@ -2198,12 +2243,11 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 @dataclass
 class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """
-    This class holds the schema definition for a single object property. It is usable in conjunction with ObjectSchema.
+    This class holds the schema definition for a single object property. It is usable in conjunction with ``ObjectSchema``.
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`PropertyType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.ObjectSchema(
@@ -2302,8 +2346,7 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     the configuration but cannot serialize, unserialize or validate. For that functionality please use
     :class:`PropertyType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.ObjectSchema(
@@ -2401,8 +2444,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`OneOfStringType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> a = schema.ObjectSchema(
@@ -2525,8 +2567,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`OneOfIntType`.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> a = schema.ObjectSchema(
@@ -2649,13 +2690,14 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`RefType`.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create a scope with an object:
+
     >>> s = schema.ScopeSchema(
     ...     {
     ...         "a": schema.ObjectSchema("A", {})
@@ -2663,9 +2705,11 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... )
 
     Create a ref:
+
     >>> ref = schema.RefSchema("a")
 
     Use ref in an object:
+
     >>> s.objects["b"] = schema.ObjectSchema(
     ...     "B",
     ...    {
@@ -2703,13 +2747,14 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`ScopeType`.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create a scope with an object:
+
     >>> s = schema.ScopeSchema(
     ...     {
     ...         "a": schema.ObjectSchema("A", {})
@@ -2717,9 +2762,11 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... )
 
     Create a ref:
+
     >>> ref = schema.RefSchema("a")
 
     Use ref in an object:
+
     >>> s.objects["b"] = schema.ObjectSchema(
     ...     "B",
     ...    {
@@ -2789,13 +2836,14 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`StepOutputType`.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create scope:
+
     >>> scope = schema.ScopeSchema(
     ...     {
     ...         "a": schema.ObjectSchema(
@@ -2807,6 +2855,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... )
 
     Create output schema:
+
     >>> output = schema.StepOutputSchema(
     ...     scope,
     ...     schema.DisplayValue("Test output"),
@@ -2831,13 +2880,14 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         Creates a JSON schema fragment for this output. This is useful when combining the output with other outputs into
         a comprehensive JSON schema output.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create scope:
+
         >>> scope = schema.ScopeSchema(
         ...     {
         ...         "a": schema.ObjectSchema(
@@ -2851,6 +2901,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ... )
 
         Create output schema:
+
         >>> output = schema.StepOutputSchema(
         ...     scope,
         ...     schema.DisplayValue("Test output"),
@@ -2858,6 +2909,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ... )
 
         Dump JSON schema:
+
         >>> json_schema = output.to_jsonschema()
         >>> json_schema["type"]
         'object'
@@ -2871,13 +2923,14 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         Creates a OpenAPI fragment for this output. This is useful when combining the output with other outputs into
         a comprehensive OpenAPI document.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create scope:
+
         >>> scope = schema.ScopeSchema(
         ...     {
         ...         "a": schema.ObjectSchema(
@@ -2891,6 +2944,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ... )
 
         Create output schema:
+
         >>> output = schema.StepOutputSchema(
         ...     scope,
         ...     schema.DisplayValue("Test output"),
@@ -2898,6 +2952,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ... )
 
         Dump OpenAPI schema:
+
         >>> openapi = output.to_openapi()
         >>> openapi["$ref"]
         '#/components/schemas/a'
@@ -2920,13 +2975,14 @@ class StepSchema:
     """
     This class holds the definition for a single step, it's input and output definitions.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Define input:
+
     >>> input_scope = schema.ScopeSchema(
     ...     {
     ...         "input": schema.ObjectSchema(
@@ -2940,6 +2996,7 @@ class StepSchema:
     ... )
 
     Create output schema:
+
     >>> output_scope = schema.ScopeSchema(
     ...     {
     ...         "greeting": schema.ObjectSchema(
@@ -2958,6 +3015,7 @@ class StepSchema:
     ... )
 
     Create step schema:
+
     >>> step_schema = schema.StepSchema(
     ...     "hello_world",
     ...     input_scope,
@@ -3019,6 +3077,7 @@ class AbstractType(Generic[TypeT]):
         """
         This function takes the underlying raw data and decodes it into the underlying advanced data type (e.g.
         dataclass) for usage.
+
         :param data: the raw data.
         :param path: the list of structural elements that lead to this point for error messages.
         :return: the advanced datatype.
@@ -3031,6 +3090,7 @@ class AbstractType(Generic[TypeT]):
         """
         This function validates an already unserialized data type and raises an exception if it does not match
         the type definition.
+
         :param data: the unserialized data.
         :param path: the path that lead to this validation call, in order to produce a nice error message
         :raise ConstraintException: if the passed data was not valid.
@@ -3040,6 +3100,7 @@ class AbstractType(Generic[TypeT]):
     def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
         """
         This function serializes the passed data into it's raw form for transport, e.g. string, int, dicts, list.
+
         :param data: the underlying data type to be serialized.
         :param path: the list of structural elements that lead to this point for error messages.
         :return: the raw datatype.
@@ -3098,30 +3159,35 @@ class StringEnumType(_EnumType, StringEnumSchema):
     """
     This class represents an enum type that is a string.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from enum import Enum
 
     Create an enum:
+
     >>> class Fruits(Enum):
     ...    APPLE="apple"
     ...    ORANGE="orange"
 
     Create the type:
+
     >>> fruit_type = schema.StringEnumType(Fruits)
 
     Unserialize a value:
+
     >>> fruit_type.unserialize("apple")
     <Fruits.APPLE: 'apple'>
 
     Serialize a value:
+
     >>> fruit_type.serialize(Fruits.ORANGE)
     'orange'
 
     Validate a value:
+
     >>> fruit_type.validate("plum")
     Traceback (most recent call last):
     ...
@@ -3148,31 +3214,36 @@ class IntEnumType(_EnumType, IntEnumSchema):
     """
     This class represents an enum type that is an integer.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from enum import Enum
 
     Create an enum:
+
     >>> class PrimeNumbers(Enum):
     ...    FIRST=2
     ...    SECOND=3
     ...    THIRD=5
 
     Create the type:
+
     >>> prime_numbers_type = schema.IntEnumType(PrimeNumbers)
 
     Unserialize a value:
+
     >>> prime_numbers_type.unserialize(2)
     <PrimeNumbers.FIRST: 2>
 
     Serialize a value:
+
     >>> prime_numbers_type.serialize(PrimeNumbers.FIRST)
     2
 
     Validate a value:
+
     >>> prime_numbers_type.validate(4)
     Traceback (most recent call last):
     ...
@@ -3199,13 +3270,14 @@ class BoolType(BoolSchema, AbstractType):
     """
     This type represents a boolean value with a multitude of unserialization options.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create bool type:
+
     >>> bool_type = schema.BoolType()
 
     Now you can use the type to unseralize, validate, or serialize values.
@@ -3215,16 +3287,18 @@ class BoolType(BoolSchema, AbstractType):
         """
         This function unserializes a bool value from a variety of types.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create bool type:
+
         >>> bool_type = schema.BoolType()
 
         Unserialize a bool iun various ways:
+
         >>> bool_type.unserialize(True)
         True
         >>> bool_type.unserialize(1)
@@ -3259,6 +3333,7 @@ class BoolType(BoolSchema, AbstractType):
         False
 
         This will throw an error:
+
         >>> bool_type.unserialize("")
         Traceback (most recent call last):
         ...
@@ -3298,20 +3373,23 @@ class BoolType(BoolSchema, AbstractType):
         """
         This function validates a bool value.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create bool type:
+
         >>> bool_type = schema.BoolType()
 
         Validate:
+
         >>> bool_type.validate(True)
         >>> bool_type.validate(False)
 
         This will throw an error:
+
         >>> bool_type.validate(1)
         Traceback (most recent call last):
         ...
@@ -3324,22 +3402,25 @@ class BoolType(BoolSchema, AbstractType):
         """
         This function serializes a bool value.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create bool type:
+
         >>> bool_type = schema.BoolType()
 
         Validate:
+
         >>> bool_type.serialize(True)
         True
         >>> bool_type.serialize(False)
         False
 
         This will throw an error:
+
         >>> bool_type.serialize(1)
         Traceback (most recent call last):
         ...
@@ -3355,8 +3436,7 @@ class StringType(StringSchema, AbstractType):
     """
     StringType represents a string of characters for human consumption.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> import re
@@ -3373,8 +3453,8 @@ class StringType(StringSchema, AbstractType):
         """
         Unserializes the current string from an integer or string.
 
-        Example
-        =======
+        **Example:**
+
         >>> from arcaflow_plugin_sdk import schema
         >>> import re
         >>> s = schema.StringType(
@@ -3394,8 +3474,7 @@ class StringType(StringSchema, AbstractType):
         """
         Validates the given string for conformance with the rules set up in this object.
 
-        Example
-        =======
+        **Example:**
 
         >>> from arcaflow_plugin_sdk import schema
         >>> import re
@@ -3404,7 +3483,6 @@ class StringType(StringSchema, AbstractType):
         ...     max=5,
         ...     pattern=re.compile("^[a-z]+$")
         ... )
-
         >>> s.validate("as")
         Traceback (most recent call last):
         ...
@@ -3453,8 +3531,7 @@ class PatternType(PatternSchema, AbstractType):
     """
     PatternType represents a regular expression.
 
-    Example
-    =======
+    **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> pattern_type = schema.PatternType()
@@ -3466,19 +3543,21 @@ class PatternType(PatternSchema, AbstractType):
         """
         This function unserializes a regular expression from a string.
 
-        Example
-        =======
+        **Example:**
 
         Initialize:
+
         >>> from arcaflow_plugin_sdk import schema
         >>> pattern_type = schema.PatternType()
 
         Unserialize:
+
         >>> regexp = pattern_type.unserialize("^[a-z]+$")
         >>> regexp.pattern
         '^[a-z]+$'
 
         This will throw an error:
+
         >>> regexp = pattern_type.unserialize("[")
         Traceback (most recent call last):
         ...
@@ -3500,18 +3579,20 @@ character set at position 0)
         """
         This function validates a regular expression as such.
 
-        Example
-        =======
+        **Example:**
 
         Initialize:
+
         >>> from arcaflow_plugin_sdk import schema
         >>> from re import compile
         >>> pattern_type = schema.PatternType()
 
         Validate:
+
         >>> pattern_type.validate(compile("^[a-z]+$"))
 
         This will fail:
+
         >>> pattern_type.validate("^[a-z]+$")
         Traceback (most recent call last):
         ...
@@ -3528,15 +3609,16 @@ character set at position 0)
 
 class IntType(IntSchema, AbstractType):
     """
-    IntType represents an integer type, both positive or negative. It is designed to take a 64 bit value.
+    ``IntType`` represents an integer type, both positive or negative. It is designed to take a 64 bit value.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Initialize int type:
+
     >>> int_type = schema.IntType(
     ...     min=3,
     ...     max=5,
@@ -3551,13 +3633,14 @@ class IntType(IntSchema, AbstractType):
         This function can unserialize a number for a integers or strings. If the passed data is a string, it can take
         the unit of the current type into account.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize int type:
+
         >>> int_type = schema.IntType(
         ...     min=1000000,
         ...     max=5000000,
@@ -3565,12 +3648,14 @@ class IntType(IntSchema, AbstractType):
         ... )
 
         Unserialize:
+
         >>> int_type.unserialize("2s30ms")
         2030000
         >>> int_type.unserialize(3000000)
         3000000
 
         These will fail:
+
         >>> int_type.unserialize("4k")
         Traceback (most recent call last):
         ...
@@ -3581,7 +3666,6 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at most 5s (5000000ns)
-
         >>> int_type.unserialize("500ms")
         Traceback (most recent call last):
         ...
@@ -3610,13 +3694,14 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         """
         This function validates the passed number for conformity with the schema.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize int type:
+
         >>> int_type = schema.IntType(
         ...     min=1000000,
         ...     max=5000000,
@@ -3624,9 +3709,11 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         ... )
 
         This will work:
+
         >>> int_type.validate(3000000)
 
         These will fail:
+
         >>> int_type.validate("4s")
         Traceback (most recent call last):
         ...
@@ -3658,13 +3745,14 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         """
         This function will return an integer for the base unit of this value.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize int type:
+
         >>> int_type = schema.IntType(
         ...     min=1000000,
         ...     max=5000000,
@@ -3672,10 +3760,12 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         ... )
 
         This will work:
+
         >>> int_type.serialize(3000000)
         3000000
 
         These will fail:
+
         >>> int_type.serialize("4s")
         Traceback (most recent call last):
         ...
@@ -3698,13 +3788,14 @@ class FloatType(FloatSchema, AbstractType):
     """
     This type represents a 64-bit floating point / real number.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Initialize float type:
+
     >>> float_type = schema.FloatType(
     ...     min=3.0,
     ...     max=5.0,
@@ -3719,13 +3810,14 @@ class FloatType(FloatSchema, AbstractType):
         This function can unserialize a number for a integers or strings. If the passed data is a string, it can take
         the unit of the current type into account.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize float type:
+
         >>> float_type = schema.FloatType(
         ...     min=1000000.0,
         ...     max=5000000.0,
@@ -3733,6 +3825,7 @@ class FloatType(FloatSchema, AbstractType):
         ... )
 
         Unserialize:
+
         >>> float_type.unserialize("2s30ms")
         2030000.0
         >>> float_type.unserialize("2s30ms1.1ns")
@@ -3743,6 +3836,7 @@ class FloatType(FloatSchema, AbstractType):
         3000000.0
 
         These will fail:
+
         >>> float_type.unserialize("4k")
         Traceback (most recent call last):
         ...
@@ -3753,7 +3847,6 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at most 5s (5000000.0ns)
-
         >>> float_type.unserialize("500ms")
         Traceback (most recent call last):
         ...
@@ -3783,13 +3876,14 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         """
         This function validates the passed number for conformity with the schema.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize float type:
+
         >>> float_type = schema.FloatType(
         ...     min=1000000.0,
         ...     max=5000000.0,
@@ -3797,9 +3891,11 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         ... )
 
         This will work:
+
         >>> float_type.validate(3000000.0)
 
         These will fail:
+
         >>> float_type.validate(3000000)
         Traceback (most recent call last):
         ...
@@ -3835,13 +3931,14 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         """
         This function will return a float for the base unit of this value.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Initialize float type:
+
         >>> float_type = schema.FloatType(
         ...     min=1000000.0,
         ...     max=5000000.0,
@@ -3849,10 +3946,12 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         ... )
 
         This will work:
+
         >>> float_type.serialize(3000000.0)
         3000000.0
 
         These will fail:
+
         >>> float_type.serialize("4s")
         Traceback (most recent call last):
         ...
@@ -3876,16 +3975,17 @@ ListT = TypeVar("ListT", bound=List)
 @dataclass
 class ListType(ListSchema, AbstractType, Generic[ListT]):
     """
-    ListType is a strongly typed list that can have elements of only one type. The typical Python equivalent would be
-    typing.List[sometype].
+    ``ListType`` is a strongly typed list that can have elements of only one type. The typical Python equivalent would be
+    ``typing.List[sometype]``.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create a list type:
+
     >>> list_type = schema.ListType(
     ...     schema.StringType(),
     ...     min=1,
@@ -3899,13 +3999,14 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
         """
         This function unserializes the list itself, and also unserializes the underlying type.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a list type:
+
         >>> list_type = schema.ListType(
         ...     schema.StringType(min=1),
         ...     min=1,
@@ -3913,10 +4014,12 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
         ... )
 
         Unserialize data:
+
         >>> list_type.unserialize(["Hello world!"])
         ['Hello world!']
 
         These will fail:
+
         >>> list_type.unserialize([])
         Traceback (most recent call last):
         ...
@@ -3927,6 +4030,7 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at most 3 items, 4 given
 
         Underlying types are also validated:
+
         >>> list_type.unserialize([""])
         Traceback (most recent call last):
         ...
@@ -3946,13 +4050,14 @@ characters, 0 given
         """
         This function validates the data type. It also validates the underlying data type.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a list type:
+
         >>> list_type = schema.ListType(
         ...     schema.StringType(min=1),
         ...     min=1,
@@ -3960,9 +4065,11 @@ characters, 0 given
         ... )
 
         Validate the data:
+
         >>> list_type.validate(["Hello world!"])
 
         These will fail:
+
         >>> list_type.validate([])
         Traceback (most recent call last):
         ...
@@ -3973,6 +4080,7 @@ characters, 0 given
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at most 3 items, 4 given
 
         Underlying types are also validated:
+
         >>> list_type.validate([""])
         Traceback (most recent call last):
         ...
@@ -3989,13 +4097,15 @@ characters, 0 given
         """
         This function serializes the list elements into a list for transport.
 
-        Example
-        =======
+        **Example:**
+
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a list type:
+
         >>> list_type = schema.ListType(
         ...     schema.StringType(min=1),
         ...     min=1,
@@ -4003,6 +4113,7 @@ characters, 0 given
         ... )
 
         Serialize the data:
+
         >>> list_type.serialize(["a"])
         ['a']
         """
@@ -4031,13 +4142,14 @@ class MapType(MapSchema, AbstractType, Generic[MapT]):
     """
     MapType is a key-value dict with fixed types for both.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
 
     Create a map type:
+
     >>> map_type = schema.MapType(
     ...     keys=schema.StringType(min=1),
     ...     values=schema.IntType(),
@@ -4052,13 +4164,14 @@ class MapType(MapSchema, AbstractType, Generic[MapT]):
         """
         Unserialize a map (dict) type as defined with the underlying types.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a map type:
+
         >>> map_type = schema.MapType(
         ...     keys=schema.StringType(min=2),
         ...     values=schema.IntType(min=3),
@@ -4067,10 +4180,12 @@ class MapType(MapSchema, AbstractType, Generic[MapT]):
         ... )
 
         Unserialize data:
+
         >>> map_type.unserialize({"foo": 5})
         {'foo': 5}
 
         This will not work due to underlying types failing validation:
+
         >>> map_type.unserialize({"a": 5})
         Traceback (most recent call last):
         ...
@@ -4082,6 +4197,7 @@ characters, 1 given
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'foo -> value': Must be at least 3
 
         This will also fail because the map does not have enough elements:
+
         >>> map_type.unserialize({})
         Traceback (most recent call last):
         ...
@@ -4110,13 +4226,14 @@ characters, 1 given
         """
         This function validates the map and its underlying types.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a map type:
+
         >>> map_type = schema.MapType(
         ...     keys=schema.StringType(min=2),
         ...     values=schema.IntType(min=3),
@@ -4125,9 +4242,11 @@ characters, 1 given
         ... )
 
         This is valid:
+
         >>> map_type.validate({"foo": 5})
 
         This will not work due to underlying types failing validation:
+
         >>> map_type.validate({"a": 5})
         Traceback (most recent call last):
         ...
@@ -4139,6 +4258,7 @@ characters, 1 given
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'foo -> value': Must be at least 3
 
         This will also fail because the map does not have enough elements:
+
         >>> map_type.validate({})
         Traceback (most recent call last):
         ...
@@ -4160,13 +4280,14 @@ characters, 1 given
         """
         This function serializes the data into the transportable system.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
 
         Create a map type:
+
         >>> map_type = schema.MapType(
         ...     keys=schema.StringType(min=2),
         ...     values=schema.IntType(min=3),
@@ -4175,10 +4296,12 @@ characters, 1 given
         ... )
 
         This is valid:
+
         >>> map_type.serialize({"foo": 5})
         {'foo': 5}
 
         This will not work due to underlying types failing validation:
+
         >>> map_type.serialize({"a": 5})
         Traceback (most recent call last):
         ...
@@ -4190,6 +4313,7 @@ characters, 1 given
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'foo -> value': Must be at least 3
 
         This will also fail because the map does not have enough elements:
+
         >>> map_type.serialize({})
         Traceback (most recent call last):
         ...
@@ -4226,28 +4350,32 @@ PropertyT = TypeVar("PropertyT")
 
 class PropertyType(PropertySchema, Generic[PropertyT]):
     """
-    This class holds the schema definition for a single object property . It is usable in conjunction with ObjectType.
+    This class holds the schema definition for a single object property . It is usable in conjunction with ``ObjectType``.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
 
     Define your dataclass
+
     >>> @dataclass
     ... class ExampleData:
     ...    a: str
 
     Create a schema:
+
     >>> object_type = schema.build_object_schema(ExampleData)
 
     This will result in a scope object, containing the dataclass with the property as a root object:
+
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
 
     Alternatively, you can construct the type by hand:
+
     >>> object_type = schema.ObjectType(
     ...     ExampleData,
     ...     {
@@ -4256,6 +4384,7 @@ class PropertyType(PropertySchema, Generic[PropertyT]):
     ... )
 
     Now you can query the type as before:
+
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
     """
@@ -4295,29 +4424,33 @@ ObjectT = TypeVar("ObjectT", bound=object)
 @dataclass
 class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     """
-    ObjectType represents an object with predefined fields. The property declaration must match the fields in the class.
+    ``ObjectType`` represents an object with predefined fields. The property declaration must match the fields in the class.
     The type currently does not validate if the properties match the provided class.
 
-    Example
-    =======
+    **Example:**
 
     Imports:
+
     >>> from arcaflow_plugin_sdk import schema
     >>> from dataclasses import dataclass
 
     Define your dataclass
+
     >>> @dataclass
     ... class ExampleData:
     ...    a: str
 
     Create a schema:
+
     >>> object_type = schema.build_object_schema(ExampleData)
 
     This will result in a scope object, containing the dataclass with the property as a root object:
+
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
 
     Alternatively, you can construct the type by hand:
+
     >>> object_type = schema.ObjectType(
     ...     ExampleData,
     ...     {
@@ -4326,6 +4459,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     ... )
 
     Now you can query the type as before:
+
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
 
@@ -4459,26 +4593,30 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         """
         This function unserializes a dict into a dataclass.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
         >>> from dataclasses import dataclass
 
         Define a dataclass:
+
         >>> @dataclass
         ... class TestData:
         ...     a: str
 
         Build a schema:
+
         >>> object_type = schema.build_object_schema(TestData)
 
         Unserialize data:
+
         >>> object_type.unserialize({"a":"Hello world!"})
         TestData(a='Hello world!')
 
         This will fail:
+
         >>> object_type.unserialize("Hello world!")
         Traceback (most recent call last):
         ...
@@ -4523,25 +4661,29 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         """
         This function will validate the dataclass and all underlying types as well.
 
-        Example
-        =======
+        **Example:**
 
         Imports:
+
         >>> from arcaflow_plugin_sdk import schema
         >>> from dataclasses import dataclass
 
         Define a dataclass:
+
         >>> @dataclass
         ... class TestData:
         ...     a: typing.Annotated[str, schema.min(1)]
 
         Build a schema:
+
         >>> object_type = schema.build_object_schema(TestData)
 
         Validate a data class:
+
         >>> object_type.validate(TestData("Hello world!"))
 
         These will fail:
+
         >>> object_type.validate(TestData(""))
         Traceback (most recent call last):
         ...
@@ -5007,14 +5149,15 @@ class StepType(StepSchema):
 
 class SchemaType(Schema):
     """
-    A schema is a definition of one or more steps that can be executed. The step has a defined input and output 
+    A schema is a definition of one or more steps that can be executed. The step has a defined input and output
     """
     steps: Dict[str, StepType]
 
     def unserialize_input(self, step_id: str, data: Any) -> Any:
         """
         This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
-        automatically called by __call__ before running the step with the unserialized input.
+        automatically called by ``__call__`` before running the step with the unserialized input.
+
         :param step_id: The step ID to use to look up the schema for unserialization.
         :param data: The raw data to unserialize.
         :return: The unserialized data in the structure the step expects it.
@@ -5035,7 +5178,8 @@ class SchemaType(Schema):
         """
         This function calls a specific step with the input parameter that has already been unserialized. It expects the
         data to be already valid, use unserialize_input to produce a valid input. This function is automatically called
-        by __call__ after unserializing the input.
+        by ``__call__`` after unserializing the input.
+
         :param step_id: The ID of the input step to run.
         :param input_param: The unserialized data structure the step expects.
         :return: The ID of the output, and the data structure returned from the step.
@@ -5061,7 +5205,8 @@ class SchemaType(Schema):
     def serialize_output(self, step_id: str, output_id: str, output_data: Any) -> Any:
         """
         This function takes an output ID (e.g. "error") and structured output_data and serializes them into a format
-        suitable for wire transport. This function is automatically called by __call__ after the step is run.
+        suitable for wire transport. This function is automatically called by ``__call__`` after the step is run.
+
         :param step_id: The step ID to use to look up the schema for serialization.
         :param output_id: The string identifier for the output data structure.
         :param output_data: The data structure returned from the step.
@@ -5083,6 +5228,7 @@ class SchemaType(Schema):
         """
         This function takes the input data, unserializes it for the specified step, calls the specified step, and,
         unless skip_serialization is set, serializes the return data.
+
         :param step_id: the step to execute
         :param data: input data
         :param skip_serialization: skip result serialization to basic types
@@ -5787,9 +5933,10 @@ def test_object_serialization(
     """
     This function aids serialization by first serializing, then unserializing the passed parameter according to the
     passed schema. It then compares that the two objects are equal.
+
     :param dc: the dataclass to use for tests.
     :param t: the schema for the dataclass. If none is passed, the schema is built automatically using
-    schema.build_object_schema()
+              ``schema.build_object_schema()``
     """
     try:
         if t is None:
