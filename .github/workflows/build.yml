@@ -6,6 +6,9 @@ on:
     tags:
       - '*'
   pull_request:
+permissions:
+  # https://github.community/t/permissions-nesecary-to-comment-on-a-pr/179047/5
+  pull-requests: write
 jobs:
   build:
     name: Build
@@ -32,16 +35,22 @@ jobs:
         run: |
           pip install pyflakes
           pyflakes `find . -name "*.py"`
+      - name: Install coverage
+        run: pip install coverage
       - name: Test
-        run: cd src && python3 -m unittest discover -v
+        run: |
+          python3 -m coverage run -a -m unittest discover -v src
       - name: Document
         run: |
           sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Python SDK for Arcaflow"
           make -C docs html
       - name: Run example plugin
-        run: ./example_plugin.py -f example.yaml
+        run: python3 -m coverage run -a ./example_plugin.py -f example.yaml
       - name: Run example plugin test
-        run: ./test_example_plugin.py
+        run: python3 -m coverage run -a ./test_example_plugin.py
+      - name: Collect coverage report
+        run: |
+          python3 -m coverage html
       - name: Update version number
         if: startsWith(github.ref, 'refs/tags/')
         run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
@@ -52,6 +61,12 @@ jobs:
         with:
           name: dist
           path: dist
+          if-no-files-found: error
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: htmlcov
           if-no-files-found: error
   publish:
     name: Publish
