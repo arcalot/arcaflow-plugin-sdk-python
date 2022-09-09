@@ -442,7 +442,6 @@ class OneOfTest(unittest.TestCase):
             b: int
 
         scope = schema.ScopeType(
-            "a",
             {
                 "a": schema.ObjectType(
                     OneOfData1,
@@ -460,7 +459,8 @@ class OneOfTest(unittest.TestCase):
                         )
                     }
                 )
-            }
+            },
+            "a",
         )
         s = schema.OneOfStringType(
             {
@@ -807,8 +807,7 @@ class SerializationTest(unittest.TestCase):
 class SchemaBuilderTest(unittest.TestCase):
     def test_non_dataclass(self):
         scope = schema.ScopeType(
-            "a",
-            {}
+            {},
         )
         with self.assertRaises(SchemaBuildException) as ctx:
             schema._SchemaBuilder.resolve(complex, scope)
@@ -816,15 +815,13 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_regexp(self):
         scope = schema.ScopeType(
-            "a",
-            {}
+            {},
         )
         resolved_type = schema._SchemaBuilder.resolve(Pattern, scope)
         self.assertIsInstance(resolved_type, schema.PatternType)
 
     def test_string(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
         test: str = "foo"
@@ -835,7 +832,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_int(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
         test: int = 5
@@ -846,7 +842,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_float(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
         test: float = 3.14
@@ -857,7 +852,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_string_enum(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
 
@@ -870,7 +864,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_int_enum(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
 
@@ -883,7 +876,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_list(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
 
@@ -897,7 +889,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_map(self):
         scope = schema.ScopeType(
-            "a",
             {}
         )
         resolved_type = schema._SchemaBuilder.resolve(typing.Dict[str, str], scope)
