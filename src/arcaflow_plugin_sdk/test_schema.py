@@ -9,8 +9,7 @@ from arcaflow_plugin_sdk import schema
 import enum
 import unittest
 
-from arcaflow_plugin_sdk.schema import PropertyType, ConstraintException, BadArgumentException, SchemaBuildException, \
-    IntType
+from arcaflow_plugin_sdk.schema import PropertyType, ConstraintException, BadArgumentException, SchemaBuildException
 
 
 class Color(enum.Enum):
@@ -422,7 +421,7 @@ class ObjectTest(unittest.TestCase):
             pass
 
         # If a is missing from 'TestSubclass', it will fail.
-        s = schema.ObjectType(
+        schema.ObjectType(
             TestSubclass,
             {
                 "a": schema.PropertyType(

@@ -5,7 +5,6 @@
 
 # -- Path setup --------------------------------------------------------------
 
-import os
 import sys
 sys.path.insert(0, '/home/sbonazzo/NotBackedUp/upstream/arcaflow-plugin-sdk-python/src')
 
