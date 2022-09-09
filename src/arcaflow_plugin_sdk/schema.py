@@ -5966,7 +5966,7 @@ def test_object_serialization(
                  "2. Your sample data is invalid according to your own rules\n" \
                  "3. There is a bug in the SDK (please report it)\n\n" \
                  "Check the error message below for details.\n\n" \
-                 "---\n\n".format(type(dc).__name__, traceback.extract_stack())
+                 "---\n\n{}".format(type(dc).__name__, traceback.extract_stack())
         result += "Error message:\n" + e.__str__() + "\n\n"
         # noinspection PyDataclass
         result += "Input:\n" + pprint.pformat(dataclasses.asdict(dc)) + "\n\n"
