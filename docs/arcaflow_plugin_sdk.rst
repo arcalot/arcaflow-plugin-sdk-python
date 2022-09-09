@@ -8,7 +8,6 @@ Submodules
    :maxdepth: 4
 
    arcaflow_plugin_sdk.annotations
-   arcaflow_plugin_sdk.http
    arcaflow_plugin_sdk.jsonschema
    arcaflow_plugin_sdk.plugin
    arcaflow_plugin_sdk.schema

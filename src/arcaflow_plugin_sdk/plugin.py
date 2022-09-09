@@ -10,7 +10,7 @@ from sys import argv, stdin, stdout, stderr
 from optparse import OptionParser
 from typing import List, Callable, TypeVar, Dict, Type
 
-from arcaflow_plugin_sdk import schema, serialization, jsonschema
+from arcaflow_plugin_sdk import schema, serialization, jsonschema, _http
 from arcaflow_plugin_sdk.schema import BadArgumentException, InvalidInputException, InvalidOutputException
 
 _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
@@ -350,8 +350,7 @@ def _print_schema(s, options, stdout):
 def _run_server(listen, s, stdin, stdout, stderr):
     stdout.write("Starting HTTP server at {}...\n".format(listen))
     stdout.write("Warning! This mode is experimental and may change or be discontinued at any time!\n")
-    from arcaflow_plugin_sdk import http
-    http.run(listen, s)
+    _http.run(listen, s)
 
 
 test_object_serialization = schema.test_object_serialization
