@@ -129,6 +129,12 @@ def run(
             help="Print Arcaflow schema.",
         )
         parser.add_option(
+            "--atp",
+            dest="atp",
+            action="store_true",
+            help="Run the Arcaflow Transport Protocol endpoint.",
+        )
+        parser.add_option(
             "--json-schema",
             dest="json_schema",
             help="Print JSON schema for either the input or the output.",
@@ -184,6 +190,13 @@ def run(
                     "--{} and --http cannot be used together".format(action)
                 )
             action = "http"
+        if options.atp is not None:
+            if action is not None:
+                raise _ExitException(
+                    64,
+                    "--{} and --atp cannot be used together".format(action)
+                )
+            action = "atp"
         if action is None:
             raise _ExitException(
                 64,
@@ -199,6 +212,9 @@ def run(
                 step_id = list(s.steps.keys())[0]
         if action == "file":
             return _execute_file(step_id, s, options, stdin, stdout, stderr)
+        elif action == "atp":
+            from arcaflow_plugin_sdk import atp
+            return atp.run_plugin(s, stdin.buffer.raw, stdout.buffer.raw, stdout.buffer.raw)
         elif action == "json-schema":
             return _print_json_schema(step_id, s, options, stdout)
         elif action == "schema":
@@ -284,19 +300,20 @@ def _execute_file(
         data = serialization.load_from_file(filename)
     original_stdout = sys.stdout
     original_stderr = sys.stderr
+    out_buffer = io.StringIO()
     if options.debug:
         # Redirect stdout to stderr for debug logging
         sys.stdout = stderr
         sys.stderr = stderr
     else:
-        out_buffer = io.StringIO()
         sys.stdout = out_buffer
         sys.stderr = out_buffer
     try:
         output_id, output_data = s(step_id, data)
         output = {
             "output_id": output_id,
-            "output_data": output_data
+            "output_data": output_data,
+            "debug_logs": out_buffer.getvalue(),
         }
         stdout.write(yaml.dump(output, sort_keys=False))
         return 0
