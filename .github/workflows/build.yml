@@ -51,6 +51,10 @@ jobs:
       - name: Collect coverage report
         run: |
           python3 -m coverage html
+      - name: Publish coverage report to job summary
+        # publishing only once
+        if: ${{ matrix.python-version == '3.9'}}
+        run: |
           pip install html2text
           html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
       - name: Update version number
