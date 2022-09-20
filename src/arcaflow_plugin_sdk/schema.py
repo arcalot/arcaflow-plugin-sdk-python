@@ -2702,6 +2702,7 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         "a": schema.ObjectSchema("A", {})
     ...     },
+    ...     "a"
     ... )
 
     Create a ref:
@@ -2759,6 +2760,7 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         "a": schema.ObjectSchema("A", {})
     ...     },
+    ...     "a",
     ... )
 
     Create a ref:
@@ -2783,10 +2785,10 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _description("A set of referenceable objects. These objects may contain references themselves.")
     ]
     root: typing.Annotated[
-        typing.Optional[str],
+        str,
         _name("Root object"),
         _description("Reference to the root object of this scope"),
-    ] = None
+    ]
 
     def __getitem__(self, item):
         try:
@@ -4983,7 +4985,7 @@ class ScopeType(ScopeSchema, AbstractType):
                 ID_TYPE,
                 ObjectType
             ],
-            root: typing.Optional[str] = None,
+            root: typing.Optional[str],
     ):
         # noinspection PyArgumentList
         ScopeSchema.__init__(self, objects, root)
