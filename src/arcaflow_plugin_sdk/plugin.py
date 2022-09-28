@@ -214,7 +214,7 @@ def run(
             return _execute_file(step_id, s, options, stdin, stdout, stderr)
         elif action == "atp":
             from arcaflow_plugin_sdk import atp
-            return atp.run_plugin(s, stdin.buffer.raw, stdout.buffer.raw, stdout.buffer.raw)
+            return atp.run_plugin(s, stdin.buffer, stdout.buffer, stdout.buffer)
         elif action == "json-schema":
             return _print_json_schema(step_id, s, options, stdout)
         elif action == "schema":

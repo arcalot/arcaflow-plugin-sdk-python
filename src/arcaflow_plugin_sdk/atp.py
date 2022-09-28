@@ -15,6 +15,7 @@ The message flow is as follows:
 """
 import dataclasses
 import io
+import os
 import signal
 import sys
 import typing
@@ -60,6 +61,10 @@ def run_plugin(
     """
     This function wraps running a plugin.
     """
+    if os.isatty(stdout.fileno()):
+        print("Cannot run plugin in ATP mode on an interactive terminal.")
+        return 1
+
     signal.signal(signal.SIGTERM, _handle_exit)
     try:
         decoder = cbor2.decoder.CBORDecoder(stdin)
@@ -68,6 +73,7 @@ def run_plugin(
         start = HelloMessage(1, s)
         serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start)
         encoder.encode(serialized_message)
+        stdout.flush()
 
         message = decoder.decode()
     except SystemExit:
@@ -92,6 +98,7 @@ def run_plugin(
             "output_data": s.serialize_output(message["id"], output_id, output_data),
             "debug_logs": out_buffer.getvalue(),
         })
+        stdout.flush()
     except SystemExit:
         return 1
     return 0
