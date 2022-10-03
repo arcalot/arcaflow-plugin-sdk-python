@@ -805,6 +805,14 @@ class SerializationTest(unittest.TestCase):
 
 
 class SchemaBuilderTest(unittest.TestCase):
+    def test_any(self):
+        scope = schema.ScopeType(
+            {},
+            "a",
+        )
+        resolved_type = schema._SchemaBuilder.resolve(schema.ANY_TYPE, scope)
+        self.assertIsInstance(resolved_type, schema.AnyType)
+
     def test_non_dataclass(self):
         scope = schema.ScopeType(
             {},

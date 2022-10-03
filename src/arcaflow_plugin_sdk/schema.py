@@ -1056,6 +1056,14 @@ _conflicts = conflicts
 
 # region Type aliases
 
+ANY_TYPE = typing.Union[
+    typing.List[typing.ForwardRef("ANY_TYPE")],
+    typing.Dict[typing.ForwardRef("ANY_TYPE"), typing.ForwardRef("ANY_TYPE")],
+    int,
+    float,
+    bool,
+    str
+]
 VALUE_TYPE = typing.Annotated[
     typing.Union[
         typing.Annotated[
@@ -1084,6 +1092,7 @@ VALUE_TYPE = typing.Annotated[
             name("Multiple with int key"),
         ],
         typing.Annotated[typing.ForwardRef("RefSchema"), discriminator_value("ref"), name("Object reference")],
+        typing.Annotated[typing.ForwardRef("AnySchema"), discriminator_value("any"), name("Any")],
     ],
     discriminator("type_id")
 ]
@@ -2735,6 +2744,29 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return dict({
             "$ref": "#/components/schemas/" + self.id
         })
+
+
+@dataclass
+class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
+    """
+    This class stores the details of the "any" type, which allows all lists, dicts, integers, floats, strings, and bools
+    in a value.
+
+    **Example:**
+
+    Imports:
+
+    >>> from arcaflow_plugin_sdk import schema
+
+    Create an any schema:
+
+    >>> ref = schema.AnySchema()
+    """
+    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+        return dict({})
+
+    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+        return dict({})
 
 
 @dataclass
@@ -5066,6 +5098,106 @@ class RefType(RefSchema, AbstractType):
         return self._scope.objects[self.id].serialize(data, path)
 
 
+class AnyType(AnySchema, AbstractType):
+    """
+    This type is a serializable version of the "any" type.
+
+    **Examples:**
+
+    Import:
+
+    >>> from arcaflow_plugin_sdk import schema
+
+    Create an AnyType:
+    >>> t = schema.AnyType()
+
+    Unserialize a value:
+    >>> t.unserialize("Hello world!")
+    'Hello world!'
+    >>> t.unserialize(1)
+    1
+    >>> t.unserialize(1.0)
+    1.0
+    >>> t.unserialize(True)
+    True
+    >>> t.unserialize({"message": "Hello world!"})
+    {'message': 'Hello world!'}
+    >>> t.unserialize(["Hello world!"])
+    ['Hello world!']
+
+    Validate a value:
+    >>> t.validate("Hello world!")
+    >>> t.validate(1)
+    >>> t.validate(1.0)
+    >>> t.validate(True)
+    >>> t.validate({"message": "Hello world!"})
+    >>> t.validate(["Hello world!"])
+
+    Serialize a value:
+    >>> t.serialize("Hello world!")
+    'Hello world!'
+    >>> t.serialize(1)
+    1
+    >>> t.serialize(1.0)
+    1.0
+    >>> t.serialize(True)
+    True
+    >>> t.serialize({"message": "Hello world!"})
+    {'message': 'Hello world!'}
+    >>> t.serialize(["Hello world!"])
+    ['Hello world!']
+
+    Not everything is accepted:
+    >>> from dataclasses import dataclass
+    >>> @dataclass
+    ... class TestClass:
+    ...     pass
+    >>> t.unserialize(TestClass())
+    Traceback (most recent call last):
+    ...
+    arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Unsupported data type for 'any' type: TestClass
+    """
+
+    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> Any:
+        self._check(data, path)
+        return data
+
+    def validate(self, data: Any, path: typing.Tuple[str] = tuple([])):
+        self._check(data, path)
+
+    def serialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> Any:
+        self._check(data, path)
+        return data
+
+    def _check(self, data: Any, path: typing.Tuple[str] = tuple([])):
+        if isinstance(data, list):
+            for i in range(len(data)):
+                new_path = list(path)
+                new_path.append("[{}]".format(i))
+                self._check(data[i], tuple(new_path))
+            return
+        elif isinstance(data, dict):
+            for k in data.keys():
+                new_path = list(path)
+                new_path.append("{{{}}}".format(k))
+                self._check(k, tuple(new_path))
+
+                new_path = list(path)
+                new_path.append("[{}]".format(k))
+                self._check(data[k], tuple(new_path))
+            return
+        elif isinstance(data, str):
+            return
+        elif isinstance(data, int):
+            return
+        elif isinstance(data, float):
+            return
+        elif isinstance(data, bool):
+            return
+        else:
+            raise ConstraintException(path, "Unsupported data type for 'any' type: {}".format(data.__class__.__name__))
+
+
 class StepOutputType(StepOutputSchema, AbstractType):
     """
     This class holds the possible outputs of a step and the metadata information related to these outputs.
@@ -5311,7 +5443,9 @@ class _SchemaBuilder:
             path: typing.Tuple[str],
             scope: ScopeType,
     ) -> typing.Union[AbstractType, PropertyType]:
-        if isinstance(t, type):
+        if t == ANY_TYPE:
+            return cls._resolve_any()
+        elif isinstance(t, type):
             return cls._resolve_type(t, type_hints, path, scope)
         elif isinstance(t, str):
             return cls._resolve_string(t, type_hints, path, scope)
@@ -5340,7 +5474,9 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_type(cls, t, type_hints: type, path: typing.Tuple[str], scope: ScopeType):
-        if issubclass(t, Enum):
+        if t == ANY_TYPE:
+            return cls._resolve_any()
+        elif issubclass(t, Enum):
             return cls._resolve_enum(t, type_hints, path, scope)
         elif t == re.Pattern:
             return cls._resolve_pattern(t, type_hints, path, scope)
@@ -5359,6 +5495,10 @@ class _SchemaBuilder:
         elif t == dict:
             return cls._resolve_dict_type(t, type_hints, path, scope)
         return cls._resolve_class(t, type_hints, path, scope)
+
+    @classmethod
+    def _resolve_any(cls):
+        return AnyType()
 
     @classmethod
     def _resolve_enum(
