@@ -1148,6 +1148,11 @@ EXAMPLES_TYPE = typing.Annotated[
         "Example values for this property, encoded as JSON."
     )
 ]
+_OBJECT_LIKE = typing.Union[
+    typing.Annotated[typing.ForwardRef("RefSchema"), discriminator_value("ref")],
+    typing.Annotated[typing.ForwardRef("ScopeSchema"), discriminator_value("scope")],
+    typing.Annotated[typing.ForwardRef("ObjectSchema"), discriminator_value("object")],
+]
 
 _id_type_inverse_re = re.compile("[^$@a-zA-Z0-9-_]")
 
@@ -2496,7 +2501,13 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     "C",
     ... )
     """
-    types: Dict[str, typing.ForwardRef("RefSchema")]
+    types: Dict[
+        str,
+        typing.Annotated[
+            _OBJECT_LIKE,
+            discriminator("type_id")
+        ]
+    ]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2619,7 +2630,13 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     "C",
     ... )
     """
-    types: Dict[int, typing.ForwardRef("RefSchema")]
+    types: Dict[
+        int,
+        typing.Annotated[
+            _OBJECT_LIKE,
+            discriminator("type_id")
+        ]
+    ]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -4977,7 +4994,13 @@ class OneOfStringType(OneOfStringSchema, _OneOfType[OneOfT, str], Generic[OneOfT
 
     def __init__(
             self,
-            types: Dict[str, typing.ForwardRef("RefType")],
+            types: Dict[
+                str,
+                typing.Annotated[
+                    _OBJECT_LIKE,
+                    discriminator("type_id")
+                ]
+            ],
             scope: typing.ForwardRef("ScopeType"),
             discriminator_field_name: str = "_type"
     ):
@@ -4987,11 +5010,25 @@ class OneOfStringType(OneOfStringSchema, _OneOfType[OneOfT, str], Generic[OneOfT
 
 
 class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
-    types: Dict[int, ObjectType]
+    types: Dict[
+        int,
+        typing.Union[
+            typing.ForwardRef("RefSchema"),
+            typing.ForwardRef("ScopeSchema"),
+            typing.ForwardRef("ObjectSchema")
+        ],
+    ]
 
     def __init__(
             self,
-            types: Dict[int, typing.ForwardRef("RefType")],
+            types: Dict[
+                int,
+                typing.Union[
+                    typing.ForwardRef("RefSchema"),
+                    typing.ForwardRef("ScopeSchema"),
+                    typing.ForwardRef("ObjectSchema")
+                ],
+            ],
             scope: typing.ForwardRef("ScopeType"),
             discriminator_field_name: str = "_type"
     ):
