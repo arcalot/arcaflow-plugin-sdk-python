@@ -1063,7 +1063,7 @@ ANY_TYPE = typing.Union[
     float,
     bool,
     str,
-    types.NoneType
+    type(None)
 ]
 VALUE_TYPE = typing.Annotated[
     typing.Union[
@@ -5195,7 +5195,7 @@ class AnyType(AnySchema, AbstractType):
             return
         elif isinstance(data, bool):
             return
-        elif isinstance(data, types.NoneType):
+        elif isinstance(data, type(None)):
             return
         else:
             raise ConstraintException(path, "Unsupported data type for 'any' type: {}".format(data.__class__.__name__))
