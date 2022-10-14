@@ -200,12 +200,12 @@ def run(
         if action is None:
             raise _ExitException(
                 64,
-                "At least one of --file, --json-schema, or --http must be specified"
+                "At least one of --file, --json-schema, --schema, or --http must be specified"
             )
 
         if action == "file" or action == "json-schema":
             if len(s.steps) > 1 and options.step is None:
-                raise _ExitException(64, "-s|--step is required\n" + parser.get_usage())
+                raise _ExitException(64, "-s|--step is required\n" + parser.get_usage() + "\nSteps: " + str(list(s.steps.keys())))
             if options.step is not None:
                 step_id = options.step
             else:
@@ -349,6 +349,8 @@ def _execute_file(
 
 
 def _print_json_schema(step_id, s, options, stdout):
+    if step_id not in s.steps:
+        raise _ExitException(64, "Unknown step \"{}\". Steps: {}".format(step_id, str(list(s.steps.keys()))))
     if options.json_schema == "input":
         data = jsonschema.step_input(s.steps[step_id])
     elif options.json_schema == "output":
