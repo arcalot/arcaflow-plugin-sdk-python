@@ -5446,7 +5446,7 @@ class _SchemaBuilder:
             path: typing.Tuple[str],
             scope: ScopeType,
     ) -> typing.Union[AbstractType, PropertyType]:
-        if isinstance(t, typing._SpecialForm):
+        if t == typing.Any:
             return cls._resolve_any()
         elif isinstance(t, type):
             return cls._resolve_type(t, type_hints, path, scope)
