@@ -293,6 +293,37 @@ class MapTest(unittest.TestCase):
             t.validate({"foo": "bar", "baz": "Hello world!"})
 
 
+class AnyTest(unittest.TestCase):
+    def test_unserialize(self):
+        t = schema.AnyType()
+        self.assertEqual(1, t.unserialize(1))
+        self.assertEqual(1.0, t.unserialize(1.0))
+        self.assertEqual(True, t.unserialize(True))
+        self.assertEqual("True", t.unserialize("True"))
+        self.assertEqual(None, t.unserialize(None))
+        self.assertEqual({"a": "b"}, t.unserialize({"a": "b"}))
+        self.assertEqual([1, 1.0, None, "a"], t.unserialize([1, 1.0, None, "a"]))
+        self.assertEqual([{0: ["a"]}], t.unserialize([{0: ["a"]}]))
+
+        class IsAClass():
+            pass
+
+        with self.assertRaises(ConstraintException):
+            t.unserialize(set())
+        with self.assertRaises(ConstraintException):
+            t.unserialize(IsAClass())
+
+    def test_validate(self):
+        t = schema.AnyType()
+        t.validate("Hello world!")
+        t.validate(1)
+        t.validate(1.0)
+        t.validate(True)
+        t.validate({"message": "Hello world!"})
+        t.validate(["Hello world!"])
+        t.validate(None)
+
+
 @dataclass
 class TestClass:
     a: str
@@ -694,6 +725,7 @@ class SerializationTest(unittest.TestCase):
             E: typing.Optional[str] = None
             F: typing.Annotated[typing.Optional[str], schema.min(3)] = None
             G: typing.Optional[str] = dataclasses.field(default="", metadata={"id": "test-field", "name": "G"})
+            I: typing.Any = None
 
         schema.test_object_serialization(
             TestData1(
@@ -810,7 +842,7 @@ class SchemaBuilderTest(unittest.TestCase):
             {},
             "a",
         )
-        resolved_type = schema._SchemaBuilder.resolve(schema.ANY_TYPE, scope)
+        resolved_type = schema._SchemaBuilder.resolve(typing.Any, scope)
         self.assertIsInstance(resolved_type, schema.AnyType)
 
     def test_non_dataclass(self):

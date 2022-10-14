@@ -1062,7 +1062,8 @@ ANY_TYPE = typing.Union[
     int,
     float,
     bool,
-    str
+    str,
+    type(None)
 ]
 VALUE_TYPE = typing.Annotated[
     typing.Union[
@@ -5194,6 +5195,8 @@ class AnyType(AnySchema, AbstractType):
             return
         elif isinstance(data, bool):
             return
+        elif isinstance(data, type(None)):
+            return
         else:
             raise ConstraintException(path, "Unsupported data type for 'any' type: {}".format(data.__class__.__name__))
 
@@ -5443,7 +5446,7 @@ class _SchemaBuilder:
             path: typing.Tuple[str],
             scope: ScopeType,
     ) -> typing.Union[AbstractType, PropertyType]:
-        if t == ANY_TYPE:
+        if t == typing.Any:
             return cls._resolve_any()
         elif isinstance(t, type):
             return cls._resolve_type(t, type_hints, path, scope)
