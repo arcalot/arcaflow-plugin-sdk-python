@@ -84,6 +84,7 @@ class ATPTest(unittest.TestCase):
 
         try:
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
             hello_message = client.read_hello()
             self.assertEqual(1, hello_message.version)
 

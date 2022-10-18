@@ -70,6 +70,9 @@ def run_plugin(
         decoder = cbor2.decoder.CBORDecoder(stdin)
         encoder = cbor2.encoder.CBOREncoder(stdout)
 
+        # Decode empty "start output" message.
+        decoder.decode()
+
         start = HelloMessage(1, s)
         serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start)
         encoder.encode(serialized_message)
@@ -135,6 +138,9 @@ class PluginClient:
         self.stdout = stdout
         self.decoder = cbor2.decoder.CBORDecoder(stdout)
         self.encoder = cbor2.encoder.CBOREncoder(stdin)
+
+    def start_output(self) -> None:
+        self.encoder.encode(None)
 
     def read_hello(self) -> HelloMessage:
         """
