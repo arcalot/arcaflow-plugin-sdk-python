@@ -493,7 +493,7 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        s = schema.OneOfStringType(
+        s_type = schema.OneOfStringType(
             {
                 "a": schema.RefType("a", scope),
                 "b": schema.RefType("b", scope)
@@ -501,8 +501,18 @@ class OneOfTest(unittest.TestCase):
             scope,
             "_type",
         )
-        s.discriminator_field_name = "foo"
-        self.assertEqual("foo", s.discriminator_field_name)
+        s_type.discriminator_field_name = "foo"
+        self.assertEqual("foo", s_type.discriminator_field_name)
+
+        schema.OneOfIntType(
+            {
+                1: schema.RefType(1, scope),
+                2: schema.RefType(2, scope)
+            },
+            scope,
+            "_type",
+        )
+
 
     def test_unserialize(self):
         @dataclasses.dataclass
@@ -534,7 +544,7 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        s = schema.OneOfStringType(
+        s_type = schema.OneOfStringType(
             {
                 "a": schema.RefType("a", scope),
                 "b": schema.RefType("b", scope)
@@ -543,16 +553,24 @@ class OneOfTest(unittest.TestCase):
             "_type",
         )
 
+        # Incomplete values to unserialize
         with self.assertRaises(ConstraintException):
-            s.unserialize({"a": "Hello world!"})
+            s_type.unserialize({"a": "Hello world!"})
         with self.assertRaises(ConstraintException):
-            s.unserialize({"b": 42})
+            s_type.unserialize({"b": 42})
 
-        unserialized_data: OneOfData1 = s.unserialize({"_type": "a", "a": "Hello world!"})
+        # Mismatching key value
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize({"_type": "a", 1: "Hello world!"})
+        # Invalid key value
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize({"_type": 1, 1: "Hello world!"})
+
+        unserialized_data: OneOfData1 = s_type.unserialize({"_type": "a", "a": "Hello world!"})
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: OneOfData2 = s.unserialize({"_type": "b", "b": 42})
+        unserialized_data2: OneOfData2 = s_type.unserialize({"_type": "b", "b": 42})
         self.assertIsInstance(unserialized_data2, OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
 
