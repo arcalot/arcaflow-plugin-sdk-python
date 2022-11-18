@@ -2500,6 +2500,22 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
+
+    Instead of RefSchema, you can also add other object-like types, such as the ObjectSchema or the ScopeSchema
+    directly:
+    >>> one_of = schema.OneOfStringSchema(
+    ...     {
+    ...         "a": schema.RefSchema("A_ref"),
+    ...         "b": schema.ObjectSchema(
+    ...             "B",
+    ...             {
+    ...                 "b": schema.PropertySchema(
+    ...                     type=schema.IntSchema(),
+    ...                 )
+    ...             }
+    ...         )
+    ...     }
+    ... )
     """
     types: Dict[
         str,
@@ -4891,9 +4907,10 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 )
             )
         for k, v in types.items():
-            if not isinstance(v, RefType):
+            if not isinstance(v, RefType) and not isinstance(v, ObjectType) and not isinstance(v, ScopeType):
                 raise BadArgumentException(
-                    "The 'types' parameter of OneOf*Type must contain RefTypes, {} found for key {}".format(
+                    "The 'types' parameter of OneOf*Type must contain RefTypes, ObjectTypes, or ScopeTypes, "
+                    "{} found for key {}".format(
                         type(v).__name__,
                         v
                     )
