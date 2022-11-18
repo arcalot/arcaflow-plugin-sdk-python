@@ -731,6 +731,46 @@ class OneOfTest(unittest.TestCase):
         )), {"type": "b", "b": 42})
 
 
+    def test_object(self):
+        @dataclasses.dataclass
+        class OneOfData1:
+            type: str
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfData2:
+            b: int
+
+        scope = schema.ScopeType({}, "")
+        s = schema.OneOfStringType(
+            {
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a": PropertyType(
+                            schema.StringType()
+                        )
+                    }
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2,
+                    {
+                        "b": PropertyType(
+                            schema.IntType()
+                        )
+                    }
+                )
+            },
+            scope,
+            "type",
+        )
+
+        unserialized_data = s.unserialize({"type": "b", "b": 42})
+        self.assertIsInstance(unserialized_data, OneOfData2)
+
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
         @dataclasses.dataclass
