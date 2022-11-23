@@ -3,7 +3,8 @@ import re
 import sys
 import typing
 from dataclasses import dataclass
-from arcaflow_plugin_sdk import plugin, validation, annotations, schema
+
+from arcaflow_plugin_sdk import annotations, plugin, schema, validation
 
 
 @dataclass

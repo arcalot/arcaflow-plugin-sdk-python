@@ -75,11 +75,11 @@ import sys
 import traceback
 import types
 import typing
-from re import Pattern
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Any, Optional, TypeVar, Type, Generic, Callable
+from re import Pattern
+from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 
 _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 

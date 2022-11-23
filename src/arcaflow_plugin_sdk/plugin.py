@@ -4,13 +4,13 @@ import json
 import sys
 import traceback
 import typing
+from optparse import OptionParser
+from sys import argv, stderr, stdin, stdout
+from typing import Callable, Dict, List, Type, TypeVar
 
 import yaml
-from sys import argv, stdin, stdout, stderr
-from optparse import OptionParser
-from typing import List, Callable, TypeVar, Dict, Type
 
-from arcaflow_plugin_sdk import schema, serialization, jsonschema, _http
+from arcaflow_plugin_sdk import _http, jsonschema, schema, serialization
 from arcaflow_plugin_sdk.schema import (
     BadArgumentException,
     InvalidInputException,

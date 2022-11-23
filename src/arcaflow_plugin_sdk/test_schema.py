@@ -1,18 +1,17 @@
 import dataclasses
 import doctest
+import enum
 import re
 import typing
+import unittest
 from dataclasses import dataclass
 from re import Pattern
 
 from arcaflow_plugin_sdk import schema
-import enum
-import unittest
-
 from arcaflow_plugin_sdk.schema import (
-    PropertyType,
-    ConstraintException,
     BadArgumentException,
+    ConstraintException,
+    PropertyType,
     SchemaBuildException,
 )
 
