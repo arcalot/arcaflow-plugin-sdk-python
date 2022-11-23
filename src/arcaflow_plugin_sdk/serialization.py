@@ -17,13 +17,17 @@ def load_from_file(file_name: str) -> Any:
             with open(file_name) as f:
                 return json.load(f)
         except BaseException as e:
-            raise LoadFromFileException("Failed to load JSON from {}: {}".format(file_name, e.__str__())) from e
+            raise LoadFromFileException(
+                "Failed to load JSON from {}: {}".format(file_name, e.__str__())
+            ) from e
     elif file_name.endswith(".yaml") or file_name.endswith(".yml"):
         try:
             with open(file_name) as f:
                 return yaml.safe_load(f)
         except BaseException as e:
-            raise LoadFromFileException("Failed to load YAML from {}: {}".format(file_name, e.__str__())) from e
+            raise LoadFromFileException(
+                "Failed to load YAML from {}: {}".format(file_name, e.__str__())
+            ) from e
     else:
         raise LoadFromFileException("Unsupported file extension: {}".format(file_name))
 
@@ -40,12 +44,16 @@ def load_from_stdin(stdin: io.TextIOWrapper) -> Any:
         try:
             return json.loads(stdin_data)
         except BaseException as e:
-            raise LoadFromStdinException("Failed to load JSON from stdin: {}".format(e.__str__())) from e
+            raise LoadFromStdinException(
+                "Failed to load JSON from stdin: {}".format(e.__str__())
+            ) from e
     else:
         try:
             return yaml.safe_load(stdin_data)
         except BaseException as e:
-            raise LoadFromStdinException("Failed to load YAML from stdin: {}".format(e.__str__())) from e
+            raise LoadFromStdinException(
+                "Failed to load YAML from stdin: {}".format(e.__str__())
+            ) from e
 
 
 class LoadFromStdinException(Exception):

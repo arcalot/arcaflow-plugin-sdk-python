@@ -9,7 +9,12 @@ from arcaflow_plugin_sdk import schema
 import enum
 import unittest
 
-from arcaflow_plugin_sdk.schema import PropertyType, ConstraintException, BadArgumentException, SchemaBuildException
+from arcaflow_plugin_sdk.schema import (
+    PropertyType,
+    ConstraintException,
+    BadArgumentException,
+    SchemaBuildException,
+)
 
 
 class Color(enum.Enum):
@@ -40,6 +45,7 @@ class EnumTest(unittest.TestCase):
             pass
 
         with self.assertRaises(schema.BadArgumentException):
+
             class BadEnum(enum.Enum):
                 A = "foo"
                 B = False
@@ -125,9 +131,7 @@ class StringTest(unittest.TestCase):
         t.unserialize("a")
 
     def test_validation_pattern(self):
-        t = schema.StringType(
-            pattern=re.compile("^[a-zA-Z]$")
-        )
+        t = schema.StringType(pattern=re.compile("^[a-zA-Z]$"))
         with self.assertRaises(schema.ConstraintException):
             t.unserialize("ab1")
         t.unserialize("a")
@@ -193,9 +197,7 @@ class ListTest(unittest.TestCase):
         class BadData:
             pass
 
-        t = schema.ListType(
-            schema.StringType()
-        )
+        t = schema.ListType(schema.StringType())
 
         t.unserialize(["foo"])
 
@@ -208,11 +210,7 @@ class ListTest(unittest.TestCase):
             t.unserialize(BadData())
 
     def test_validation_elements(self):
-        t = schema.ListType(
-            schema.StringType(
-                min=5
-            )
-        )
+        t = schema.ListType(schema.StringType(min=5))
         with self.assertRaises(schema.ConstraintException):
             t.unserialize(["foo"])
 
@@ -235,10 +233,7 @@ class ListTest(unittest.TestCase):
 
 class MapTest(unittest.TestCase):
     def test_assignment(self):
-        t = schema.MapType(
-            schema.StringType(),
-            schema.StringType()
-        )
+        t = schema.MapType(schema.StringType(), schema.StringType())
         t.min = 1
         t.max = 2
         self.assertEqual(1, t.min)
@@ -249,10 +244,7 @@ class MapTest(unittest.TestCase):
         class InvalidData:
             a: str
 
-        t = schema.MapType(
-            schema.StringType(),
-            schema.StringType()
-        )
+        t = schema.MapType(schema.StringType(), schema.StringType())
         t.unserialize({})
         t.validate({})
         t.unserialize({"foo": "bar"})
@@ -305,7 +297,7 @@ class AnyTest(unittest.TestCase):
         self.assertEqual([1, 1.0, None, "a"], t.unserialize([1, 1.0, None, "a"]))
         self.assertEqual([{0: ["a"]}], t.unserialize([{0: ["a"]}]))
 
-        class IsAClass():
+        class IsAClass:
             pass
 
         with self.assertRaises(ConstraintException):
@@ -344,15 +336,9 @@ class ObjectTest(unittest.TestCase):
                 schema.IntType(),
                 required=True,
             ),
-            "c": schema.PropertyType(
-                schema.FloatType(),
-                required=True
-            ),
-            "d": schema.PropertyType(
-                schema.BoolType(),
-                required=True
-            )
-        }
+            "c": schema.PropertyType(schema.FloatType(), required=True),
+            "d": schema.PropertyType(schema.BoolType(), required=True),
+        },
     )
 
     def test_serialize(self):
@@ -379,23 +365,23 @@ class ObjectTest(unittest.TestCase):
         self.assertEqual(True, o.d)
 
         with self.assertRaises(schema.ConstraintException):
-            self.t.unserialize({
-                "a": "foo",
-            })
+            self.t.unserialize(
+                {
+                    "a": "foo",
+                }
+            )
 
         with self.assertRaises(schema.ConstraintException):
-            self.t.unserialize({
-                "b": 5,
-            })
+            self.t.unserialize(
+                {
+                    "b": 5,
+                }
+            )
 
         with self.assertRaises(schema.ConstraintException):
-            self.t.unserialize({
-                "a": "foo",
-                "b": 5,
-                "c": 3.14,
-                "d": True,
-                "e": complex(3.14)
-            })
+            self.t.unserialize(
+                {"a": "foo", "b": 5, "c": 3.14, "d": True, "e": complex(3.14)}
+            )
 
     def test_field_override(self):
         @dataclasses.dataclass
@@ -406,11 +392,9 @@ class ObjectTest(unittest.TestCase):
             TestData,
             {
                 "test-data": schema.PropertyType(
-                    schema.StringType(),
-                    required=True,
-                    field_override="a"
+                    schema.StringType(), required=True, field_override="a"
                 )
-            }
+            },
         )
         unserialized = s.unserialize({"test-data": "foo"})
         self.assertEqual(unserialized.a, "foo")
@@ -438,8 +422,8 @@ class ObjectTest(unittest.TestCase):
                             ),
                             "b": schema.PropertyType(
                                 schema.StringType(),
-                            )
-                        }
+                            ),
+                        },
                     )
 
     def test_baseclass_field(self):
@@ -458,7 +442,7 @@ class ObjectTest(unittest.TestCase):
                 "a": schema.PropertyType(
                     schema.StringType(),
                 )
-            }
+            },
         )
 
 
@@ -475,29 +459,16 @@ class OneOfTest(unittest.TestCase):
         scope = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    OneOfData1,
-                    {
-                        "a": PropertyType(
-                            schema.StringType()
-                        )
-                    }
+                    OneOfData1, {"a": PropertyType(schema.StringType())}
                 ),
                 "b": schema.ObjectType(
-                    OneOfData2,
-                    {
-                        "b": PropertyType(
-                            schema.IntType()
-                        )
-                    }
-                )
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
             "a",
         )
         s_type = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", scope),
-                "b": schema.RefType("b", scope)
-            },
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
             "_type",
         )
@@ -505,14 +476,10 @@ class OneOfTest(unittest.TestCase):
         self.assertEqual("foo", s_type.discriminator_field_name)
 
         schema.OneOfIntType(
-            {
-                1: schema.RefType(1, scope),
-                2: schema.RefType(2, scope)
-            },
+            {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
             scope,
             "_type",
         )
-
 
     def test_unserialize(self):
         @dataclasses.dataclass
@@ -526,29 +493,16 @@ class OneOfTest(unittest.TestCase):
         scope = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    OneOfData1,
-                    {
-                        "a": PropertyType(
-                            schema.StringType()
-                        )
-                    }
+                    OneOfData1, {"a": PropertyType(schema.StringType())}
                 ),
                 "b": schema.ObjectType(
-                    OneOfData2,
-                    {
-                        "b": PropertyType(
-                            schema.IntType()
-                        )
-                    }
-                )
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
             "a",
         )
         s_type = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", scope),
-                "b": schema.RefType("b", scope)
-            },
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
             "_type",
         )
@@ -566,7 +520,9 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({"_type": 1, 1: "Hello world!"})
 
-        unserialized_data: OneOfData1 = s_type.unserialize({"_type": "a", "a": "Hello world!"})
+        unserialized_data: OneOfData1 = s_type.unserialize(
+            {"_type": "a", "a": "Hello world!"}
+        )
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.a, "Hello world!")
 
@@ -584,37 +540,32 @@ class OneOfTest(unittest.TestCase):
         class OneOfData2:
             b: int
 
-        scope = schema.ScopeType({
-            "a": schema.ObjectType(
-                OneOfData1,
-                {
-                    "type": PropertyType(
-                        schema.StringType(),
-                    ),
-                    "a": PropertyType(
-                        schema.StringType()
-                    )
-                }
-            ),
-            "b": schema.ObjectType(
-                OneOfData2,
-                {
-                    "b": PropertyType(
-                        schema.IntType()
-                    )
-                }
-            )
-        }, "a", )
-        s = schema.OneOfStringType(
+        scope = schema.ScopeType(
             {
-                "a": schema.RefType("a", scope),
-                "b": schema.RefType("b", scope)
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a": PropertyType(schema.StringType()),
+                    },
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
+            "a",
+        )
+        s = schema.OneOfStringType(
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
             "type",
         )
 
-        unserialized_data: OneOfData1 = s.unserialize({"type": "a", "a": "Hello world!"})
+        unserialized_data: OneOfData1 = s.unserialize(
+            {"type": "a", "a": "Hello world!"}
+        )
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.type, "a")
         self.assertEqual(unserialized_data.a, "Hello world!")
@@ -633,53 +584,37 @@ class OneOfTest(unittest.TestCase):
         class OneOfData2:
             b: int
 
-        scope = schema.ScopeType({
-            "a": schema.ObjectType(
-                OneOfData1,
-                {
-                    "type": PropertyType(
-                        schema.StringType(),
-                    ),
-                    "a": PropertyType(
-                        schema.StringType()
-                    )
-                }
-            ),
-            "b": schema.ObjectType(
-                OneOfData2,
-                {
-                    "b": PropertyType(
-                        schema.IntType()
-                    )
-                }
-            )
-        }, "a", )
-        s = schema.OneOfStringType[OneOfData1](
+        scope = schema.ScopeType(
             {
-                "a": schema.RefType("a", scope),
-                "b": schema.RefType("b", scope)
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a": PropertyType(schema.StringType()),
+                    },
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
+            "a",
+        )
+        s = schema.OneOfStringType[OneOfData1](
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
             "type",
         )
 
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.validate(OneOfData1(
-                None,
-                "Hello world!"
-            ))
+            s.validate(OneOfData1(None, "Hello world!"))
 
         with self.assertRaises(ConstraintException):
-            s.validate(OneOfData1(
-                "b",
-                "Hello world!"
-            ))
+            s.validate(OneOfData1("b", "Hello world!"))
 
-        s.validate(OneOfData1(
-            "a",
-            "Hello world!"
-        ))
+        s.validate(OneOfData1("a", "Hello world!"))
 
     def test_serialize(self):
         @dataclasses.dataclass
@@ -691,45 +626,35 @@ class OneOfTest(unittest.TestCase):
         class OneOfData2:
             b: int
 
-        scope = schema.ScopeType({
-            "a": schema.ObjectType(
-                OneOfData1,
-                {
-                    "type": PropertyType(
-                        schema.StringType(),
-                    ),
-                    "a": PropertyType(
-                        schema.StringType()
-                    )
-                }
-            ),
-            "b": schema.ObjectType(
-                OneOfData2,
-                {
-                    "b": PropertyType(
-                        schema.IntType()
-                    )
-                }
-            ),
-        }, "a")
-        s = schema.OneOfStringType(
+        scope = schema.ScopeType(
             {
-                "a": schema.RefType("a", scope),
-                "b": schema.RefType("b", scope)
+                "a": schema.ObjectType(
+                    OneOfData1,
+                    {
+                        "type": PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a": PropertyType(schema.StringType()),
+                    },
+                ),
+                "b": schema.ObjectType(
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
+            "a",
+        )
+        s = schema.OneOfStringType(
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
             "type",
         )
 
-        self.assertEqual(s.serialize(OneOfData1(
-            "a",
-            "Hello world!"
-        )), {"type": "a", "a": "Hello world!"})
+        self.assertEqual(
+            s.serialize(OneOfData1("a", "Hello world!")),
+            {"type": "a", "a": "Hello world!"},
+        )
 
-        self.assertEqual(s.serialize(OneOfData2(
-            42
-        )), {"type": "b", "b": 42})
-
+        self.assertEqual(s.serialize(OneOfData2(42)), {"type": "b", "b": 42})
 
     def test_object(self):
         @dataclasses.dataclass
@@ -750,19 +675,12 @@ class OneOfTest(unittest.TestCase):
                         "type": PropertyType(
                             schema.StringType(),
                         ),
-                        "a": PropertyType(
-                            schema.StringType()
-                        )
-                    }
+                        "a": PropertyType(schema.StringType()),
+                    },
                 ),
                 "b": schema.ObjectType(
-                    OneOfData2,
-                    {
-                        "b": PropertyType(
-                            schema.IntType()
-                        )
-                    }
-                )
+                    OneOfData2, {"b": PropertyType(schema.IntType())}
+                ),
             },
             scope,
             "type",
@@ -770,6 +688,7 @@ class OneOfTest(unittest.TestCase):
 
         unserialized_data = s.unserialize({"type": "b", "b": 42})
         self.assertIsInstance(unserialized_data, OneOfData2)
+
 
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
@@ -782,17 +701,13 @@ class SerializationTest(unittest.TestCase):
             H: float
             E: typing.Optional[str] = None
             F: typing.Annotated[typing.Optional[str], schema.min(3)] = None
-            G: typing.Optional[str] = dataclasses.field(default="", metadata={"id": "test-field", "name": "G"})
+            G: typing.Optional[str] = dataclasses.field(
+                default="", metadata={"id": "test-field", "name": "G"}
+            )
             I: typing.Any = None
 
         schema.test_object_serialization(
-            TestData1(
-                A="Hello world!",
-                B=5,
-                C={},
-                D=[],
-                H=3.14
-            ),
+            TestData1(A="Hello world!", B=5, C={}, D=[], H=3.14),
             self.fail,
         )
 
@@ -801,29 +716,30 @@ class SerializationTest(unittest.TestCase):
             namespace_pattern: re.Pattern
 
             name_pattern: typing.Annotated[
-                typing.Optional[re.Pattern],
-                schema.required_if_not("label_selector")
+                typing.Optional[re.Pattern], schema.required_if_not("label_selector")
             ] = None
 
             kill: typing.Annotated[int, schema.min(1)] = dataclasses.field(
                 default=1,
-                metadata={"name": "Number of pods to kill", "description": "How many pods should we attempt to kill?"}
+                metadata={
+                    "name": "Number of pods to kill",
+                    "description": "How many pods should we attempt to kill?",
+                },
             )
 
             label_selector: typing.Annotated[
                 typing.Optional[str],
                 schema.min(1),
-                schema.required_if_not("name_pattern")
+                schema.required_if_not("name_pattern"),
             ] = None
 
             kubeconfig_path: typing.Optional[str] = None
 
         schema.test_object_serialization(
             KillPodConfig(
-                namespace_pattern=re.compile(".*"),
-                name_pattern=re.compile(".*")
+                namespace_pattern=re.compile(".*"), name_pattern=re.compile(".*")
             ),
-            self.fail
+            self.fail,
         )
 
     def test_required_if(self):
@@ -1060,7 +976,9 @@ class SchemaBuilderTest(unittest.TestCase):
         class TestData:
             a: str = "foo"
             b: int = 5
-            c: str = dataclasses.field(default="bar", metadata={"name": "C", "description": "A string"})
+            c: str = dataclasses.field(
+                default="bar", metadata={"name": "C", "description": "A string"}
+            )
             d: bool = True
 
         scope = schema.ScopeType(
@@ -1105,8 +1023,12 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(scope.objects["A"], schema.ObjectType)
         self.assertIsInstance(scope.objects["B"], schema.ObjectType)
 
-        self.assertIsInstance(scope.objects["TestData"].properties["a"].type, schema.OneOfStringType)
-        one_of_type: schema.OneOfStringType = scope.objects["TestData"].properties["a"].type
+        self.assertIsInstance(
+            scope.objects["TestData"].properties["a"].type, schema.OneOfStringType
+        )
+        one_of_type: schema.OneOfStringType = (
+            scope.objects["TestData"].properties["a"].type
+        )
         self.assertEqual(one_of_type.discriminator_field_name, "_type")
         self.assertIsInstance(one_of_type.types["A"], schema.RefType)
         self.assertEqual(one_of_type.types["A"].id, "A")
@@ -1131,7 +1053,7 @@ class SchemaBuilderTest(unittest.TestCase):
                     typing.Annotated[A, schema.discriminator_value(1)],
                     typing.Annotated[B, schema.discriminator_value(2)],
                 ],
-                schema.discriminator("discriminator")
+                schema.discriminator("discriminator"),
             ]
 
         scope = schema.build_object_schema(TestData)
@@ -1140,8 +1062,12 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(scope.objects["A"], schema.ObjectType)
         self.assertIsInstance(scope.objects["B"], schema.ObjectType)
 
-        self.assertIsInstance(scope.objects["TestData"].properties["a"].type, schema.OneOfIntType)
-        one_of_type: schema.OneOfIntType = scope.objects["TestData"].properties["a"].type
+        self.assertIsInstance(
+            scope.objects["TestData"].properties["a"].type, schema.OneOfIntType
+        )
+        one_of_type: schema.OneOfIntType = (
+            scope.objects["TestData"].properties["a"].type
+        )
         self.assertEqual(one_of_type.discriminator_field_name, "discriminator")
         self.assertIsInstance(one_of_type.types[1], schema.RefType)
         self.assertEqual(one_of_type.types[1].id, "A")
@@ -1166,7 +1092,9 @@ class SchemaBuilderTest(unittest.TestCase):
             {},
             "TestData",
         )
-        resolved_type = schema._SchemaBuilder.resolve(typing.Annotated[str, schema.min(3)], scope)
+        resolved_type = schema._SchemaBuilder.resolve(
+            typing.Annotated[str, schema.min(3)], scope
+        )
         self.assertIsInstance(resolved_type, schema.StringType)
         self.assertEqual(3, resolved_type.min)
 
@@ -1187,6 +1115,7 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertEqual(3, a.type.min)
 
         with self.assertRaises(SchemaBuildException):
+
             @dataclasses.dataclass
             class TestData:
                 a: typing.Annotated[typing.Optional[str], "foo"] = None
@@ -1247,7 +1176,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
 
 class JSONSchemaTest(unittest.TestCase):
-
     def _execute_test_cases(self, test_cases):
         for name in test_cases.keys():
             defs = schema._JSONSchemaDefs()
@@ -1268,25 +1196,19 @@ class JSONSchemaTest(unittest.TestCase):
             "a",
         )
         s = schema.BoolType()._to_jsonschema_fragment(scope, defs)
-        self.assertEqual(
-            s["anyOf"][0]["type"],
-            "boolean"
-        )
-        self.assertEqual(
-            s["anyOf"][1]["type"],
-            "string"
-        )
-        self.assertEqual(
-            s["anyOf"][2]["type"],
-            "integer"
-        )
+        self.assertEqual(s["anyOf"][0]["type"], "boolean")
+        self.assertEqual(s["anyOf"][1]["type"], "string")
+        self.assertEqual(s["anyOf"][2]["type"], "integer")
 
     def test_string(self):
         test_cases: typing.Dict[str, typing.Tuple[schema.StringType, typing.Dict]] = {
             "base": (schema.StringType(), {"type": "string"}),
             "min": (schema.StringType(min=5), {"type": "string", "minLength": 5}),
             "max": (schema.StringType(max=5), {"type": "string", "maxLength": 5}),
-            "pattern": (schema.StringType(pattern=re.compile("^[a-z]+$")), {"type": "string", "pattern": "^[a-z]+$"})
+            "pattern": (
+                schema.StringType(pattern=re.compile("^[a-z]+$")),
+                {"type": "string", "pattern": "^[a-z]+$"},
+            ),
         }
 
         self._execute_test_cases(test_cases)
@@ -1318,7 +1240,10 @@ class JSONSchemaTest(unittest.TestCase):
             SECOND = 2
 
         test_cases: typing.Dict[str, typing.Tuple[schema._EnumType, typing.Dict]] = {
-            "string": (schema.StringEnumType(Color), {"type": "string", "enum": ["red"]}),
+            "string": (
+                schema.StringEnumType(Color),
+                {"type": "string", "enum": ["red"]},
+            ),
             "int": (schema.IntEnumType(Fibonacci), {"type": "integer", "enum": [1, 2]}),
         }
 
@@ -1326,14 +1251,17 @@ class JSONSchemaTest(unittest.TestCase):
 
     def test_list(self):
         test_cases: typing.Dict[str, typing.Tuple[schema.ListType, typing.Dict]] = {
-            "base": (schema.ListType(schema.IntType()), {"type": "array", "items": {"type": "integer"}}),
+            "base": (
+                schema.ListType(schema.IntType()),
+                {"type": "array", "items": {"type": "integer"}},
+            ),
             "min": (
                 schema.ListType(schema.IntType(), min=3),
-                {"type": "array", "items": {"type": "integer"}, "minItems": 3}
+                {"type": "array", "items": {"type": "integer"}, "minItems": 3},
             ),
             "max": (
                 schema.ListType(schema.IntType(), max=3),
-                {"type": "array", "items": {"type": "integer"}, "maxItems": 3}
+                {"type": "array", "items": {"type": "integer"}, "maxItems": 3},
             ),
         }
         self._execute_test_cases(test_cases)
@@ -1350,7 +1278,7 @@ class JSONSchemaTest(unittest.TestCase):
                     "additionalProperties": {
                         "type": "string",
                     },
-                }
+                },
             ),
             "min": (
                 schema.MapType(schema.StringType(), schema.IntType(), min=3),
@@ -1361,7 +1289,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "integer",
                     },
                     "minProperties": 3,
-                }
+                },
             ),
             "max": (
                 schema.MapType(schema.StringType(), schema.IntType(), max=3),
@@ -1372,7 +1300,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "integer",
                     },
                     "maxProperties": 3,
-                }
+                },
             ),
         }
         self._execute_test_cases(test_cases)
@@ -1392,42 +1320,31 @@ class JSONSchemaTest(unittest.TestCase):
                 {
                     "a": schema.PropertyType(
                         schema.StringType(),
-                        display=schema.DisplayValue(
-                            "A",
-                            "A string"
-                        )
+                        display=schema.DisplayValue("A", "A string"),
                     )
-                }
+                },
             )
         }
         defs = schema._JSONSchemaDefs()
         expected = {
-            '$defs': {
-                'TestData': {
-                    'type': 'object',
-                    'properties': {
-                        'a': {
-                            'type': 'string',
-                            'title': 'A',
-                            'description': 'A string'
-                        }
+            "$defs": {
+                "TestData": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"type": "string", "title": "A", "description": "A string"}
                     },
-                    'required': ['a'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
+                    "required": ["a"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
                 }
             },
-            'type': 'object',
-            'properties': {
-                'a': {
-                    'type': 'string',
-                    'title': 'A',
-                    'description': 'A string'
-                }
+            "type": "object",
+            "properties": {
+                "a": {"type": "string", "title": "A", "description": "A string"}
             },
-            'required': ['a'],
-            'additionalProperties': False,
-            'dependentRequired': {}
+            "required": ["a"],
+            "additionalProperties": False,
+            "dependentRequired": {},
         }
         result = scope._to_jsonschema_fragment(scope, defs)
         self.assertEqual(expected, result)
@@ -1463,116 +1380,86 @@ class JSONSchemaTest(unittest.TestCase):
                             "_type",
                         )
                     )
-                }
+                },
             ),
-            "A": schema.ObjectType(
-                A,
-                {
-                    "a": schema.PropertyType(schema.StringType())
-                }
-            ),
-            "B": schema.ObjectType(
-                B,
-                {
-                    "b": schema.PropertyType(schema.StringType())
-                }
-            )
+            "A": schema.ObjectType(A, {"a": schema.PropertyType(schema.StringType())}),
+            "B": schema.ObjectType(B, {"b": schema.PropertyType(schema.StringType())}),
         }
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
-        self.assertEqual({
-            '$defs': {
-                'TestData': {
-                    'type': 'object',
-                    'properties': {
-                        'a': {
-                            'oneOf': [
-                                {'$ref': '#/$defs/A_discriminated_string_a'},
-                                {'$ref': '#/$defs/B_discriminated_string_b'}
-                            ]
-                        }
-                    },
-                    'required': ['a'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                },
-                'A': {
-                    'type': 'object',
-                    'properties': {
-                        'a': {
-                            'type': 'string'
+        self.assertEqual(
+            {
+                "$defs": {
+                    "TestData": {
+                        "type": "object",
+                        "properties": {
+                            "a": {
+                                "oneOf": [
+                                    {"$ref": "#/$defs/A_discriminated_string_a"},
+                                    {"$ref": "#/$defs/B_discriminated_string_b"},
+                                ]
+                            }
                         },
-                        '_type': {
-                            'type': 'string',
-                            'const': 'a'
-                        }
+                        "required": ["a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
                     },
-                    'required': ['_type', 'a'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                },
-                'A_discriminated_string_a': {
-                    'type': 'object',
-                    'properties': {
-                        'a': {
-                            'type': 'string'
+                    "A": {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            "_type": {"type": "string", "const": "a"},
                         },
-                        '_type': {
-                            'type': 'string',
-                            'const': 'a'
-                        }
+                        "required": ["_type", "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
                     },
-                    'required': ['_type', 'a'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                },
-                'B': {
-                    'type': 'object',
-                    'properties': {
-                        'b': {
-                            'type': 'string'
+                    "A_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            "_type": {"type": "string", "const": "a"},
                         },
-                        '_type': {
-                            'type': 'string',
-                            'const': 'b'
-                        }
+                        "required": ["_type", "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
                     },
-                    'required': [
-                        '_type',
-                        'b'
-                    ],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                },
-                'B_discriminated_string_b': {
-                    'type': 'object',
-                    'properties': {
-                        'b': {
-                            'type': 'string'
+                    "B": {
+                        "type": "object",
+                        "properties": {
+                            "b": {"type": "string"},
+                            "_type": {"type": "string", "const": "b"},
                         },
-                        '_type': {
-                            'type': 'string',
-                            'const': 'b'
-                        }
+                        "required": ["_type", "b"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
                     },
-                    'required': ['_type', 'b'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                }
+                    "B_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "b": {"type": "string"},
+                            "_type": {"type": "string", "const": "b"},
+                        },
+                        "required": ["_type", "b"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "a": {
+                        "oneOf": [
+                            {"$ref": "#/$defs/A_discriminated_string_a"},
+                            {"$ref": "#/$defs/B_discriminated_string_b"},
+                        ]
+                    }
+                },
+                "required": ["a"],
+                "additionalProperties": False,
+                "dependentRequired": {},
             },
-            'type': 'object',
-            'properties': {
-                'a': {
-                    'oneOf': [
-                        {'$ref': '#/$defs/A_discriminated_string_a'},
-                        {'$ref': '#/$defs/B_discriminated_string_b'}
-                    ]
-                }
-            },
-            'required': ['a'],
-            'additionalProperties': False,
-            'dependentRequired': {}
-        }, json_schema)
+            json_schema,
+        )
 
 
 def load_tests(loader, tests, ignore):
@@ -1583,5 +1470,5 @@ def load_tests(loader, tests, ignore):
     return tests
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

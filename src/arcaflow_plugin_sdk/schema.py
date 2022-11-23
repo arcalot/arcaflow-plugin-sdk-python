@@ -86,6 +86,7 @@ _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 
 # region Exceptions
 
+
 @dataclass
 class ConstraintException(Exception):
     """
@@ -93,6 +94,7 @@ class ConstraintException(Exception):
     The message holds the exact path of the problematic field, as well as a message explaining the error.
     If this error is not easily understood, please open an issue on the Arcaflow plugin SDK.
     """
+
     path: typing.Tuple[str] = tuple([])
     msg: str = ""
 
@@ -107,6 +109,7 @@ class NoSuchStepException(Exception):
     """
     ``NoSuchStepException`` indicates that the given step is not supported by the plugin.
     """
+
     step: str
 
     def __str__(self):
@@ -120,6 +123,7 @@ class BadArgumentException(Exception):
     explain what exactly the problem is, but may not be able to locate the exact error as the schema may be manually
     built.
     """
+
     msg: str
 
     def __str__(self):
@@ -153,7 +157,10 @@ class SchemaBuildException(Exception):
     def __str__(self) -> str:
         if len(self.path) == 0:
             return "Invalid schema definition: %s" % self.msg
-        return "Invalid schema definition for %s: %s" % (" -> ".join(self.path), self.msg)
+        return "Invalid schema definition for %s: %s" % (
+            " -> ".join(self.path),
+            self.msg,
+        )
 
 
 class InvalidInputException(Exception):
@@ -161,6 +168,7 @@ class InvalidInputException(Exception):
     This exception indicates that the input data for a given step didn't match the schema. The embedded
     ``ConstraintException`` holds the details of this failure.
     """
+
     constraint: ConstraintException
 
     def __init__(self, cause: ConstraintException):
@@ -175,6 +183,7 @@ class InvalidOutputException(Exception):
     This exception indicates that the output of a schema was invalid. This is always a bug in the plugin and should
     be reported to the plugin author.
     """
+
     constraint: ConstraintException
 
     def __init__(self, cause: ConstraintException):
@@ -188,6 +197,7 @@ class UnitParseException(Exception):
     """
     This exception indicates that it failed to parse a unit string.
     """
+
     msg: str
 
     def __init__(self, msg: str):
@@ -200,6 +210,7 @@ class UnitParseException(Exception):
 # endregion
 
 # region Annotations
+
 
 def id(id: str):
     """
@@ -395,9 +406,7 @@ def units(units: typing.ForwardRef("Units")):
     '5B'
     """
 
-    def call(
-            t
-    ):
+    def call(t):
         """
         :param typing.Union[IntSchema, FloatSchema] t:
         :return typing.Union[IntSchema, FloatSchema]:
@@ -405,8 +414,13 @@ def units(units: typing.ForwardRef("Units")):
         effective_t = t
         if isinstance(t, PropertySchema):
             effective_t = t.type
-        if not isinstance(effective_t, IntSchema) and not isinstance(effective_t, FloatSchema):
-            raise InvalidAnnotationException("units", "expected int or float schema, found {}".format(type(t).__name__))
+        if not isinstance(effective_t, IntSchema) and not isinstance(
+            effective_t, FloatSchema
+        ):
+            raise InvalidAnnotationException(
+                "units",
+                "expected int or float schema, found {}".format(type(t).__name__),
+            )
         effective_t.units = units
         return t
 
@@ -416,7 +430,9 @@ def units(units: typing.ForwardRef("Units")):
 _units = units
 
 
-def example(example: typing.Any) -> typing.Callable[
+def example(
+    example: typing.Any,
+) -> typing.Callable[
     [typing.ForwardRef("PropertySchema")], typing.ForwardRef("PropertySchema")
 ]:
     """
@@ -452,7 +468,9 @@ def example(example: typing.Any) -> typing.Callable[
     try:
         marshalled_example = json.dumps(example)
     except Exception as e:
-        raise InvalidAnnotationException("example", "expected a JSON-serializable type, {}".format(e.__str__())) from e
+        raise InvalidAnnotationException(
+            "example", "expected a JSON-serializable type, {}".format(e.__str__())
+        ) from e
 
     def call(t):
         if isinstance(t, PropertyType):
@@ -470,21 +488,21 @@ def example(example: typing.Any) -> typing.Callable[
 
 _example = example
 
-discriminatorT = typing.TypeVar("discriminatorT", bound=typing.Union[
-    typing.ForwardRef("OneOfStringSchema"),
-    typing.ForwardRef("OneOfIntSchema")
-])
+discriminatorT = typing.TypeVar(
+    "discriminatorT",
+    bound=typing.Union[
+        typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
+    ],
+)
 discriminatorFunc = typing.Callable[
     [
         typing.Union[
-            typing.ForwardRef("OneOfStringSchema"),
-            typing.ForwardRef("OneOfIntSchema")
+            typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
         ]
     ],
     typing.Union[
-        typing.ForwardRef("OneOfStringSchema"),
-        typing.ForwardRef("OneOfIntSchema")
-    ]
+        typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
+    ],
 ]
 
 
@@ -536,7 +554,9 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
         if not isinstance(t, OneOfStringSchema) and not isinstance(t, OneOfIntSchema):
             raise InvalidAnnotationException(
                 "discriminator",
-                "expected a property or object type with union member, found {}".format(type(t).__name__, )
+                "expected a property or object type with union member, found {}".format(
+                    type(t).__name__,
+                ),
             )
         oneof: typing.Union[OneOfStringSchema, OneOfIntSchema] = t
 
@@ -546,7 +566,9 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
         elif isinstance(t, OneOfIntSchema):
             discriminator_field_schema = IntType()
         else:
-            raise BadArgumentException("Unsupported discriminator type: {}".format(type(t)))
+            raise BadArgumentException(
+                "Unsupported discriminator type: {}".format(type(t))
+            )
         for key, item in oneof.types.items():
             if hasattr(item, "__discriminator_value"):
                 one_of[item.__discriminator_value] = item
@@ -561,9 +583,7 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
             except ConstraintException as e:
                 raise BadArgumentException(
                     "The discriminator value has an invalid value: {}. "
-                    "Please check your annotations.".format(
-                        e.__str__()
-                    )
+                    "Please check your annotations.".format(e.__str__())
                 ) from e
 
         return oneof
@@ -617,13 +637,17 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
     """
 
     def call(t):
-        if not isinstance(t, ObjectSchema) and \
-                not isinstance(t, RefSchema) and \
-                not isinstance(t, OneOfStringSchema) and \
-                not isinstance(t, OneOfIntSchema):
+        if (
+            not isinstance(t, ObjectSchema)
+            and not isinstance(t, RefSchema)
+            and not isinstance(t, OneOfStringSchema)
+            and not isinstance(t, OneOfIntSchema)
+        ):
             raise InvalidAnnotationException(
                 "discriminator_value",
-                "discriminator_value is only valid for object types, not {}".format(type(t).__name__)
+                "discriminator_value is only valid for object types, not {}".format(
+                    type(t).__name__
+                ),
             )
         t.__discriminator_value = discriminator_value
         return t
@@ -633,14 +657,17 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
 
 _discriminator_value = discriminator_value
 
-ValidatorT = TypeVar("ValidatorT", bound=typing.Union[
-    typing.ForwardRef("IntSchema"),
-    typing.ForwardRef("FloatSchema"),
-    typing.ForwardRef("StringSchema"),
-    typing.ForwardRef("ListSchema"),
-    typing.ForwardRef("MapSchema"),
-    typing.ForwardRef("PropertySchema"),
-])
+ValidatorT = TypeVar(
+    "ValidatorT",
+    bound=typing.Union[
+        typing.ForwardRef("IntSchema"),
+        typing.ForwardRef("FloatSchema"),
+        typing.ForwardRef("StringSchema"),
+        typing.ForwardRef("ListSchema"),
+        typing.ForwardRef("MapSchema"),
+        typing.ForwardRef("PropertySchema"),
+    ],
+)
 
 Validator = Callable[[ValidatorT], ValidatorT]
 
@@ -693,7 +720,9 @@ def min(param: typing.Union[int, float]) -> Validator:
             effective_t.min = param
         else:
             raise BadArgumentException(
-                "min is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(t.__name__)
+                "min is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(
+                    t.__name__
+                )
             )
         if isinstance(t, PropertySchema):
             t.type = effective_t
@@ -758,7 +787,9 @@ most 5
             effective_t.max = param
         else:
             raise BadArgumentException(
-                "max is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(t.__name__)
+                "max is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(
+                    t.__name__
+                )
             )
         if isinstance(t, PropertySchema):
             t.type = effective_t
@@ -821,7 +852,11 @@ match the pattern ^[a-z]+$
         if hasattr(effective_t, "pattern"):
             effective_t.pattern = pattern
         else:
-            raise BadArgumentException("pattern is valid only for STRING types, not for {} types.".format(t.__name__))
+            raise BadArgumentException(
+                "pattern is valid only for STRING types, not for {} types.".format(
+                    t.__name__
+                )
+            )
         if isinstance(t, PropertySchema):
             t.type = effective_t
         return t
@@ -886,7 +921,9 @@ required because 'some_other_field' is set
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
-            raise BadArgumentException("required_if is only valid for properties on object types.")
+            raise BadArgumentException(
+                "required_if is only valid for properties on object types."
+            )
         if t.required_if is None:
             require_if_list = list()
         else:
@@ -963,7 +1000,9 @@ required because 'some_other_field' is not set
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
-            raise BadArgumentException("required_if_not is only valid for fields on object types.")
+            raise BadArgumentException(
+                "required_if_not is only valid for fields on object types."
+            )
         if t.required_if_not is None:
             required_if_not_list = list()
         else:
@@ -1038,7 +1077,9 @@ conflicts 'some_other_field', set one of the two, not both
         :return PropertySchema:
         """
         if not isinstance(t, PropertySchema):
-            raise BadArgumentException("conflicts is only valid for fields on object types.")
+            raise BadArgumentException(
+                "conflicts is only valid for fields on object types."
+            )
         if t.conflicts is not None:
             conflicts_list = list(t.conflicts)
         else:
@@ -1063,25 +1104,59 @@ ANY_TYPE = typing.Union[
     float,
     bool,
     str,
-    type(None)
+    type(None),
 ]
 VALUE_TYPE = typing.Annotated[
     typing.Union[
         typing.Annotated[
             typing.ForwardRef("StringEnumSchema"),
             discriminator_value("enum_string"),
-            name("String enum")
+            name("String enum"),
         ],
-        typing.Annotated[typing.ForwardRef("IntEnumSchema"), discriminator_value("enum_integer"), name("Integer enum")],
-        typing.Annotated[typing.ForwardRef("StringSchema"), discriminator_value("string"), name("String")],
-        typing.Annotated[typing.ForwardRef("PatternSchema"), discriminator_value("pattern"), name("Pattern")],
-        typing.Annotated[typing.ForwardRef("IntSchema"), discriminator_value("integer"), name("Integer")],
-        typing.Annotated[typing.ForwardRef("FloatSchema"), discriminator_value("float"), name("Float")],
-        typing.Annotated[typing.ForwardRef("BoolSchema"), discriminator_value("bool"), name("Bool")],
-        typing.Annotated[typing.ForwardRef("ListSchema"), discriminator_value("list"), name("List")],
-        typing.Annotated[typing.ForwardRef("MapSchema"), discriminator_value("map"), name("Map")],
-        typing.Annotated[typing.ForwardRef("ScopeSchema"), discriminator_value("scope"), name("Scope")],
-        typing.Annotated[typing.ForwardRef("ObjectSchema"), discriminator_value("object"), name("Object")],
+        typing.Annotated[
+            typing.ForwardRef("IntEnumSchema"),
+            discriminator_value("enum_integer"),
+            name("Integer enum"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("StringSchema"),
+            discriminator_value("string"),
+            name("String"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("PatternSchema"),
+            discriminator_value("pattern"),
+            name("Pattern"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("IntSchema"),
+            discriminator_value("integer"),
+            name("Integer"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("FloatSchema"),
+            discriminator_value("float"),
+            name("Float"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("BoolSchema"), discriminator_value("bool"), name("Bool")
+        ],
+        typing.Annotated[
+            typing.ForwardRef("ListSchema"), discriminator_value("list"), name("List")
+        ],
+        typing.Annotated[
+            typing.ForwardRef("MapSchema"), discriminator_value("map"), name("Map")
+        ],
+        typing.Annotated[
+            typing.ForwardRef("ScopeSchema"),
+            discriminator_value("scope"),
+            name("Scope"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("ObjectSchema"),
+            discriminator_value("object"),
+            name("Object"),
+        ],
         typing.Annotated[
             typing.ForwardRef("OneOfStringSchema"),
             discriminator_value("one_of_string"),
@@ -1092,46 +1167,49 @@ VALUE_TYPE = typing.Annotated[
             discriminator_value("one_of_int"),
             name("Multiple with int key"),
         ],
-        typing.Annotated[typing.ForwardRef("RefSchema"), discriminator_value("ref"), name("Object reference")],
-        typing.Annotated[typing.ForwardRef("AnySchema"), discriminator_value("any"), name("Any")],
+        typing.Annotated[
+            typing.ForwardRef("RefSchema"),
+            discriminator_value("ref"),
+            name("Object reference"),
+        ],
+        typing.Annotated[
+            typing.ForwardRef("AnySchema"), discriminator_value("any"), name("Any")
+        ],
     ],
-    discriminator("type_id")
+    discriminator("type_id"),
 ]
 MAP_KEY_TYPE = typing.Annotated[
     typing.Union[
         typing.Annotated[
             typing.ForwardRef("StringEnumSchema"),
             discriminator_value("enum_string"),
-            name("String enum")
+            name("String enum"),
         ],
         typing.Annotated[
             typing.ForwardRef("IntEnumSchema"),
             discriminator_value("enum_integer"),
-            name("Integer enum")
+            name("Integer enum"),
         ],
         typing.Annotated[
             typing.ForwardRef("StringSchema"),
             discriminator_value("string"),
-            name("String")
+            name("String"),
         ],
         typing.Annotated[
             typing.ForwardRef("IntSchema"),
             discriminator_value("integer"),
-            name("Integer")
+            name("Integer"),
         ],
     ],
-    discriminator("type_id")
+    discriminator("type_id"),
 ]
 ID_TYPE = typing.Annotated[
-    str,
-    min(1),
-    max(255),
-    pattern(re.compile("^[$@a-zA-Z0-9-_]+$"))
+    str, min(1), max(255), pattern(re.compile("^[$@a-zA-Z0-9-_]+$"))
 ]
 DISPLAY_TYPE = typing.Annotated[
     Optional[typing.ForwardRef("DisplayValue")],
     _name("Display options"),
-    _description("Name, description and icon.")
+    _description("Name, description and icon."),
 ]
 DEFAULT_TYPE = typing.Annotated[
     Optional[str],
@@ -1139,14 +1217,12 @@ DEFAULT_TYPE = typing.Annotated[
     _description(
         "Default value for this property in JSON encoding. The value must be unserializable by the type specified "
         "in the type field. "
-    )
+    ),
 ]
 EXAMPLES_TYPE = typing.Annotated[
     List[str],
     _name("Examples"),
-    _description(
-        "Example values for this property, encoded as JSON."
-    )
+    _description("Example values for this property, encoded as JSON."),
 ]
 _OBJECT_LIKE = typing.Union[
     typing.Annotated[typing.ForwardRef("RefSchema"), discriminator_value("ref")],
@@ -1191,7 +1267,9 @@ class _OpenAPIGenerator(ABC):
     """
 
     @abstractmethod
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         pass
 
 
@@ -1209,7 +1287,9 @@ class _JSONSchemaGenerator(ABC):
     """
 
     @abstractmethod
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         """
         This method creates a JSON schema version 2020-12 representation of this schema object.
         :return:
@@ -1237,7 +1317,9 @@ class Unit:
     name_short_singular: typing.Annotated[
         str,
         name("Short name (singular)"),
-        description("Short name that can be printed in a few characters, singular form."),
+        description(
+            "Short name that can be printed in a few characters, singular form."
+        ),
         example("B"),
         example("char"),
     ]
@@ -1263,7 +1345,9 @@ class Unit:
         example("characters"),
     ]
 
-    def format_short(self, amount: typing.Union[int, float], display_zero: bool = True) -> str:
+    def format_short(
+        self, amount: typing.Union[int, float], display_zero: bool = True
+    ) -> str:
         """
         This function formats an amount according to this unit.
 
@@ -1288,7 +1372,9 @@ class Unit:
         else:
             return ""
 
-    def format_long(self, amount: typing.Union[int, float], display_zero: bool = True) -> str:
+    def format_long(
+        self, amount: typing.Union[int, float], display_zero: bool = True
+    ) -> str:
         """
         This function formats an amount according to this unit.
 
@@ -1372,16 +1458,21 @@ class Units:
     '5m5s'
 
     """
+
     base_unit: typing.Annotated[
         Unit,
         _name("Base unit"),
-        _description("The base unit is the smallest unit of scale for this set of units."),
-        _example({
-            "name_short_singular": "B",
-            "name_short_plural": "B",
-            "name_long_singular": "byte",
-            "name_long_plural": "bytes",
-        })
+        _description(
+            "The base unit is the smallest unit of scale for this set of units."
+        ),
+        _example(
+            {
+                "name_short_singular": "B",
+                "name_short_plural": "B",
+                "name_long_singular": "byte",
+                "name_long_plural": "bytes",
+            }
+        ),
     ]
     multipliers: typing.Annotated[
         Optional[Dict[int, Unit]],
@@ -1399,10 +1490,10 @@ class Units:
                     "name_short_singular": "MB",
                     "name_short_plural": "MB",
                     "name_long_singular": "megabyte",
-                    "name_long_plural": "megabytes"
-                }
+                    "name_long_plural": "megabytes",
+                },
             }
-        )
+        ),
     ] = None
 
     def __init__(self, base_unit: Unit, multipliers: Optional[Dict[int, Unit]] = None):
@@ -1438,25 +1529,31 @@ class Units:
         5242880
         """
         if data.strip() == "":
-            raise UnitParseException("Empty string cannot be parsed as " + self.base_unit.name_long_plural)
+            raise UnitParseException(
+                "Empty string cannot be parsed as " + self.base_unit.name_long_plural
+            )
         if self.__unit_re_cache is None:
             parts = []
             if self.multipliers is not None:
                 for multiplier in reversed(self.multipliers.keys()):
                     unit = self.multipliers[multiplier]
-                    parts.append("(?:|(?P<g{}>[0-9]+)\\s*({}|{}|{}|{}))".format(
-                        re.escape(str(multiplier)),
-                        re.escape(unit.name_short_singular),
-                        re.escape(unit.name_short_plural),
-                        re.escape(unit.name_long_singular),
-                        re.escape(unit.name_long_plural)
-                    ))
-            parts.append("(?:|(?P<g1>[0-9]+(|.[0-9]+))\\s*(|{}|{}|{}|{}))".format(
-                re.escape(self.base_unit.name_short_singular),
-                re.escape(self.base_unit.name_short_plural),
-                re.escape(self.base_unit.name_long_singular),
-                re.escape(self.base_unit.name_long_plural)
-            ))
+                    parts.append(
+                        "(?:|(?P<g{}>[0-9]+)\\s*({}|{}|{}|{}))".format(
+                            re.escape(str(multiplier)),
+                            re.escape(unit.name_short_singular),
+                            re.escape(unit.name_short_plural),
+                            re.escape(unit.name_long_singular),
+                            re.escape(unit.name_long_plural),
+                        )
+                    )
+            parts.append(
+                "(?:|(?P<g1>[0-9]+(|.[0-9]+))\\s*(|{}|{}|{}|{}))".format(
+                    re.escape(self.base_unit.name_short_singular),
+                    re.escape(self.base_unit.name_short_plural),
+                    re.escape(self.base_unit.name_long_singular),
+                    re.escape(self.base_unit.name_long_plural),
+                )
+            )
             regex = "^\\s*" + "\\s*".join(parts) + "\\s*$"
             self.__unit_re_cache = re.compile(regex)
         match = self.__unit_re_cache.match(data)
@@ -1561,105 +1658,31 @@ class Units:
         part = self.base_unit.format_long(remainder, False)
         if part != "":
             parts.append(part)
-        return ' '.join(parts)
+        return " ".join(parts)
 
 
 UNIT_BYTE = Units(
-    Unit(
-        "B",
-        "B",
-        "byte",
-        "bytes"
-    ),
+    Unit("B", "B", "byte", "bytes"),
     {
-        1024: Unit(
-            "kB",
-            "kB",
-            "kilobyte",
-            "kilobytes"
-        ),
-        1048576: Unit(
-            "MB",
-            "MB",
-            "megabyte",
-            "megabytes"
-        ),
-        1073741824: Unit(
-            "GB",
-            "GB",
-            "gigabyte",
-            "gigabytes"
-        ),
-        1099511627776: Unit(
-            "TB",
-            "TB",
-            "terabyte",
-            "terabytes"
-        ),
-        1125899906842624: Unit(
-            "PB",
-            "PB",
-            "petabyte",
-            "petabytes"
-        ),
-    }
+        1024: Unit("kB", "kB", "kilobyte", "kilobytes"),
+        1048576: Unit("MB", "MB", "megabyte", "megabytes"),
+        1073741824: Unit("GB", "GB", "gigabyte", "gigabytes"),
+        1099511627776: Unit("TB", "TB", "terabyte", "terabytes"),
+        1125899906842624: Unit("PB", "PB", "petabyte", "petabytes"),
+    },
 )
 UNIT_TIME = Units(
-    Unit(
-        "ns",
-        "ns",
-        "nanosecond",
-        "nanoseconds"
-    ),
+    Unit("ns", "ns", "nanosecond", "nanoseconds"),
     {
-        1000: Unit(
-            "ms",
-            "ms",
-            "microsecond",
-            "microseconds"
-        ),
-        1000000: Unit(
-            "s",
-            "s",
-            "second",
-            "seconds"
-        ),
-        60000000: Unit(
-            "m",
-            "m",
-            "minute",
-            "minutes"
-        ),
-        3600000000: Unit(
-            "H",
-            "H",
-            "hour",
-            "hours"
-        ),
-        86400000000: Unit(
-            "d",
-            "d",
-            "day",
-            "days"
-        ),
-    }
+        1000: Unit("ms", "ms", "microsecond", "microseconds"),
+        1000000: Unit("s", "s", "second", "seconds"),
+        60000000: Unit("m", "m", "minute", "minutes"),
+        3600000000: Unit("H", "H", "hour", "hours"),
+        86400000000: Unit("d", "d", "day", "days"),
+    },
 )
-UNIT_CHARACTER = Units(
-    Unit(
-        "char",
-        "chars",
-        "character",
-        "characters"
-    )
-)
-UNIT_PERCENT = Units(
-    Unit(
-        "%",
-        "%",
-        "percent",
-        "percent"
-    )
-)
+UNIT_CHARACTER = Units(Unit("char", "chars", "character", "characters"))
+UNIT_PERCENT = Units(Unit("%", "%", "percent", "percent"))
 
 
 @dataclass
@@ -1675,6 +1698,7 @@ class DisplayValue:
     ...     icon="<svg></svg>"
     ... )
     """
+
     name: typing.Annotated[
         typing.Optional[str],
         _name("Name"),
@@ -1730,31 +1754,29 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Mapping where the left side of the map holds the possible value and the right side holds the display "
             "value for forms, etc."
         ),
-        _example({"apple": {"name": "Apple"}, "orange": {"name": "Orange"}})
+        _example({"apple": {"name": "Apple"}, "orange": {"name": "Orange"}}),
     ]
 
     def valid_values(self) -> List[str]:
         return list(self.values.keys())
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         """
         This method generates an JSON schema fragment for enumerated strings.
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
         """
-        return {
-            "type": "string",
-            "enum": list(self.values.keys())
-        }
+        return {"type": "string", "enum": list(self.values.keys())}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         """
         This method generates an OpenAPI fragment for string enums.
         See: https://spec.openapis.org/oas/v3.1.0#data-types
         """
-        return {
-            "type": "string",
-            "enum": list(self.values.keys())
-        }
+        return {"type": "string", "enum": list(self.values.keys())}
 
 
 @dataclass
@@ -1782,33 +1804,30 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         min(1),
         name("Values"),
         description("Possible values for this field."),
-        example({1024: {"name": "kB"}, 1048576: {"name": "MB"}})
+        example({1024: {"name": "kB"}, 1048576: {"name": "MB"}}),
     ]
     units: Optional[Units] = None
 
     def valid_values(self) -> List[int]:
         return list(self.values.keys())
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         """
         This method generates an JSON schema fragment for enumerated integers.
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
         """
-        return {
-            "type": "integer",
-            "enum": list(self.values.keys())
-        }
+        return {"type": "integer", "enum": list(self.values.keys())}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         """
         This method generates an OpenAPI fragment for string enums.
         See: https://spec.openapis.org/oas/v3.1.0#data-types
         """
-        return {
-            "type": "integer",
-            "format": "int64",
-            "enum": list(self.values.keys())
-        }
+        return {"type": "integer", "format": "int64", "enum": list(self.values.keys())}
 
 
 @dataclass
@@ -1842,23 +1861,23 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _name("Maximum length"),
         _description("Maximum length for this string (inclusive)."),
         _units(UNIT_CHARACTER),
-        _example(16)
+        _example(16),
     ] = None
     pattern: typing.Annotated[
         Optional[re.Pattern],
         _name("Pattern"),
         _description("Regular expression this string must match."),
-        _example("^[a-zA-Z]+$")
+        _example("^[a-zA-Z]+$"),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         """
         This method generates an JSON schema fragment for strings.
         See: https://json-schema.org/understanding-json-schema/reference/string.html
         """
-        result = {
-            "type": "string"
-        }
+        result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
         if self.max is not None:
@@ -1867,14 +1886,14 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             result["pattern"] = self.pattern.pattern
         return result
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         """
         This method generates an OpenAPI fragment for strings.
         See: https://swagger.io/docs/specification/data-models/data-types/#string
         """
-        result = {
-            "type": "string"
-        }
+        result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
         if self.max is not None:
@@ -1897,17 +1916,15 @@ class PatternSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     >>> s = schema.PatternSchema()
     """
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
-        return {
-            "type": "string",
-            "format": "regex"
-        }
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        return {"type": "string", "format": "regex"}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
-        return {
-            "type": "string",
-            "format": "regex"
-        }
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        return {"type": "string", "format": "regex"}
 
 
 @dataclass
@@ -1936,36 +1953,38 @@ class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         Optional[int],
         _name("Maximum value"),
         _description("Maximum value for this int (inclusive)."),
-        _example(16)
+        _example(16),
     ] = None
     units: typing.Annotated[
         Optional[Units],
         _name("Units"),
         _description("Units this number represents."),
-        _example({
-            "base_unit": {
-                "name_short_singular": "char",
-                "name_short_plural": "chars",
-                "name_long_singular": "character",
-                "name_long_plural": "characters"
+        _example(
+            {
+                "base_unit": {
+                    "name_short_singular": "char",
+                    "name_short_plural": "chars",
+                    "name_long_singular": "character",
+                    "name_long_plural": "characters",
+                }
             }
-        }),
+        ),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
-        result = {
-            "type": "integer"
-        }
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        result = {"type": "integer"}
         if self.min is not None:
             result["minimum"] = self.min
         if self.max is not None:
             result["maximum"] = self.max
         return result
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
-        result = {
-            "type": "integer"
-        }
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        result = {"type": "integer"}
         if self.min is not None:
             result["minimum"] = self.min
         if self.max is not None:
@@ -2000,36 +2019,38 @@ class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         Optional[float],
         _name("Maximum value"),
         _description("Maximum value for this float (inclusive)."),
-        _example(16.0)
+        _example(16.0),
     ] = None
     units: typing.Annotated[
         Optional[Units],
         _name("Units"),
         _description("Units this number represents."),
-        _example({
-            "base_unit": {
-                "name_short_singular": "%",
-                "name_short_plural": "%",
-                "name_long_singular": "percent",
-                "name_long_plural": "percent"
+        _example(
+            {
+                "base_unit": {
+                    "name_short_singular": "%",
+                    "name_short_plural": "%",
+                    "name_long_singular": "percent",
+                    "name_long_plural": "percent",
+                }
             }
-        })
+        ),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
-        result = {
-            "type": "number"
-        }
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        result = {"type": "number"}
         if self.min is not None:
             result["minimum"] = self.min
         if self.max is not None:
             result["maximum"] = self.max
         return result
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
-        result = {
-            "type": "number"
-        }
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        result = {"type": "number"}
         if self.min is not None:
             result["minimum"] = self.min
         if self.max is not None:
@@ -2053,51 +2074,73 @@ class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... )
     """
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         return {
             "anyOf": [
-                {
-                    "title": "Boolean",
-                    "type": "boolean"
-                },
+                {"title": "Boolean", "type": "boolean"},
                 {
                     "title": "String",
                     "type": "string",
                     "enum": [
-                        "yes", "y", "true", "on", "enable", "enabled", "1",
-                        "no", "n", "false", "off", "disable", "disabled", "0",
-                    ]
+                        "yes",
+                        "y",
+                        "true",
+                        "on",
+                        "enable",
+                        "enabled",
+                        "1",
+                        "no",
+                        "n",
+                        "false",
+                        "off",
+                        "disable",
+                        "disabled",
+                        "0",
+                    ],
                 },
                 {
                     "title": "Integer",
                     "type": "integer",
                     "maximum": 1,
                     "minimum": 0,
-                }
+                },
             ]
         }
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         return {
             "anyOf": [
-                {
-                    "title": "Boolean",
-                    "type": "boolean"
-                },
+                {"title": "Boolean", "type": "boolean"},
                 {
                     "title": "String",
                     "type": "string",
                     "enum": [
-                        "yes", "y", "true", "on", "enable", "enabled", "1",
-                        "no", "n", "false", "off", "disable", "disabled", "0",
-                    ]
+                        "yes",
+                        "y",
+                        "true",
+                        "on",
+                        "enable",
+                        "enabled",
+                        "1",
+                        "no",
+                        "n",
+                        "false",
+                        "off",
+                        "disable",
+                        "disabled",
+                        "0",
+                    ],
                 },
                 {
                     "title": "Integer",
                     "type": "integer",
                     "maximum": 1,
                     "minimum": 0,
-                }
+                },
             ]
         }
 
@@ -2135,14 +2178,16 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _min(0),
         _name("Maximum items"),
         _description("Maximum number of items in this list."),
-        _example(16)
+        _example(16),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         # noinspection PyProtectedMember
         result = {
             "type": "array",
-            "items": self.items._to_jsonschema_fragment(scope, defs)
+            "items": self.items._to_jsonschema_fragment(scope, defs),
         }
         if self.min is not None:
             result["minItems"] = self.min
@@ -2150,11 +2195,13 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             result["maxItems"] = self.max
         return result
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         # noinspection PyProtectedMember
         result = {
             "type": "array",
-            "items": self.items._to_openapi_fragment(scope, defs)
+            "items": self.items._to_openapi_fragment(scope, defs),
         }
         if self.min is not None:
             result["minItems"] = self.min
@@ -2179,6 +2226,7 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=3,
     ... )
     """
+
     keys: typing.Annotated[
         MAP_KEY_TYPE,
         _name("Keys"),
@@ -2201,15 +2249,17 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _min(0),
         _name("Maximum items"),
         _description("Maximum number of items in this list."),
-        _example(16)
+        _example(16),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         # noinspection PyProtectedMember
         result = {
             "type": "object",
             "propertyNames": self.keys._to_jsonschema_fragment(scope, defs),
-            "additionalProperties": self.values._to_jsonschema_fragment(scope, defs)
+            "additionalProperties": self.values._to_jsonschema_fragment(scope, defs),
         }
 
         # Sadly, these properties are not supported by JSON schema
@@ -2229,12 +2279,14 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             result["maxProperties"] = self.max
         return result
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         # noinspection PyProtectedMember
         result = {
             "type": "object",
             "propertyNames": self.keys._to_openapi_fragment(scope, defs),
-            "additionalProperties": self.values._to_openapi_fragment(scope, defs)
+            "additionalProperties": self.values._to_openapi_fragment(scope, defs),
         }
 
         # Sadly, these properties are not supported by JSON schema
@@ -2285,10 +2337,9 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     }
     ... )
     """
+
     type: typing.Annotated[
-        VALUE_TYPE,
-        _name("Type"),
-        _description("Type definition for this field.")
+        VALUE_TYPE, _name("Type"), _description("Type definition for this field.")
     ]
     display: DISPLAY_TYPE = None
     default: DEFAULT_TYPE = None
@@ -2296,31 +2347,35 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     required: typing.Annotated[
         bool,
         _name("Required"),
-        _description("When set to true, the value for this field must be provided under all circumstances."),
+        _description(
+            "When set to true, the value for this field must be provided under all circumstances."
+        ),
     ] = True
     required_if: typing.Annotated[
         Optional[List[str]],
         _name("Required if"),
         _description(
             "Sets the current property to required if any of the properties in this list are set."
-        )
+        ),
     ] = None
     required_if_not: typing.Annotated[
         Optional[List[str]],
         _name("Required if not"),
         _description(
             "Sets the current property to be required if none of the properties in this list are set."
-        )
+        ),
     ] = None
     conflicts: typing.Annotated[
         Optional[List[str]],
         _name("Conflicts"),
         _description(
             "The current property cannot be set if any of the listed properties are set."
-        )
+        ),
     ] = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs):
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ):
         # noinspection PyProtectedMember
         data = self.type._to_jsonschema_fragment(scope, defs)
         if self.examples is not None:
@@ -2336,7 +2391,9 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 data["description"] = self.display.description
         return data
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         # noinspection PyProtectedMember
         data = self.type._to_openapi_fragment(scope, defs)
         if self.examples is not None:
@@ -2384,22 +2441,23 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     }
     ... )
     """
+
     id: typing.Annotated[
         ID_TYPE,
         _name("ID"),
-        _description("Unique identifier for this object within the current scope.")
+        _description("Unique identifier for this object within the current scope."),
     ]
     properties: typing.Annotated[
         Dict[str, PropertySchema],
         _name("Properties"),
-        _description("Properties of this object.")
+        _description("Properties of this object."),
     ]
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs):
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ):
         if self.id in defs.defs:
-            return {
-                "$ref": "#/$defs/" + self.id
-            }
+            return {"$ref": "#/$defs/" + self.id}
 
         # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
         defs.defs[self.id] = {
@@ -2407,26 +2465,28 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "properties": {},
             "required": [],
             "additionalProperties": False,
-            "dependentRequired": {}
+            "dependentRequired": {},
         }
 
         for property_id, property in self.properties.items():
             if property.required:
                 defs.defs[self.id]["required"].append(property_id)
             if property.required_if is not None:
-                defs.defs[self.id]["dependentRequired"][property_id] = property.required_if
+                defs.defs[self.id]["dependentRequired"][
+                    property_id
+                ] = property.required_if
             # noinspection PyProtectedMember
-            defs.defs[self.id]["properties"][property_id] = property._to_jsonschema_fragment(scope, defs)
+            defs.defs[self.id]["properties"][
+                property_id
+            ] = property._to_jsonschema_fragment(scope, defs)
 
-        return {
-            "$ref": "#/$defs/" + self.id
-        }
+        return {"$ref": "#/$defs/" + self.id}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         if self.id in defs.components:
-            return {
-                "$ref": "#/components/schemas/" + self.id
-            }
+            return {"$ref": "#/components/schemas/" + self.id}
 
         # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
         defs.components[self.id] = {
@@ -2439,14 +2499,11 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             if property.required:
                 defs.components[self.id]["required"].append(property_id)
             # noinspection PyProtectedMember
-            defs.components[self.id]["properties"][property_id] = property._to_openapi_fragment(
-                scope,
-                defs
-            )
+            defs.components[self.id]["properties"][
+                property_id
+            ] = property._to_openapi_fragment(scope, defs)
 
-        return {
-            "$ref": "#/components/schemas/" + self.id
-        }
+        return {"$ref": "#/components/schemas/" + self.id}
 
 
 @dataclass
@@ -2517,23 +2574,20 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     }
     ... )
     """
-    types: Dict[
-        str,
-        typing.Annotated[
-            _OBJECT_LIKE,
-            discriminator("type_id")
-        ]
-    ]
+
+    types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
             "Name of the field used to discriminate between possible values. If this field is"
             "present on any of the component objects it must also be a string."
-        )
+        ),
     ] = "_type"
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         one_of = []
         for k, v in self.types.items():
             # noinspection PyProtectedMember
@@ -2553,14 +2607,12 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     discriminated_object["description"] = v.display.description
             name = v.id + "_discriminated_string_" + _id_typeize(k)
             defs.defs[name] = discriminated_object
-            one_of.append({
-                "$ref": "#/$defs/" + name
-            })
-        return {
-            "oneOf": one_of
-        }
+            one_of.append({"$ref": "#/$defs/" + name})
+        return {"oneOf": one_of}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         one_of = []
         discriminator_mapping = {}
         for k, v in self.types.items():
@@ -2582,15 +2634,13 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     discriminated_object["description"] = v.display.description
 
             defs.components[name] = discriminated_object
-            one_of.append({
-                "$ref": "#/components/schemas/" + name
-            })
+            one_of.append({"$ref": "#/components/schemas/" + name})
         return {
             "oneOf": one_of,
             "discriminator": {
                 "propertyName": self.discriminator_field_name,
-                "mapping": discriminator_mapping
-            }
+                "mapping": discriminator_mapping,
+            },
         }
 
 
@@ -2646,23 +2696,20 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     "C",
     ... )
     """
-    types: Dict[
-        int,
-        typing.Annotated[
-            _OBJECT_LIKE,
-            discriminator("type_id")
-        ]
-    ]
+
+    types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
             "Name of the field used to discriminate between possible values. If this field is"
             "present on any of the component objects it must also be an int."
-        )
+        ),
     ] = "_type"
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         one_of = []
         for k, v in self.types.items():
             # noinspection PyProtectedMember
@@ -2682,14 +2729,12 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     discriminated_object["description"] = v.display.description
             name = v.id + "_discriminated_int_" + str(k)
             defs.defs[name] = discriminated_object
-            one_of.append({
-                "$ref": "#/$defs/" + name
-            })
-        return {
-            "oneOf": one_of
-        }
+            one_of.append({"$ref": "#/$defs/" + name})
+        return {"oneOf": one_of}
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         one_of = []
         discriminator_mapping = {}
         for k, v in self.types.items():
@@ -2711,15 +2756,13 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     discriminated_object["description"] = v.display.description
 
             defs.components[name] = discriminated_object
-            one_of.append({
-                "$ref": "#/components/schemas/" + name
-            })
+            one_of.append({"$ref": "#/components/schemas/" + name})
         return {
             "oneOf": one_of,
             "discriminator": {
                 "propertyName": self.discriminator_field_name,
-                "mapping": discriminator_mapping
-            }
+                "mapping": discriminator_mapping,
+            },
         }
 
 
@@ -2769,15 +2812,15 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ]
     display: DISPLAY_TYPE = None
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
-        return dict({
-            "$ref": "#/$defs/" + self.id
-        })
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        return dict({"$ref": "#/$defs/" + self.id})
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
-        return dict({
-            "$ref": "#/components/schemas/" + self.id
-        })
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        return dict({"$ref": "#/components/schemas/" + self.id})
 
 
 @dataclass
@@ -2796,10 +2839,15 @@ class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
     >>> ref = schema.AnySchema()
     """
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
+
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
         return dict({})
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         return dict({})
 
 
@@ -2842,13 +2890,13 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...    }
     ... )
     """
+
     objects: typing.Annotated[
-        Dict[
-            ID_TYPE,
-            ObjectSchema
-        ],
+        Dict[ID_TYPE, ObjectSchema],
         _name("Objects"),
-        _description("A set of referenceable objects. These objects may contain references themselves.")
+        _description(
+            "A set of referenceable objects. These objects may contain references themselves."
+        ),
     ]
     root: typing.Annotated[
         str,
@@ -2860,15 +2908,17 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         try:
             return self.objects[item]
         except KeyError:
-            raise BadArgumentException("Referenced object is not defined: {}".format(item))
+            raise BadArgumentException(
+                "Referenced object is not defined: {}".format(item)
+            )
 
     def to_jsonschema(self):
         return self._to_jsonschema_fragment(self, _JSONSchemaDefs())
 
-    def _to_jsonschema_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs) -> any:
-        result = {
-            "$defs": {}
-        }
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        result = {"$defs": {}}
         for k, v in self.objects.items():
             # noinspection PyProtectedMember
             _ = v._to_jsonschema_fragment(scope, defs)
@@ -2883,10 +2933,10 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def to_openapi(self):
         return self._to_openapi_fragment(self, _OpenAPIComponents())
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
-        result = {
-            "components": {"schemas": {}}
-        }
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        result = {"components": {"schemas": {}}}
         for k, v in self.objects.items():
             # noinspection PyProtectedMember
             _ = v._to_openapi_fragment(scope, defs)
@@ -2934,13 +2984,13 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     schema: typing.Annotated[
         ScopeSchema,
         _name("Schema"),
-        _description("Data schema for this particular output.")
+        _description("Data schema for this particular output."),
     ]
     display: DISPLAY_TYPE = None
     error: typing.Annotated[
         bool,
         _name("Error"),
-        _description("If set to true, this output will be treated as an error output.")
+        _description("If set to true, this output will be treated as an error output."),
     ] = False
 
     def to_jsonschema(self):
@@ -3033,7 +3083,9 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         # noinspection PyProtectedMember
         return self.schema._to_jsonschema_fragment(scope, defs)
 
-    def _to_openapi_fragment(self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents) -> any:
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
         # noinspection PyProtectedMember
         return self.schema._to_openapi_fragment(scope, defs)
 
@@ -3091,15 +3143,12 @@ class StepSchema:
     ...     schema.DisplayValue("Hello world!")
     ... )
     """
+
     id: typing.Annotated[
-        ID_TYPE,
-        _name("ID"),
-        _description("Machine identifier for this step.")
+        ID_TYPE, _name("ID"), _description("Machine identifier for this step.")
     ]
     input: typing.Annotated[
-        ScopeSchema,
-        _name("Input"),
-        _description("Input data schema")
+        ScopeSchema, _name("Input"), _description("Input data schema")
     ]
     outputs: typing.Annotated[
         Dict[
@@ -3107,7 +3156,7 @@ class StepSchema:
             StepOutputSchema,
         ],
         _name("Outputs"),
-        _description("Possible outputs from this step.")
+        _description("Possible outputs from this step."),
     ]
     display: DISPLAY_TYPE = None
 
@@ -3117,13 +3166,11 @@ class Schema:
     """
     This is a collection of steps supported by a plugin.
     """
+
     steps: typing.Annotated[
-        Dict[
-            ID_TYPE,
-            StepSchema
-        ],
+        Dict[ID_TYPE, StepSchema],
         _name("Steps"),
-        _description("Steps this schema supports.")
+        _description("Steps this schema supports."),
     ]
 
 
@@ -3192,33 +3239,45 @@ class _EnumType(AbstractType, Generic[EnumT]):
             if data not in self._type:
                 raise ConstraintException(
                     path,
-                    "'{}' is not a valid value for the enum '{}'".format(data, self._type.__name__)
+                    "'{}' is not a valid value for the enum '{}'".format(
+                        data, self._type.__name__
+                    ),
                 )
             return data
         else:
             for v in self._type:
                 if v == data or v.value == data:
                     return v
-            raise ConstraintException(path, "'{}' is not a valid value for '{}'".format(data, self._type.__name__))
+            raise ConstraintException(
+                path,
+                "'{}' is not a valid value for '{}'".format(data, self._type.__name__),
+            )
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
         if isinstance(data, Enum):
             if data not in self._type:
                 raise ConstraintException(
                     path,
-                    "'{}' is not a valid value for the enum '{}'".format(data, self._type.__name__)
+                    "'{}' is not a valid value for the enum '{}'".format(
+                        data, self._type.__name__
+                    ),
                 )
         else:
             for v in self._type:
                 if v == data or v.value == data:
                     return
-            raise ConstraintException(path, "'{}' is not a valid value for '{}'".format(data, self._type.__name__))
+            raise ConstraintException(
+                path,
+                "'{}' is not a valid value for '{}'".format(data, self._type.__name__),
+            )
 
     def serialize(self, data: EnumT, path: typing.Tuple[str] = tuple([])) -> Any:
         if data not in self._type:
             raise ConstraintException(
                 path,
-                "'{}' is not a valid value for the enum '{}'".format(data, self._type.__name__)
+                "'{}' is not a valid value for the enum '{}'".format(
+                    data, self._type.__name__
+                ),
             )
         return data.value
 
@@ -3269,13 +3328,16 @@ class StringEnumType(_EnumType, StringEnumSchema):
             for value in self._type:
                 if not isinstance(value.value, str):
                     raise BadArgumentException(
-                        "{} on {} is not a string".format(value, t.__name__))
+                        "{} on {} is not a string".format(value, t.__name__)
+                    )
                 values[value.value] = DisplayValue(
                     value.name,
                 )
             self.values = values
         except TypeError as e:
-            raise BadArgumentException("{} is not a valid enum, not iterable".format(t.__name__)) from e
+            raise BadArgumentException(
+                "{} is not a valid enum, not iterable".format(t.__name__)
+            ) from e
 
 
 class IntEnumType(_EnumType, IntEnumSchema):
@@ -3325,13 +3387,16 @@ class IntEnumType(_EnumType, IntEnumSchema):
             for value in self._type:
                 if not isinstance(value.value, int):
                     raise BadArgumentException(
-                        "{} on {} is not a string".format(value, t.__name__))
+                        "{} on {} is not a string".format(value, t.__name__)
+                    )
                 values[value.value] = DisplayValue(
                     value.name,
                 )
             self.values = values
         except TypeError as e:
-            raise BadArgumentException("{} is not a valid enum, not iterable".format(t.__name__)) from e
+            raise BadArgumentException(
+                "{} is not a valid enum, not iterable".format(t.__name__)
+            ) from e
 
 
 class BoolType(BoolSchema, AbstractType):
@@ -3414,28 +3479,38 @@ class BoolType(BoolSchema, AbstractType):
                 return False
             if data == 1:
                 return True
-            raise ConstraintException(path, "Boolean value expected, integer found ({})".format(data))
+            raise ConstraintException(
+                path, "Boolean value expected, integer found ({})".format(data)
+            )
         if isinstance(data, str):
             lower_str = data.lower()
-            if lower_str == "yes" or \
-                    lower_str == "y" or \
-                    lower_str == "on" or \
-                    lower_str == "true" or \
-                    lower_str == "enable" or \
-                    lower_str == "enabled" or \
-                    lower_str == "1":
+            if (
+                lower_str == "yes"
+                or lower_str == "y"
+                or lower_str == "on"
+                or lower_str == "true"
+                or lower_str == "enable"
+                or lower_str == "enabled"
+                or lower_str == "1"
+            ):
                 return True
-            if lower_str == "no" or \
-                    lower_str == "n" or \
-                    lower_str == "off" or \
-                    lower_str == "false" or \
-                    lower_str == "disable" or \
-                    lower_str == "disabled" or \
-                    lower_str == "0":
+            if (
+                lower_str == "no"
+                or lower_str == "n"
+                or lower_str == "off"
+                or lower_str == "false"
+                or lower_str == "disable"
+                or lower_str == "disabled"
+                or lower_str == "0"
+            ):
                 return False
-            raise ConstraintException(path, "Boolean value expected, string found ({})".format(data))
+            raise ConstraintException(
+                path, "Boolean value expected, string found ({})".format(data)
+            )
 
-        raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
+        raise ConstraintException(
+            path, "Boolean value expected, {} found".format(type(data))
+        )
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
         """
@@ -3464,7 +3539,9 @@ class BoolType(BoolSchema, AbstractType):
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, <class 'int'> found
         """
         if not isinstance(data, bool):
-            raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
+            raise ConstraintException(
+                path, "Boolean value expected, {} found".format(type(data))
+            )
 
     def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
         """
@@ -3496,7 +3573,9 @@ class BoolType(BoolSchema, AbstractType):
         """
         if isinstance(data, bool):
             return data
-        raise ConstraintException(path, "Boolean value expected, {} found".format(type(data)))
+        raise ConstraintException(
+            path, "Boolean value expected, {} found".format(type(data))
+        )
 
 
 @dataclass
@@ -3569,22 +3648,27 @@ class StringType(StringSchema, AbstractType):
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: String must be at most 5 characters, 6 given
         """
         if not isinstance(data, str):
-            raise ConstraintException(path, "Must be a string, {} given".format(type(data)))
+            raise ConstraintException(
+                path, "Must be a string, {} given".format(type(data))
+            )
         string: str = data
         if self.min is not None and len(string) < self.min:
             raise ConstraintException(
                 path,
-                "String must be at least {} characters, {} given".format(self.min, len(string))
+                "String must be at least {} characters, {} given".format(
+                    self.min, len(string)
+                ),
             )
         if self.max is not None and len(string) > self.max:
             raise ConstraintException(
                 path,
-                "String must be at most {} characters, {} given".format(self.max, len(string))
+                "String must be at most {} characters, {} given".format(
+                    self.max, len(string)
+                ),
             )
         if self.pattern is not None and not self.pattern.match(string):
             raise ConstraintException(
-                path,
-                "String must match the pattern {}".format(self.pattern.pattern)
+                path, "String must match the pattern {}".format(self.pattern.pattern)
             )
 
     def serialize(self, data: str, path: typing.Tuple[str] = tuple([])) -> any:
@@ -3637,11 +3721,17 @@ character set at position 0)
         try:
             return re.compile(str(data))
         except re.error as e:
-            raise ConstraintException(path, "Invalid regular expression ({})".format(e.__str__()))
+            raise ConstraintException(
+                path, "Invalid regular expression ({})".format(e.__str__())
+            )
         except TypeError as e:
-            raise ConstraintException(path, "Invalid regular expression ({})".format(e.__str__()))
+            raise ConstraintException(
+                path, "Invalid regular expression ({})".format(e.__str__())
+            )
         except ValueError as e:
-            raise ConstraintException(path, "Invalid regular expression ({})".format(e.__str__()))
+            raise ConstraintException(
+                path, "Invalid regular expression ({})".format(e.__str__())
+            )
 
     def validate(self, data: re.Pattern, path: typing.Tuple[str] = tuple([])):
         """
@@ -3796,17 +3886,29 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
         """
         if not isinstance(data, int):
-            raise ConstraintException(path, "Must be an integer, {} given".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be an integer, {} given".format(type(data).__name__)
+            )
         integer = int(data)
         if self.min is not None and integer < self.min:
             num = self.min
             if self.units is not None:
-                num = self.units.format_short(num) + " (" + self.units.base_unit.format_short(num) + ")"
+                num = (
+                    self.units.format_short(num)
+                    + " ("
+                    + self.units.base_unit.format_short(num)
+                    + ")"
+                )
             raise ConstraintException(path, "Must be at least {}".format(num))
         if self.max is not None and integer > self.max:
             num = self.max
             if self.units is not None:
-                num = self.units.format_short(num) + " (" + self.units.base_unit.format_short(num) + ")"
+                num = (
+                    self.units.format_short(num)
+                    + " ("
+                    + self.units.base_unit.format_short(num)
+                    + ")"
+                )
             raise ConstraintException(path, "Must be at most {}".format(num))
 
     def serialize(self, data: int, path: typing.Tuple[str] = tuple([])) -> Any:
@@ -3982,17 +4084,29 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
         """
         if not isinstance(data, float):
-            raise ConstraintException(path, "Must be an float, {} given".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be an float, {} given".format(type(data).__name__)
+            )
         f = float(data)
         if self.min is not None and f < self.min:
             num = self.min
             if self.units is not None:
-                num = self.units.format_short(num) + " (" + self.units.base_unit.format_short(num) + ")"
+                num = (
+                    self.units.format_short(num)
+                    + " ("
+                    + self.units.base_unit.format_short(num)
+                    + ")"
+                )
             raise ConstraintException(path, "Must be at least {}".format(num))
         if self.max is not None and f > self.max:
             num = self.max
             if self.units is not None:
-                num = self.units.format_short(num) + " (" + self.units.base_unit.format_short(num) + ")"
+                num = (
+                    self.units.format_short(num)
+                    + " ("
+                    + self.units.base_unit.format_short(num)
+                    + ")"
+                )
             raise ConstraintException(path, "Must be at most {}".format(num))
 
     def serialize(self, data: float, path: typing.Tuple[str] = tuple([])) -> Any:
@@ -4106,7 +4220,9 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
 characters, 0 given
         """
         if not isinstance(data, list):
-            raise ConstraintException(path, "Must be a list, {} given".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be a list, {} given".format(type(data).__name__)
+            )
         for i in range(len(data)):
             new_path = list(path)
             new_path.append("item " + str(i))
@@ -4195,11 +4311,18 @@ characters, 0 given
 
     def _validate(self, data, path):
         if not isinstance(data, list):
-            raise ConstraintException(path, "Must be a list, {} given".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be a list, {} given".format(type(data).__name__)
+            )
         if self.min is not None and len(data) < self.min:
-            raise ConstraintException(path, "Must have at least {} items, {} given".format(self.min, len(data)))
+            raise ConstraintException(
+                path,
+                "Must have at least {} items, {} given".format(self.min, len(data)),
+            )
         if self.max is not None and len(data) > self.max:
-            raise ConstraintException(path, "Must have at most {} items, {} given".format(self.max, len(data)))
+            raise ConstraintException(
+                path, "Must have at most {} items, {} given".format(self.max, len(data))
+            )
 
 
 MapT = TypeVar("MapT", bound=Dict)
@@ -4282,8 +4405,7 @@ characters, 1 given
             unserialized_key = self.keys.unserialize(key, tuple(key_path))
             if unserialized_key in result:
                 raise ConstraintException(
-                    tuple(key_path),
-                    "Key already exists in result dict"
+                    tuple(key_path), "Key already exists in result dict"
                 )
             value_path = list(tuple(new_path))
             value_path.append("value")
@@ -4404,12 +4526,24 @@ characters, 1 given
 
     def _validate(self, data, path):
         if not isinstance(data, dict):
-            raise ConstraintException(path, "Must be a dict, {} given".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be a dict, {} given".format(type(data).__name__)
+            )
         entries = dict(data)
         if self.min is not None and len(entries) < self.min:
-            raise ConstraintException(path, "Must have at least {} elements, {} given.".format(self.min, len(entries)))
+            raise ConstraintException(
+                path,
+                "Must have at least {} elements, {} given.".format(
+                    self.min, len(entries)
+                ),
+            )
         if self.max is not None and len(entries) > self.max:
-            raise ConstraintException(path, "Must have at most {} elements, {} given.".format(self.max, len(entries)))
+            raise ConstraintException(
+                path,
+                "Must have at most {} elements, {} given.".format(
+                    self.max, len(entries)
+                ),
+            )
         return entries
 
 
@@ -4460,16 +4594,16 @@ class PropertyType(PropertySchema, Generic[PropertyT]):
     field_override: str = ""
 
     def __init__(
-            self,
-            type: VALUE_TYPE,
-            display: DISPLAY_TYPE = None,
-            default: DEFAULT_TYPE = None,
-            examples: EXAMPLES_TYPE = None,
-            required: Optional[bool] = True,
-            required_if: Optional[List[str]] = None,
-            required_if_not: Optional[List[str]] = None,
-            conflicts: Optional[List[str]] = None,
-            field_override: str = ""
+        self,
+        type: VALUE_TYPE,
+        display: DISPLAY_TYPE = None,
+        default: DEFAULT_TYPE = None,
+        examples: EXAMPLES_TYPE = None,
+        required: Optional[bool] = True,
+        required_if: Optional[List[str]] = None,
+        required_if_not: Optional[List[str]] = None,
+        conflicts: Optional[List[str]] = None,
+        field_override: str = "",
     ):
         # noinspection PyArgumentList
         PropertySchema.__init__(
@@ -4537,11 +4671,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     _cls: Type[ObjectT]
     properties: Dict[str, PropertyType]
 
-    def __init__(
-            self,
-            cls: Type[ObjectT],
-            properties: Dict[str, PropertyType]
-    ):
+    def __init__(self, cls: Type[ObjectT], properties: Dict[str, PropertyType]):
         super().__init__(cls.__name__, properties)
         self._cls = cls
         self._validate_config(cls, properties)
@@ -4554,7 +4684,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     def _validate_config(cls_type: Type[ObjectT], properties: Dict[str, PropertyType]):
         if not isinstance(cls_type, type):
             raise BadArgumentException(
-                "The passed class argument '{}' is not a type. Please pass a type.".format(type(cls_type).__name__)
+                "The passed class argument '{}' is not a type. Please pass a type.".format(
+                    type(cls_type).__name__
+                )
             )
         if not isinstance(properties, dict):
             raise BadArgumentException(
@@ -4567,12 +4699,18 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
             dataclasses.fields(cls_type)
         except Exception as e:
             raise BadArgumentException(
-                "The passed class '{}' is not a dataclass. Please use a dataclass.".format(cls_type.__name__)
+                "The passed class '{}' is not a dataclass. Please use a dataclass.".format(
+                    cls_type.__name__
+                )
             ) from e
 
         class_type_hints = typing.get_type_hints(cls_type)
         init_type_hints = typing.get_type_hints(cls_type.__init__)
-        if len(init_type_hints) == len(properties) + 1 and "return" in init_type_hints and "return" not in properties:
+        if (
+            len(init_type_hints) == len(properties) + 1
+            and "return" in init_type_hints
+            and "return" not in properties
+        ):
             del init_type_hints["return"]
         if len(properties) != len(init_type_hints):
             raise BadArgumentException(
@@ -4582,7 +4720,8 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 "inject the data values.".format(
                     cls_type.__name__,
                     len(init_type_hints),
-                    len(properties), "', '".join(init_type_hints.keys())
+                    len(properties),
+                    "', '".join(init_type_hints.keys()),
                 )
             )
 
@@ -4604,7 +4743,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                             cls_type.__name__,
                             field_id,
                             property_id,
-                            "', '".join(init_type_hints.keys())
+                            "', '".join(init_type_hints.keys()),
                         )
                     )
                 # TODO in the future we should check if the data types of the constructor match with the property.
@@ -4625,7 +4764,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                             cls_type.__name__,
                             field_id,
                             property_id,
-                            "', '".join(class_type_hints.keys())
+                            "', '".join(class_type_hints.keys()),
                         )
                     )
                 # TODO in the future we should check if the data types of the properties match with the property.
@@ -4636,7 +4775,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 # See: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
 
     @classmethod
-    def _resolve_class_type_hints(cls, cls_type: type, level: int = 0) -> Dict[str, inspect.Parameter]:
+    def _resolve_class_type_hints(
+        cls, cls_type: type, level: int = 0
+    ) -> Dict[str, inspect.Parameter]:
         if level > 64:
             raise BadArgumentException(
                 "Too many parent classes of {}".format(cls_type.__name__)
@@ -4647,7 +4788,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 class_type_hints = typing.get_type_hints(cls_type)
             if hasattr(cls_type, "__bases__"):
                 for base in cls_type.__bases__:
-                    base_class_type_hints = cls._resolve_class_type_hints(base, level + 1)
+                    base_class_type_hints = cls._resolve_class_type_hints(
+                        base, level + 1
+                    )
                     for k, v in base_class_type_hints.items():
                         if k not in class_type_hints:
                             class_type_hints[k] = v
@@ -4691,13 +4834,17 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'TestData': Must be a dict, got str
         """
         if not isinstance(data, dict):
-            raise ConstraintException(path, "Must be a dict, got {}".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be a dict, got {}".format(type(data).__name__)
+            )
         kwargs = {}
         for key in data.keys():
             if key not in self.properties:
                 raise ConstraintException(
                     path,
-                    "Invalid parameter '{}', expected one of: {}".format(key, ", ".join(self.properties.keys()))
+                    "Invalid parameter '{}', expected one of: {}".format(
+                        key, ", ".join(self.properties.keys())
+                    ),
                 )
         for property_id in self.properties.keys():
             object_property: PropertyType = self.properties[property_id]
@@ -4712,14 +4859,18 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 field_id = property_id
                 if object_property.field_override != "":
                     field_id = object_property.field_override
-                kwargs[field_id] = object_property.type.unserialize(property_value, tuple(new_path))
+                kwargs[field_id] = object_property.type.unserialize(
+                    property_value, tuple(new_path)
+                )
 
                 if object_property.conflicts is not None:
                     for conflict in object_property.conflicts:
                         if conflict in data:
                             raise ConstraintException(
                                 tuple(new_path),
-                                "Field conflicts '{}', set one of the two, not both".format(conflict)
+                                "Field conflicts '{}', set one of the two, not both".format(
+                                    conflict
+                                ),
                             )
             else:
                 self._validate_not_set(data, object_property, tuple(new_path))
@@ -4761,7 +4912,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         if not isinstance(data, self._cls):
             raise ConstraintException(
                 path,
-                "Must be an instance of {}, {} given".format(self._cls.__name__, type(data).__name__)
+                "Must be an instance of {}, {} given".format(
+                    self._cls.__name__, type(data).__name__
+                ),
             )
         values = {}
         for property_id in self.properties.keys():
@@ -4783,15 +4936,17 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                         if conflicts in values.keys():
                             raise ConstraintException(
                                 tuple(new_path),
-                                "Field conflicts with {}".format(conflicts)
+                                "Field conflicts with {}".format(conflicts),
                             )
             else:
                 if property_field.required:
                     raise ConstraintException(
-                        tuple(new_path),
-                        "Field is required but not set"
+                        tuple(new_path), "Field is required but not set"
                     )
-                if property_field.required_if_not is not None and len(property_field.required_if_not) > 0:
+                if (
+                    property_field.required_if_not is not None
+                    and len(property_field.required_if_not) > 0
+                ):
                     found = False
                     for required_if_not in property_field.required_if_not:
                         if required_if_not in values.keys():
@@ -4801,7 +4956,8 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                         raise ConstraintException(
                             tuple(new_path),
                             "Field is required because none of '{}' are set".format(
-                                "', '".join(property_field.required_if_not))
+                                "', '".join(property_field.required_if_not)
+                            ),
                         )
 
                 if property_field.required_if is not None:
@@ -4810,14 +4966,17 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                             raise ConstraintException(
                                 tuple(new_path),
                                 "Field is required because none of '{}' are set".format(
-                                    "', '".join(property_field.required_if_not))
+                                    "', '".join(property_field.required_if_not)
+                                ),
                             )
 
     def serialize(self, data: ObjectT, path: typing.Tuple[str] = tuple([])) -> Any:
         if not isinstance(data, self._cls):
             raise ConstraintException(
                 path,
-                "Must be an instance of {}, {} given".format(self._cls.__name__, type(data).__name__)
+                "Must be an instance of {}, {} given".format(
+                    self._cls.__name__, type(data).__name__
+                ),
             )
         result = {}
         for property_id in self.properties.keys():
@@ -4827,10 +4986,14 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 field_id = property_field.field_override
             new_path, value = self._validate_property(data, path, field_id, property_id)
             if value is not None:
-                result[property_id] = property_field.type.serialize(getattr(data, field_id), tuple(new_path))
+                result[property_id] = property_field.type.serialize(
+                    getattr(data, field_id), tuple(new_path)
+                )
         return result
 
-    def _validate_property(self, data: TypeT, path: typing.Tuple[str], field_id: str, property_id: str):
+    def _validate_property(
+        self, data: TypeT, path: typing.Tuple[str], field_id: str, property_id: str
+    ):
         new_path = list(path)
         new_path.append(property_id)
         value = getattr(data, field_id)
@@ -4842,23 +5005,28 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     @staticmethod
     def _validate_not_set(data, object_property: PropertyType, path: typing.Tuple[str]):
         if object_property.required:
-            raise ConstraintException(
-                path,
-                "This field is required"
-            )
+            raise ConstraintException(path, "This field is required")
         if object_property.required_if is not None:
             for required_if in object_property.required_if:
-                if (isinstance(data, dict) and required_if in data) or \
-                        (hasattr(data, required_if) and getattr(data, required_if) is None):
+                if (isinstance(data, dict) and required_if in data) or (
+                    hasattr(data, required_if) and getattr(data, required_if) is None
+                ):
                     raise ConstraintException(
                         path,
-                        "This field is required because '{}' is set".format(required_if)
+                        "This field is required because '{}' is set".format(
+                            required_if
+                        ),
                     )
-        if object_property.required_if_not is not None and len(object_property.required_if_not) > 0:
+        if (
+            object_property.required_if_not is not None
+            and len(object_property.required_if_not) > 0
+        ):
             none_set = True
             for required_if_not in object_property.required_if_not:
-                if (isinstance(data, dict) and required_if_not in data) or \
-                        (hasattr(data, required_if_not) and getattr(data, required_if_not) is not None):
+                if (isinstance(data, dict) and required_if_not in data) or (
+                    hasattr(data, required_if_not)
+                    and getattr(data, required_if_not) is not None
+                ):
                     none_set = False
                     break
             if none_set:
@@ -4867,13 +5035,13 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                         path,
                         "This field is required because '{}' is not set".format(
                             object_property.required_if_not[0]
-                        )
+                        ),
                     )
                 raise ConstraintException(
                     path,
                     "This field is required because none of '{}' are set".format(
                         "', '".join(object_property.required_if_not)
-                    )
+                    ),
                 )
 
 
@@ -4888,11 +5056,11 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     _scope: typing.ForwardRef("ScopeType")
 
     def __init__(
-            self,
-            types: Dict[DiscriminatorT, typing.ForwardRef("RefType")],
-            t: Type[DiscriminatorT],
-            scope: typing.ForwardRef("ScopeType"),
-            discriminator_field_name: str,
+        self,
+        types: Dict[DiscriminatorT, typing.ForwardRef("RefType")],
+        t: Type[DiscriminatorT],
+        scope: typing.ForwardRef("ScopeType"),
+        discriminator_field_name: str,
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
@@ -4907,13 +5075,14 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 )
             )
         for k, v in types.items():
-            if not isinstance(v, RefType) and not isinstance(v, ObjectType) and not isinstance(v, ScopeType):
+            if (
+                not isinstance(v, RefType)
+                and not isinstance(v, ObjectType)
+                and not isinstance(v, ScopeType)
+            ):
                 raise BadArgumentException(
                     "The 'types' parameter of OneOf*Type must contain RefTypes, ObjectTypes, or ScopeTypes, "
-                    "{} found for key {}".format(
-                        type(v).__name__,
-                        v
-                    )
+                    "{} found for key {}".format(type(v).__name__, v)
                 )
         self._t = t
         self._scope = scope
@@ -4921,24 +5090,30 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
 
     def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> OneOfT:
         if not isinstance(data, dict):
-            raise ConstraintException(path, "Must be a dict, got {}".format(type(data).__name__))
+            raise ConstraintException(
+                path, "Must be a dict, got {}".format(type(data).__name__)
+            )
         new_path: List[str] = list(path)
         new_path.append(self.discriminator_field_name)
         if self.discriminator_field_name not in data:
-            raise ConstraintException(tuple(new_path), "Required discriminator field not found")
+            raise ConstraintException(
+                tuple(new_path), "Required discriminator field not found"
+            )
         unserialized_discriminator_field: str = data[self.discriminator_field_name]
         if not isinstance(unserialized_discriminator_field, self._t):
             raise ConstraintException(
                 tuple(new_path),
-                "{} required, {} found".format(self._t.__name__, type(unserialized_discriminator_field).__name__)
+                "{} required, {} found".format(
+                    self._t.__name__, type(unserialized_discriminator_field).__name__
+                ),
             )
         if unserialized_discriminator_field not in self.types:
             raise ConstraintException(
                 tuple(new_path),
                 "Invalid value for field: '{}' expected one of: '{}'".format(
                     unserialized_discriminator_field,
-                    "', '".join(list(self.types.keys()))
-                )
+                    "', '".join(list(self.types.keys())),
+                ),
             )
         sub_type = self.types[unserialized_discriminator_field]
         if self.discriminator_field_name not in sub_type.properties:
@@ -4963,16 +5138,15 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                             "Invalid value for '{}' on '{}', should be: '{}'".format(
                                 self.discriminator_field_name,
                                 object_schema.cls.__name__,
-                                discriminator
-                            )
+                                discriminator,
+                            ),
                         )
                 return
         raise ConstraintException(
             tuple(path),
             "Invalid type: '{}', expected one of '{}'".format(
-                type(data).__name__,
-                "', '".join(types)
-            )
+                type(data).__name__, "', '".join(types)
+            ),
         )
 
     def serialize(self, data: OneOfT, path: typing.Tuple[str] = tuple([])) -> Any:
@@ -4992,8 +5166,8 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                             "Invalid value for '{}' on '{}', should be: '{}'".format(
                                 self.discriminator_field_name,
                                 object_schema.cls.__name__,
-                                discriminator
-                            )
+                                discriminator,
+                            ),
                         )
                 else:
                     serialized_data[self.discriminator_field_name] = discriminator
@@ -5001,29 +5175,27 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         raise ConstraintException(
             tuple(path),
             "Invalid type: '{}', expected one of '{}'".format(
-                type(data).__name__,
-                "', '".join(types)
-            )
+                type(data).__name__, "', '".join(types)
+            ),
         )
 
 
 class OneOfStringType(OneOfStringSchema, _OneOfType[OneOfT, str], Generic[OneOfT]):
-
     def __init__(
-            self,
-            types: Dict[
-                str,
-                typing.Annotated[
-                    _OBJECT_LIKE,
-                    discriminator("type_id")
-                ]
-            ],
-            scope: typing.ForwardRef("ScopeType"),
-            discriminator_field_name: str = "_type"
+        self,
+        types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
+        scope: typing.ForwardRef("ScopeType"),
+        discriminator_field_name: str = "_type",
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(self, types, discriminator_field_name)
-        _OneOfType.__init__(self, types, t=str, scope=scope, discriminator_field_name=discriminator_field_name)
+        _OneOfType.__init__(
+            self,
+            types,
+            t=str,
+            scope=scope,
+            discriminator_field_name=discriminator_field_name,
+        )
 
 
 class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
@@ -5032,26 +5204,32 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
         typing.Union[
             typing.ForwardRef("RefSchema"),
             typing.ForwardRef("ScopeSchema"),
-            typing.ForwardRef("ObjectSchema")
+            typing.ForwardRef("ObjectSchema"),
         ],
     ]
 
     def __init__(
-            self,
-            types: Dict[
-                int,
-                typing.Union[
-                    typing.ForwardRef("RefSchema"),
-                    typing.ForwardRef("ScopeSchema"),
-                    typing.ForwardRef("ObjectSchema")
-                ],
+        self,
+        types: Dict[
+            int,
+            typing.Union[
+                typing.ForwardRef("RefSchema"),
+                typing.ForwardRef("ScopeSchema"),
+                typing.ForwardRef("ObjectSchema"),
             ],
-            scope: typing.ForwardRef("ScopeType"),
-            discriminator_field_name: str = "_type"
+        ],
+        scope: typing.ForwardRef("ScopeType"),
+        discriminator_field_name: str = "_type",
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(self, types, discriminator_field_name)
-        _OneOfType.__init__(self, types, t=int, scope=scope, discriminator_field_name=discriminator_field_name)
+        _OneOfType.__init__(
+            self,
+            types,
+            t=int,
+            scope=scope,
+            discriminator_field_name=discriminator_field_name,
+        )
 
 
 class ScopeType(ScopeSchema, AbstractType):
@@ -5061,18 +5239,12 @@ class ScopeType(ScopeSchema, AbstractType):
     proxy through to the underlying root object if set.
     """
 
-    objects: Dict[
-        ID_TYPE,
-        ObjectType
-    ]
+    objects: Dict[ID_TYPE, ObjectType]
 
     def __init__(
-            self,
-            objects: Dict[
-                ID_TYPE,
-                ObjectType
-            ],
-            root: typing.Optional[str],
+        self,
+        objects: Dict[ID_TYPE, ObjectType],
+        root: typing.Optional[str],
     ):
         # noinspection PyArgumentList
         ScopeSchema.__init__(self, objects, root)
@@ -5081,32 +5253,42 @@ class ScopeType(ScopeSchema, AbstractType):
         try:
             return self.objects[item]
         except KeyError:
-            raise BadArgumentException("Referenced object is not defined: {}".format(item))
+            raise BadArgumentException(
+                "Referenced object is not defined: {}".format(item)
+            )
 
     @property
     def properties(self) -> Dict[str, PropertyType]:
         if self.root is None:
             path: typing.Tuple[str] = tuple()
-            raise ConstraintException(path, "Cannot get properties, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot get properties, root object is not set on scope."
+            )
         return self.objects[self.root].properties
 
     @property
     def cls(self) -> Type[ObjectT]:
         if self.root is None:
             path: typing.Tuple[str] = tuple()
-            raise ConstraintException(path, "Cannot get cls, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot get cls, root object is not set on scope."
+            )
         return self.objects[self.root].cls
 
     @property
     def id(self) -> str:
         if self.root is None:
             path: typing.Tuple[str] = tuple()
-            raise ConstraintException(path, "Cannot get id, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot get id, root object is not set on scope."
+            )
         return self.objects[self.root].id
 
     def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
         if self.root is None:
-            raise ConstraintException(path, "Cannot unserialize, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot unserialize, root object is not set on scope."
+            )
         root_object: ObjectType = self.objects[self.root]
         new_path: List[str] = list(path)
         new_path.append(root_object.cls.__name__)
@@ -5114,7 +5296,9 @@ class ScopeType(ScopeSchema, AbstractType):
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
         if self.root is None:
-            raise ConstraintException(path, "Cannot validate, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot validate, root object is not set on scope."
+            )
         root_object: ObjectType = self.objects[self.root]
         new_path: List[str] = list(path)
         new_path.append(root_object.cls.__name__)
@@ -5122,7 +5306,9 @@ class ScopeType(ScopeSchema, AbstractType):
 
     def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
         if self.root is None:
-            raise ConstraintException(path, "Cannot serialize, root object is not set on scope.")
+            raise ConstraintException(
+                path, "Cannot serialize, root object is not set on scope."
+            )
         root_object: ObjectType = self.objects[self.root]
         new_path: List[str] = list(path)
         new_path.append(root_object.cls.__name__)
@@ -5133,6 +5319,7 @@ class RefType(RefSchema, AbstractType):
     """
     A ref is a reference to an object in a Scope.
     """
+
     _scope: ScopeType
 
     def __init__(self, id: str, scope: ScopeType):
@@ -5252,7 +5439,12 @@ class AnyType(AnySchema, AbstractType):
         elif isinstance(data, type(None)):
             return
         else:
-            raise ConstraintException(path, "Unsupported data type for 'any' type: {}".format(data.__class__.__name__))
+            raise ConstraintException(
+                path,
+                "Unsupported data type for 'any' type: {}".format(
+                    data.__class__.__name__
+                ),
+            )
 
 
 class StepOutputType(StepOutputSchema, AbstractType):
@@ -5289,24 +5481,21 @@ class StepType(StepSchema):
     outputs: Dict[ID_TYPE, StepOutputType]
 
     def __init__(
-            self,
-            id: str,
-            handler: Callable[[StepInputT], typing.Tuple[str, StepOutputT]],
-            input: ScopeType,
-            outputs: Dict[
-                ID_TYPE,
-                StepOutputType
-            ],
-            display: Optional[DisplayValue] = None
+        self,
+        id: str,
+        handler: Callable[[StepInputT], typing.Tuple[str, StepOutputT]],
+        input: ScopeType,
+        outputs: Dict[ID_TYPE, StepOutputType],
+        display: Optional[DisplayValue] = None,
     ):
         super().__init__(id, input, outputs, display)
         self._handler = handler
 
     def __call__(
-            self,
-            params: StepInputT,
-            skip_input_validation: bool = False,
-            skip_output_validation: bool = False,
+        self,
+        params: StepInputT,
+        skip_input_validation: bool = False,
+        skip_output_validation: bool = False,
     ) -> typing.Tuple[str, StepOutputT]:
         """
         :param params: Input parameter for the step.
@@ -5327,10 +5516,8 @@ class StepType(StepSchema):
         output_id, output_data = result
         if output_id not in self.outputs:
             raise BadArgumentException(
-                "The step returned an undeclared output ID: %s, please return one of: '%s'" % (
-                    output_id,
-                    "', '".join(self.outputs.keys())
-                )
+                "The step returned an undeclared output ID: %s, please return one of: '%s'"
+                % (output_id, "', '".join(self.outputs.keys()))
             )
         output: StepOutputType = self.outputs[output_id]
         if not skip_output_validation:
@@ -5342,6 +5529,7 @@ class SchemaType(Schema):
     """
     A schema is a definition of one or more steps that can be executed. The step has a defined input and output
     """
+
     steps: Dict[str, StepType]
 
     def unserialize_input(self, step_id: str, data: Any) -> Any:
@@ -5382,10 +5570,10 @@ class SchemaType(Schema):
 
     @staticmethod
     def _call_step(
-            step: StepType,
-            input_param: Any,
-            skip_input_validation: bool = False,
-            skip_output_validation: bool = False,
+        step: StepType,
+        input_param: Any,
+        skip_input_validation: bool = False,
+        skip_output_validation: bool = False,
     ) -> typing.Tuple[str, Any]:
         return step(
             input_param,
@@ -5415,7 +5603,9 @@ class SchemaType(Schema):
         except ConstraintException as e:
             raise InvalidOutputException(e) from e
 
-    def __call__(self, step_id: str, data: Any, skip_serialization: bool = False) -> typing.Tuple[str, Any]:
+    def __call__(
+        self, step_id: str, data: Any, skip_serialization: bool = False
+    ) -> typing.Tuple[str, Any]:
         """
         This function takes the input data, unserializes it for the specified step, calls the specified step, and,
         unless skip_serialization is set, serializes the return data.
@@ -5447,6 +5637,7 @@ class SchemaType(Schema):
 
 # region Build
 
+
 class _SchemaBuilder:
     @classmethod
     def resolve(cls, t: any, scope: ScopeType) -> AbstractType:
@@ -5458,11 +5649,11 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_abstract_type(
-            cls,
-            t: any,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t: any,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         result = cls._resolve(t, type_hints, path, scope)
         if isinstance(result, PropertyType):
@@ -5470,35 +5661,32 @@ class _SchemaBuilder:
             new_path: List[str] = list(path)
             name = res.display.name
             if name is None:
-                raise SchemaBuildException(
-                    path,
-                    "BUG: resolved property with no name"
-                )
+                raise SchemaBuildException(path, "BUG: resolved property with no name")
             new_path.append(name)
             raise SchemaBuildException(
                 tuple(new_path),
                 "Unsupported attribute combination, you can only use typing.Optional, etc. in classes, but not in "
-                "lists, dicts, etc."
+                "lists, dicts, etc.",
             )
         res: AbstractType = result
         return res
 
     @classmethod
-    def _resolve_field(cls, t: any, type_hints: type, path: typing.Tuple[str], scope: ScopeType) -> PropertyType:
+    def _resolve_field(
+        cls, t: any, type_hints: type, path: typing.Tuple[str], scope: ScopeType
+    ) -> PropertyType:
         result = cls._resolve(t, type_hints, path, scope)
         if not isinstance(result, PropertyType):
-            result = PropertyType(
-                result
-            )
+            result = PropertyType(result)
         return result
 
     @classmethod
     def _resolve(
-            cls,
-            t: any,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t: any,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> typing.Union[AbstractType, PropertyType]:
         if t == typing.Any:
             return cls._resolve_any()
@@ -5527,10 +5715,14 @@ class _SchemaBuilder:
         elif typing.get_origin(t) == typing.Annotated:
             return cls._resolve_annotated(t, type_hints, path, scope)
         else:
-            raise SchemaBuildException(path, "Unable to resolve underlying type: %s" % type(t).__name__)
+            raise SchemaBuildException(
+                path, "Unable to resolve underlying type: %s" % type(t).__name__
+            )
 
     @classmethod
-    def _resolve_type(cls, t, type_hints: type, path: typing.Tuple[str], scope: ScopeType):
+    def _resolve_type(
+        cls, t, type_hints: type, path: typing.Tuple[str], scope: ScopeType
+    ):
         if t == ANY_TYPE:
             return cls._resolve_any()
         elif issubclass(t, Enum):
@@ -5559,31 +5751,29 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_enum(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         try:
             try:
-                return StringEnumType(
-                    t
-                )
+                return StringEnumType(t)
             except BadArgumentException:
-                return IntEnumType(
-                    t
-                )
+                return IntEnumType(t)
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating enum type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating enum type"
+            ) from e
 
     @classmethod
     def _resolve_dataclass_field(
-            cls,
-            t: dataclasses.Field,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t: dataclasses.Field,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> typing.Tuple[str, PropertyType]:
         underlying_type = cls._resolve_field(t.type, type_hints, path, scope)
         base_type = underlying_type.type
@@ -5603,7 +5793,10 @@ class _SchemaBuilder:
             underlying_type.display.name = getattr(underlying_type, "__description")
         elif hasattr(base_type, "__description"):
             underlying_type.display.description = getattr(base_type, "__description")
-        if underlying_type.display.description == "" or underlying_type.display.description is None:
+        if (
+            underlying_type.display.description == ""
+            or underlying_type.display.description is None
+        ):
             meta_description = t.metadata.get("description")
             if meta_description != "" and meta_description is not None:
                 underlying_type.display.description = meta_description
@@ -5621,9 +5814,17 @@ class _SchemaBuilder:
             underlying_type.examples = getattr(underlying_type, "__examples")
         elif hasattr(base_type, "__examples"):
             underlying_type.examples = getattr(base_type, "__examples")
-        if underlying_type.examples == "" or underlying_type.examples is None or underlying_type.examples == []:
+        if (
+            underlying_type.examples == ""
+            or underlying_type.examples is None
+            or underlying_type.examples == []
+        ):
             meta_examples = t.metadata.get("examples")
-            if meta_examples != "" and meta_examples is not None and meta_examples != []:
+            if (
+                meta_examples != ""
+                and meta_examples is not None
+                and meta_examples != []
+            ):
                 underlying_type.examples = meta_examples
 
         meta_id = t.name
@@ -5644,27 +5845,29 @@ class _SchemaBuilder:
                 default = t.default_factory()
             if default is not None:
                 try:
-                    underlying_type.default = json.dumps(underlying_type.type.serialize(default))
+                    underlying_type.default = json.dumps(
+                        underlying_type.type.serialize(default)
+                    )
                 except ConstraintException as e:
                     raise SchemaBuildException(
                         path,
-                        "Failed to serialize default value: {}".format(e.__str__())
+                        "Failed to serialize default value: {}".format(e.__str__()),
                     )
         elif not underlying_type.required:
             raise SchemaBuildException(
                 path,
                 "Field is marked as optional, but does not have a default value set. "
-                "Please set a default value for this field."
+                "Please set a default value for this field.",
             )
         return meta_id, underlying_type
 
     @classmethod
     def _resolve_class(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         if t.__name__ in scope.objects:
             return RefType(t.__name__, scope)
@@ -5691,18 +5894,14 @@ class _SchemaBuilder:
                         path,
                         "{} are not supported by the Arcaflow typing system and cannot be used in input or output data"
                         "types. Please use one of the supported types, or file an issue at {} with your use case to "
-                        "get them included.".format(
-                            unsupported_type_name,
-                            _issue_url
-                        )
+                        "get them included.".format(unsupported_type_name, _issue_url),
                     )
             raise SchemaBuildException(
                 path,
                 "{} is not a dataclass or a supported type. Please use the @dataclasses.dataclass decorator on your "
                 "class or use a supported native type. If this is a native Python type and you want to request support "
                 "for it in the Arcaflow SDK, please open an issue at {} to get it included.".format(
-                    t.__name__,
-                    _issue_url
+                    t.__name__, _issue_url
                 ),
             ) from e
 
@@ -5714,7 +5913,9 @@ class _SchemaBuilder:
         for f in fields_list:
             new_path = list(path)
             new_path.append(f.name)
-            name, final_field = cls._resolve_dataclass_field(f, type_hints[f.name], tuple(new_path), scope)
+            name, final_field = cls._resolve_dataclass_field(
+                f, type_hints[f.name], tuple(new_path), scope
+            )
             final_fields[name] = final_field
 
         try:
@@ -5725,129 +5926,146 @@ class _SchemaBuilder:
 
             return RefType(t.__name__, scope)
         except Exception as e:
-            raise SchemaBuildException(path, "Failed to create object type: {}".format(e.__str__())) from e
+            raise SchemaBuildException(
+                path, "Failed to create object type: {}".format(e.__str__())
+            ) from e
 
     @classmethod
     def _resolve_bool_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> BoolType:
         try:
             return BoolType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating bool type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating bool type"
+            ) from e
 
     @classmethod
     def _resolve_bool(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> BoolType:
         try:
             return BoolType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating bool type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating bool type"
+            ) from e
 
     @classmethod
     def _resolve_string_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> StringType:
         try:
             return StringType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating string type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating string type"
+            ) from e
 
     @classmethod
     def _resolve_string(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> StringType:
         try:
             return StringType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating string type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating string type"
+            ) from e
 
     @classmethod
     def _resolve_int(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> IntType:
         try:
             return IntType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating int type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating int type"
+            ) from e
 
     @classmethod
     def _resolve_int_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> IntType:
         try:
             return IntType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating int type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating int type"
+            ) from e
 
     @classmethod
     def _resolve_float(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> FloatType:
         try:
             return FloatType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating float type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating float type"
+            ) from e
 
     @classmethod
     def _resolve_float_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> FloatType:
         try:
             return FloatType()
         except Exception as e:
-            raise SchemaBuildException(path, "Constraint exception while creating float type") from e
+            raise SchemaBuildException(
+                path, "Constraint exception while creating float type"
+            ) from e
 
     @classmethod
     def _resolve_annotated(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ):
         args = typing.get_args(t)
         if typing.get_origin(type_hints) == typing.Annotated:
             args_hints = typing.get_args(type_hints)
         else:
-            args_hints = type_hints,
+            args_hints = (type_hints,)
         if len(args) < 2:
             raise SchemaBuildException(
-                path,
-                "At least one validation parameter required for typing.Annotated"
+                path, "At least one validation parameter required for typing.Annotated"
             )
         new_path = list(path)
         new_path.append("typing.Annotated")
@@ -5857,7 +6075,9 @@ class _SchemaBuilder:
             new_path = list(path)
             new_path.append(str(i))
             if not isinstance(args[i], typing.Callable):
-                raise SchemaBuildException(tuple(new_path), "Annotation is not callable")
+                raise SchemaBuildException(
+                    tuple(new_path), "Annotation is not callable"
+                )
             try:
                 underlying_t = args[i](underlying_t)
             except Exception as e:
@@ -5869,46 +6089,46 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_list(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
             "List type without item type definition encountered, please declare your lists like this: "
-            "typing.List[str]"
+            "typing.List[str]",
         )
 
     @classmethod
     def _resolve_list_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
             "List type without item type definition encountered, please declare your lists like this: "
-            "typing.List[str]"
+            "typing.List[str]",
         )
 
     @classmethod
     def _resolve_list_annotation(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ):
         args = typing.get_args(t)
         if len(args) != 1:
             raise SchemaBuildException(
                 path,
                 "List type without item type definition encountered, please declare your lists like this: "
-                "typing.List[str]"
+                "typing.List[str]",
             )
         new_path = list(path)
         new_path.append("items")
@@ -5921,25 +6141,25 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_dict(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
             "Dict type without item type definition encountered, please declare your dicts like this: "
-            "typing.Dict[str, int]"
+            "typing.Dict[str, int]",
         )
 
     @classmethod
     def _resolve_forward(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         t: typing.ForwardRef
         # TODO is there a better way to directly evaluate a forward ref?
@@ -5949,43 +6169,47 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_dict_type(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
             "Dict type without item type definition encountered, please declare your dicts like this: "
-            "typing.Dict[str, int]"
+            "typing.Dict[str, int]",
         )
 
     @classmethod
     def _resolve_dict_annotation(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ):
         args = typing.get_args(t)
         arg_hints = typing.get_args(type_hints)
         if len(arg_hints) == 0:
-            arg_hints = type_hints,
+            arg_hints = (type_hints,)
         if len(args) != 2:
             raise SchemaBuildException(
                 path,
                 "Dict type without item type definition encountered, please declare your dicts like this: "
-                "typing.Dict[str, int]"
+                "typing.Dict[str, int]",
             )
         keys_path = list(path)
         keys_path.append("keys")
-        key_schema: AbstractType = cls._resolve_abstract_type(args[0], arg_hints[0], tuple(keys_path), scope)
+        key_schema: AbstractType = cls._resolve_abstract_type(
+            args[0], arg_hints[0], tuple(keys_path), scope
+        )
 
         values_path = list(path)
         values_path.append("values")
-        value_schema = cls._resolve_abstract_type(args[1], arg_hints[1], tuple(values_path), scope)
+        value_schema = cls._resolve_abstract_type(
+            args[1], arg_hints[1], tuple(values_path), scope
+        )
 
         try:
             return MapType(
@@ -5997,11 +6221,11 @@ class _SchemaBuilder:
 
     @classmethod
     def _resolve_union(
-            cls,
-            t,
-            type_hints: type,
-            path: typing.Tuple[str],
-            scope: ScopeType,
+        cls,
+        t,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> typing.Union[AbstractType, PropertyType]:
         args = typing.get_args(t)
         arg_hints = typing.get_args(t)
@@ -6030,39 +6254,43 @@ class _SchemaBuilder:
             f = cls._resolve_field(args[i], arg_hints[i], tuple(new_path), scope)
             if not f.required:
                 raise SchemaBuildException(
-                    tuple(new_path),
-                    "Union types cannot contain optional values."
+                    tuple(new_path), "Union types cannot contain optional values."
                 )
             if f.required_if is not None and len(f.required_if) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain require_if fields"
+                    "Union types cannot simultaneously contain require_if fields",
                 )
             if f.required_if_not is not None and len(f.required_if_not) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain require_if_not fields"
+                    "Union types cannot simultaneously contain require_if_not fields",
                 )
             if f.conflicts is not None and len(f.conflicts) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain conflicts fields"
+                    "Union types cannot simultaneously contain conflicts fields",
                 )
             if not isinstance(f.type, RefType):
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types can only contain objects, {} found".format(type(f.type).__name__)
+                    "Union types can only contain objects, {} found".format(
+                        type(f.type).__name__
+                    ),
                 )
             discriminator_value = f.type.id
             if hasattr(f.type, "__discriminator_value"):
                 discriminator_value = getattr(f.type, "__discriminator_value")
-            if discriminator_type is not None and type(discriminator_value) != discriminator_type:
+            if (
+                discriminator_type is not None
+                and type(discriminator_value) != discriminator_type
+            ):
                 raise BadArgumentException(
                     "Invalid discriminator value type: {}, the value type has been previously set to {}. Please make "
                     "sure all your discriminator values have the same type.".format(
-                        type(discriminator_value),
-                        discriminator_type
-                    ))
+                        type(discriminator_value), discriminator_type
+                    )
+                )
             discriminator_type = type(discriminator_value)
             if hasattr(f.type, "__name"):
                 if f.type.display is None:
@@ -6079,10 +6307,7 @@ class _SchemaBuilder:
                 scope,
             )
         else:
-            return OneOfIntType(
-                types,
-                scope
-            )
+            return OneOfIntType(types, scope)
 
     @classmethod
     def _resolve_pattern(cls, t, type_hints: type, path, scope: ScopeType):
@@ -6131,9 +6356,9 @@ schemas to the engine, or to build an engine replacement. (This is normally hand
 
 
 def test_object_serialization(
-        dc,
-        fail: typing.Optional[Callable[[str], None]] = None,
-        t: typing.Optional[ObjectType] = None
+    dc,
+    fail: typing.Optional[Callable[[str], None]] = None,
+    t: typing.Optional[ObjectType] = None,
 ):
     """
     This function aids serialization by first serializing, then unserializing the passed parameter according to the
@@ -6153,19 +6378,20 @@ def test_object_serialization(
         if unserialized_data != dc:
             raise Exception(
                 "After serializing and unserializing {}, the data mismatched. Serialized data was: {}".format(
-                    dc.__name__,
-                    serialized_data
+                    dc.__name__, serialized_data
                 )
             )
     except Exception as e:
-        result = "Your object serialization test for {} failed.\n\n" \
-                 "This means that your object cannot be properly serialized by the SDK. There are three possible " \
-                 "reasons for this:\n\n" \
-                 "1. Your data class has a field type in it that the SDK doesn't support\n" \
-                 "2. Your sample data is invalid according to your own rules\n" \
-                 "3. There is a bug in the SDK (please report it)\n\n" \
-                 "Check the error message below for details.\n\n" \
-                 "---\n\n{}".format(type(dc).__name__, traceback.extract_stack())
+        result = (
+            "Your object serialization test for {} failed.\n\n"
+            "This means that your object cannot be properly serialized by the SDK. There are three possible "
+            "reasons for this:\n\n"
+            "1. Your data class has a field type in it that the SDK doesn't support\n"
+            "2. Your sample data is invalid according to your own rules\n"
+            "3. There is a bug in the SDK (please report it)\n\n"
+            "Check the error message below for details.\n\n"
+            "---\n\n{}".format(type(dc).__name__, traceback.extract_stack())
+        )
         result += "Error message:\n" + e.__str__() + "\n\n"
         # noinspection PyDataclass
         result += "Input:\n" + pprint.pformat(dataclasses.asdict(dc)) + "\n\n"

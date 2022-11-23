@@ -26,15 +26,13 @@ class Output:
 )
 def hello_world(params: Input) -> Tuple[str, Union[Output]]:
     print("Hello world!")
-    return "success", Output(
-        "Hello, {}!".format(params.name))
+    return "success", Output("Hello, {}!".format(params.name))
 
 
 test_schema = plugin.build_schema(hello_world)
 
 
 class ATPTest(unittest.TestCase):
-
     def _execute_plugin(self) -> Tuple[int, TextIO, TextIO]:
         stdin_reader_fd, stdin_writer_fd = os.pipe()
         stdout_reader_fd, stdout_writer_fd = os.pipe()
@@ -90,7 +88,7 @@ class ATPTest(unittest.TestCase):
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_schema),
-                schema.SCHEMA_SCHEMA.serialize(hello_message.schema)
+                schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
             client.start_work("hello-world", {"name": "Arca Lot"})
@@ -101,5 +99,5 @@ class ATPTest(unittest.TestCase):
             self._cleanup(pid, stdin_writer, stdout_reader)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
