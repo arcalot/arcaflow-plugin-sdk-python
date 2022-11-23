@@ -11,6 +11,7 @@ class FullName:
     """
     A full name holds the first and last name of an individual.
     """
+
     first_name: typing.Annotated[
         str,
         validation.min(1),
@@ -38,6 +39,7 @@ class Nickname:
     """
     A nickname is a simplified form of the name that only holds the preferred name of an individual.
     """
+
     nick: typing.Annotated[
         str,
         validation.min(1),
@@ -58,6 +60,7 @@ class InputParams:
     """
     This is the data structure for the input parameters of the step defined below.
     """
+
     name: typing.Annotated[
         typing.Union[
             typing.Annotated[
@@ -74,15 +77,19 @@ class InputParams:
         schema.name("Name"),
         schema.description("Who do we say hello to?"),
         annotations.discriminator("_type"),
-        schema.example({
-            "_type": "fullname",
-            "first_name": "Arca",
-            "last_name": "Lot",
-        }),
-        schema.example({
-            "_type": "nickname",
-            "nick": "Arcalot",
-        }),
+        schema.example(
+            {
+                "_type": "fullname",
+                "first_name": "Arca",
+                "last_name": "Lot",
+            }
+        ),
+        schema.example(
+            {
+                "_type": "nickname",
+                "nick": "Arcalot",
+            }
+        ),
     ]
 
 
@@ -91,6 +98,7 @@ class SuccessOutput:
     """
     This is the output data structure for the success case.
     """
+
     message: str
 
 
@@ -99,6 +107,7 @@ class ErrorOutput:
     """
     This is the output data structure in the error  case.
     """
+
     error: str
 
 
@@ -110,7 +119,9 @@ class ErrorOutput:
     description="Says hello :)",
     outputs={"success": SuccessOutput, "error": ErrorOutput},
 )
-def hello_world(params: InputParams) -> typing.Tuple[str, typing.Union[SuccessOutput, ErrorOutput]]:
+def hello_world(
+    params: InputParams,
+) -> typing.Tuple[str, typing.Union[SuccessOutput, ErrorOutput]]:
     """
     The function  is the implementation for the step. It needs the decorator above to make it into a  step. The type
     hints for the params are required.
@@ -120,12 +131,15 @@ def hello_world(params: InputParams) -> typing.Tuple[str, typing.Union[SuccessOu
     :return: the string identifying which output it is, as well the output structure
     """
 
-    return "success", SuccessOutput(
-        "Hello, {}!".format(params.name))
+    return "success", SuccessOutput("Hello, {}!".format(params.name))
 
 
 if __name__ == "__main__":
-    sys.exit(plugin.run(plugin.build_schema(
-        # List your step functions here:
-        hello_world,
-    )))
+    sys.exit(
+        plugin.run(
+            plugin.build_schema(
+                # List your step functions here:
+                hello_world,
+            )
+        )
+    )

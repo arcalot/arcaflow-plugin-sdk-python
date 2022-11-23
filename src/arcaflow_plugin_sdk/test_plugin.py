@@ -21,7 +21,7 @@ class StdoutTestOutput:
     "stdout-test",
     "Stdout test",
     "A test for writing to stdout.",
-    {"success": StdoutTestOutput}
+    {"success": StdoutTestOutput},
 )
 def stdout_test_step(input: StdoutTestInput) -> typing.Tuple[str, StdoutTestOutput]:
     print("Hello world!")
@@ -37,22 +37,16 @@ class StdoutTest(unittest.TestCase):
             tmp.close()
 
         self.addCleanup(cleanup)
-        tmp.write(bytes("{}", 'utf-8'))
+        tmp.write(bytes("{}", "utf-8"))
         tmp.flush()
 
         i = io.StringIO()
         o = io.StringIO()
         e = io.StringIO()
-        exit_code = plugin.run(
-            s,
-            ["test.py", "-f", tmp.name, "--debug"],
-            i,
-            o,
-            e
-        )
+        exit_code = plugin.run(s, ["test.py", "-f", tmp.name, "--debug"], i, o, e)
         self.assertEqual(0, exit_code)
         self.assertEqual("Hello world!\n", e.getvalue())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

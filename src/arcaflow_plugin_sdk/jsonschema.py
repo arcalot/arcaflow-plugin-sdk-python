@@ -16,7 +16,7 @@ def step_input(t: schema.StepSchema) -> dict:
 
 def step_outputs(t: schema.StepSchema):
     """
-    This function takes a schema step and creates a JSON schema object from the output parameters. 
+    This function takes a schema step and creates a JSON schema object from the output parameters.
     :return: the JSON schema represented as a dict.
     """
     result = {
@@ -25,9 +25,7 @@ def step_outputs(t: schema.StepSchema):
         "title": t.display.name + " outputs",
         "description": t.display.description,
         "oneof": [],
-        '$defs': {
-
-        }
+        "$defs": {},
     }
 
     for output_id in list(t.outputs.keys()):
@@ -35,11 +33,10 @@ def step_outputs(t: schema.StepSchema):
         for k, v in output_data["$defs"].items():
             result["$defs"][k] = v
         del output_data["$defs"]
-        result["oneof"].append({
-            "output_id": {
-                "type": "string",
-                "const": output_id
-            },
-            "output_data": output_data
-        })
+        result["oneof"].append(
+            {
+                "output_id": {"type": "string", "const": output_id},
+                "output_data": output_data,
+            }
+        )
     return result

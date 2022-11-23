@@ -45,7 +45,9 @@ class _StepHandler(resource.Resource):
             input_data = json.loads(input)
         except BaseException as e:
             request.setResponseCode(400)
-            return "Failed to load JSON from request: {}".format(e.__str__()).encode("utf-8")
+            return "Failed to load JSON from request: {}".format(e.__str__()).encode(
+                "utf-8"
+            )
 
         try:
             output_id, output_data = self.schema(self.step_id, input_data)
@@ -62,7 +64,9 @@ class _StepHandler(resource.Resource):
             return json.dumps(output_data).encode("utf-8")
         except BaseException as e:
             request.setResponseCode(500)
-            return "Failed to encode response JSON: {}".format(e.__str__()).encode("utf-8")
+            return "Failed to encode response JSON: {}".format(e.__str__()).encode(
+                "utf-8"
+            )
 
 
 class _SchemaHandler(resource.Resource):
@@ -97,15 +101,19 @@ class _SchemaHandler(resource.Resource):
                     "type": "string",
                 }
                 defs[ref_id + "_output_" + output_id]["required"].append("_output_id")
-                one_of.append({"$ref": "#/components/schemas/" + ref_id + "_output_" + output_id})
+                one_of.append(
+                    {"$ref": "#/components/schemas/" + ref_id + "_output_" + output_id}
+                )
 
-                discriminator_mapping[output_id] = "#/components/schemas/" + ref_id + "_output_" + output_id
+                discriminator_mapping[output_id] = (
+                    "#/components/schemas/" + ref_id + "_output_" + output_id
+                )
             output_openapi = {
                 "oneOf": one_of,
                 "discriminator": {
                     "propertyName": "_output_id",
                     "mapping": discriminator_mapping,
-                }
+                },
             }
 
             paths["/{}".format(step_id)] = {
@@ -119,18 +127,14 @@ class _SchemaHandler(resource.Resource):
                             "application/json": {
                                 "schema": step_input_schema,
                             }
-                        }
+                        },
                     },
                     "responses": {
                         "default": {
                             "description": "Execution complete",
-                            "content": {
-                                "application/json": {
-                                    "schema": output_openapi
-                                }
-                            }
+                            "content": {"application/json": {"schema": output_openapi}},
                         }
-                    }
+                    },
                 }
             }
         data = {
@@ -141,9 +145,7 @@ class _SchemaHandler(resource.Resource):
                 "version": "0.0.0",
             },
             "paths": paths,
-            "components": {
-                "schemas": defs
-            }
+            "components": {"schemas": defs},
         }
 
         return json.dumps(data).encode("utf-8")
@@ -160,8 +162,7 @@ class _Handler(resource.Resource):
     def render(self, request):
         request.setHeader("Content-Type", "text/html;charset=utf-8")
         return _INDEX_HTML.format(
-            "Plugin API",
-            "http://{}/api.json".format(request.getHeader("Host"))
+            "Plugin API", "http://{}/api.json".format(request.getHeader("Host"))
         ).encode("utf-8")
 
 

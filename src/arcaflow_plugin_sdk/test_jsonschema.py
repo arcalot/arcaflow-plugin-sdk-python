@@ -35,10 +35,9 @@ class JSONSchemaTest(unittest.TestCase):
                                 schema.StringType(),
                             ),
                             "field-b": schema.PropertyType(
-                                schema.IntType(),
-                                field_override="b"
-                            )
-                        }
+                                schema.IntType(), field_override="b"
+                            ),
+                        },
                     )
                 },
                 "Request",
@@ -49,42 +48,39 @@ class JSONSchemaTest(unittest.TestCase):
 
         s = jsonschema.step_input(step)
         self.maxDiff = None
-        self.assertEqual({
-            '$defs': {
-                'Request': {
-                    'additionalProperties': False,
-                    'dependentRequired': {},
-                    'properties': {
-                        'a': {'type': 'string'},
-                        'field-b': {
-                            'type': 'integer'
-                        }
-                    },
-                    'required': ['a', 'field-b'],
-                    'type': 'object'
-                }
+        self.assertEqual(
+            {
+                "$defs": {
+                    "Request": {
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                        "properties": {
+                            "a": {"type": "string"},
+                            "field-b": {"type": "integer"},
+                        },
+                        "required": ["a", "field-b"],
+                        "type": "object",
+                    }
+                },
+                "$id": "test",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "title": "Test step input",
+                "description": "This is just a test",
+                "properties": {"a": {"type": "string"}, "field-b": {"type": "integer"}},
+                "required": ["a", "field-b"],
+                "dependentRequired": {},
+                "additionalProperties": False,
             },
-            '$id': 'test',
-            '$schema': 'https://json-schema.org/draft/2020-12/schema',
-            'type': 'object',
-            'title': 'Test step input',
-            'description': 'This is just a test',
-            'properties': {'a': {'type': 'string'}, 'field-b': {'type': 'integer'}},
-            'required': ['a', 'field-b'],
-            'dependentRequired': {},
-            'additionalProperties': False,
-        }, s)
+            s,
+        )
 
     def test_step_outputs(self):
         input_scope = schema.ScopeSchema(
             {
                 "Request": schema.ObjectSchema(
                     id="Request",
-                    properties={
-                        "a": schema.PropertySchema(
-                            schema.StringSchema()
-                        )
-                    }
+                    properties={"a": schema.PropertySchema(schema.StringSchema())},
                 )
             },
             "Request",
@@ -97,10 +93,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "Response1": schema.ObjectSchema(
                             id="Response1",
                             properties={
-                                "b": schema.PropertySchema(
-                                    schema.StringSchema()
-                                )
-                            }
+                                "b": schema.PropertySchema(schema.StringSchema())
+                            },
                         )
                     },
                     "Response1",
@@ -112,16 +106,14 @@ class JSONSchemaTest(unittest.TestCase):
                         "Response1": schema.ObjectSchema(
                             id="Response1",
                             properties={
-                                "c": schema.PropertySchema(
-                                    schema.StringSchema()
-                                )
-                            }
+                                "c": schema.PropertySchema(schema.StringSchema())
+                            },
                         )
                     },
                     "Response1",
                 ),
-                error=True
-            )
+                error=True,
+            ),
         }
 
         step = schema.StepSchema(
@@ -136,60 +128,50 @@ class JSONSchemaTest(unittest.TestCase):
 
         s = jsonschema.step_outputs(step)
         self.maxDiff = None
-        self.assertEqual({
-            '$id': 'test',
-            '$schema': 'https://json-schema.org/draft/2020-12/schema',
-            'title': 'Test step outputs',
-            'description': 'This is just a test',
-            'oneof': [
-                {
-                    'output_id': {
-                        'type': 'string',
-                        'const': 'success'
-                    },
-                    'output_data': {
-                        'type': 'object',
-                        'properties': {
-                            'b': {'type': 'string'}
+        self.assertEqual(
+            {
+                "$id": "test",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "title": "Test step outputs",
+                "description": "This is just a test",
+                "oneof": [
+                    {
+                        "output_id": {"type": "string", "const": "success"},
+                        "output_data": {
+                            "type": "object",
+                            "properties": {"b": {"type": "string"}},
+                            "required": ["b"],
+                            "additionalProperties": False,
+                            "dependentRequired": {},
                         },
-                        'required': ['b'],
-                        'additionalProperties': False,
-                        'dependentRequired': {}
+                    },
+                    {
+                        "output_id": {
+                            "type": "string",
+                            "const": "error",
+                        },
+                        "output_data": {
+                            "type": "object",
+                            "properties": {"c": {"type": "string"}},
+                            "required": ["c"],
+                            "additionalProperties": False,
+                            "dependentRequired": {},
+                        },
+                    },
+                ],
+                "$defs": {
+                    "Response1": {
+                        "type": "object",
+                        "properties": {"c": {"type": "string"}},
+                        "required": ["c"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
                     }
                 },
-                {
-                    'output_id': {
-                        'type': 'string',
-                        'const': 'error',
-                    },
-                    'output_data': {
-                        'type': 'object',
-                        'properties': {
-                            'c': {
-                                'type': 'string'
-                            }
-                        },
-                        'required': ['c'],
-                        'additionalProperties': False,
-                        'dependentRequired': {}
-                    }
-                }
-            ],
-            '$defs': {
-                'Response1': {
-                    'type': 'object',
-                    'properties': {
-                        'c': {
-                            'type': 'string'
-                        }
-                    },
-                    'required': ['c'],
-                    'additionalProperties': False,
-                    'dependentRequired': {}
-                }
-            }
-        }, s)
+            },
+            s,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
