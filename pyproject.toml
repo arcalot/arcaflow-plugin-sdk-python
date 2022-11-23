@@ -1,28 +1,38 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "arcaflow_plugin_sdk"
+[tool.poetry]
+name = "arcaflow-plugin-sdk-python"
 # Do not change, the version is automatically updated in CI.
 version = "0.0.0"
-authors = [
-]
 description = "Plugin SDK for the Arcaflow workflow engine"
+authors = ["Arcalot Contributors"]
+license = "Apache-2.0"
 readme = "README.md"
-license = { text="Apache-2.0" }
-requires-python = ">=3.9"
+packages = [{include = "arcaflow_plugin_sdk", from = "src"}]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-  'PyYAML >= 5.4',
-  'twisted >= 22.4.0',
-  'cbor2 >=2.4.3',
-]
+homepage = "https://github.com/arcalot/arcaflow-python-sdk"
 
-[project.urls]
-"Homepage" = "https://github.com/arcalot/arcaflow-python-sdk"
+[tool.poetry.urls]
 "Bug Tracker" = "https://github.com/arcalot/arcaflow-python-sdk/issues"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+cbor2 = "^5.4.3"
+PyYAML = "^5.4"
+twisted = "^22.10.0"
+
+[tool.poetry.dev-dependencies]
+coverage = "^6.5.0"
+pre-commit = "^2.20.0"
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^6.5.0"
+html2text = "^2020.1.16"
+sphinx = "^5.3.0"
+sphinx-rtd-theme = "^1.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
