@@ -3,7 +3,7 @@ import typing
 import unittest
 from typing import Tuple
 
-from arcaflow_plugin_sdk import schema, jsonschema
+from arcaflow_plugin_sdk import jsonschema, schema
 
 
 class JSONSchemaTest(unittest.TestCase):

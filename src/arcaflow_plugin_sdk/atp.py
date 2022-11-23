@@ -19,7 +19,9 @@ import os
 import signal
 import sys
 import typing
+
 import cbor2
+
 from arcaflow_plugin_sdk import schema
 
 

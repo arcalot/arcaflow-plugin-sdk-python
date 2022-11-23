@@ -1,7 +1,7 @@
 import json
 
-from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
+from twisted.internet import endpoints, reactor
+from twisted.web import resource, server
 from twisted.web.resource import Resource
 
 from arcaflow_plugin_sdk import schema

@@ -3,9 +3,9 @@ import os
 import signal
 import time
 import unittest
-from typing import Tuple, Union, TextIO
+from typing import TextIO, Tuple, Union
 
-from arcaflow_plugin_sdk import plugin, atp, schema
+from arcaflow_plugin_sdk import atp, plugin, schema
 
 
 @dataclasses.dataclass
