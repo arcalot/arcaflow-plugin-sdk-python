@@ -1306,7 +1306,7 @@ class Unit:
     **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
-    >>> u = Unit(
+    >>> u = schema.Unit(
     ...     "ns",
     ...     "ns",
     ...     "nanosecond",
@@ -1354,7 +1354,7 @@ class Unit:
         **Example:**
 
         >>> from arcaflow_plugin_sdk import schema
-        >>> u = Unit(
+        >>> u = schema.Unit(
         ...     "ns",
         ...     "ns",
         ...     "nanosecond",
@@ -1381,7 +1381,7 @@ class Unit:
         **Example:**
 
         >>> from arcaflow_plugin_sdk import schema
-        >>> u = Unit(
+        >>> u = schema.Unit(
         ...     "ns",
         ...     "ns",
         ...     "nanosecond",
@@ -1417,33 +1417,33 @@ class Units:
 
     Define your unit:
 
-    >>> t = Units(
-    ...     Unit(
+    >>> t = schema.Units(
+    ...     schema.Unit(
     ...         "ns",
     ...         "ns",
     ...         "nanosecond",
     ...         "nanoseconds"
     ...     ),
     ...     {
-    ...         1000: Unit(
+    ...         1000: schema.Unit(
     ...             "ms",
     ...             "ms",
     ...             "microsecond",
     ...             "microseconds"
     ...         ),
-    ...         1000000: Unit(
+    ...         1000000: schema.Unit(
     ...             "s",
     ...             "s",
     ...             "second",
     ...             "seconds"
     ...         ),
-    ...         60000000: Unit(
+    ...         60000000: schema.Unit(
     ...             "m",
     ...             "m",
     ...             "minute",
     ...             "minutes"
     ...         ),
-    ...         3600000000: Unit(
+    ...         3600000000: schema.Unit(
     ...             "H",
     ...             "H",
     ...             "hour",
