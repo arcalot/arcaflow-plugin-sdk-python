@@ -12,63 +12,58 @@ permissions:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [ '3.9', '3.10', 'pypy3.9' ]
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+      - name: Update version number
+        if: startsWith(github.ref, 'refs/tags/')
+        run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install build tools
-        run: python3 -m pip install --upgrade build
-      - name: Install
-        run: pip install -r requirements.txt
-      - name: Install sphinx
+      - name: Check isort, black, and flake8
         run: |
-          pip install sphinx
-          pip install sphinx-rtd-theme
-      - name: Check with pyflakes
+          pip install black flake8 isort
+          isort --profile black .
+          black .
+          flake8 .
+      - name: Install Python Poetry
+        uses: snok/install-poetry@v1.3.3
+      - name: Install project dependencies
+        run: poetry install --no-interaction --with dev
+      - name: Run tests with coverage
         run: |
-          pip install pyflakes
-          pyflakes `find . -name "*.py"`
-      - name: Install coverage
-        run: pip install coverage
-      - name: Test
-        run: |
-          python3 -m coverage run -a -m unittest discover -v src
-      - name: Document
-        run: |
-          sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Python SDK for Arcaflow"
-          make -C docs html
-      - name: Run example plugin
-        run: python3 -m coverage run -a ./example_plugin.py -f example.yaml
-      - name: Run example plugin test
-        run: python3 -m coverage run -a ./test_example_plugin.py
-      - name: Collect coverage report
-        run: |
-          python3 -m coverage html
+          # Run the unit tests
+          poetry run python3 -m coverage run -a -m unittest discover -v src
+          # Run the example plugin
+          poetry run python3 -m coverage run -a ./example_plugin.py -f example.yaml
+          # Test the example plugin
+          poetry run python3 -m coverage run -a ./test_example_plugin.py
+          # Generate the coverage HTML report
+          poetry run python3 -m coverage html
       - name: Publish coverage report to job summary
         # publishing only once
         if: ${{ matrix.python-version == '3.9'}}
         run: |
-          pip install html2text
-          html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
-      - name: Update version number
-        if: startsWith(github.ref, 'refs/tags/')
-        run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
+          poetry run html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
+      - name: Generate documentation
+        run: |
+          poetry run sphinx-apidoc -o docs/ -f -a -e src/ --doc-project "Python SDK for Arcaflow"
+          poetry run make -C docs html
       - name: Build
-        run: python3 -m build
-      - name: Upload artifacts
+        run: poetry build
+      - name: Upload dist artifact
         uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist
           if-no-files-found: error
-      - name: Upload artifacts
+      - name: Upload coverage HTML artifact
         uses: actions/upload-artifact@v3
         with:
           name: coverage
