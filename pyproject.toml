@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "arcaflow-plugin-sdk-python"
+name = "arcaflow-plugin-sdk"
 # Do not change, the version is automatically updated in CI.
 version = "0.0.0"
-description = "Plugin SDK for the Arcaflow workflow engine"
+description = "Plugin SDK for Python for the Arcaflow workflow engine"
 authors = ["Arcalot Contributors"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -12,10 +12,10 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
-homepage = "https://github.com/arcalot/arcaflow-python-sdk"
+homepage = "https://github.com/arcalot/arcaflow-plugin-sdk-python"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/arcalot/arcaflow-python-sdk/issues"
+"Bug Tracker" = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
