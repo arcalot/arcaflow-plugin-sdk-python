@@ -10,7 +10,7 @@ from typing import Callable, Dict, List, Type, TypeVar
 
 import yaml
 
-from arcaflow_plugin_sdk import _http, jsonschema, schema, serialization
+from arcaflow_plugin_sdk import jsonschema, schema, serialization
 from arcaflow_plugin_sdk.schema import (
     BadArgumentException,
     InvalidInputException,
@@ -150,12 +150,6 @@ def run(
             metavar="KIND",
         )
         parser.add_option(
-            "--http",
-            dest="http",
-            help="Run a HTTP microservice.",
-            metavar="LISTEN_PORT",
-        )
-        parser.add_option(
             "-s",
             "--step",
             dest="step",
@@ -193,12 +187,6 @@ def run(
                     64, "--{} and --schema cannot be used together".format(action)
                 )
             action = "schema"
-        if options.http is not None:
-            if action is not None:
-                raise _ExitException(
-                    64, "--{} and --http cannot be used together".format(action)
-                )
-            action = "http"
         if options.atp is not None:
             if action is not None:
                 raise _ExitException(
@@ -208,7 +196,7 @@ def run(
         if action is None:
             raise _ExitException(
                 64,
-                "At least one of --file, --json-schema, --schema, or --http must be specified",
+                "At least one of --file, --json-schema, or --schema must be specified",
             )
 
         if action == "file" or action == "json-schema":
@@ -234,8 +222,6 @@ def run(
             return _print_json_schema(step_id, s, options, stdout)
         elif action == "schema":
             return _print_schema(s, options, stdout)
-        elif action == "http":
-            return _run_server(options.http, s, stdin, stdout, stderr)
     except serialization.LoadFromFileException as e:
         stderr.write(e.msg + "\n")
         return 64
@@ -376,14 +362,6 @@ def _print_json_schema(step_id, s, options, stdout):
 def _print_schema(s, options, stdout):
     stdout.write(yaml.dump(schema.SCHEMA_SCHEMA.serialize(s)))
     return 0
-
-
-def _run_server(listen, s, stdin, stdout, stderr):
-    stdout.write("Starting HTTP server at {}...\n".format(listen))
-    stdout.write(
-        "Warning! This mode is experimental and may change or be discontinued at any time!\n"
-    )
-    _http.run(listen, s)
 
 
 test_object_serialization = schema.test_object_serialization

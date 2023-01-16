@@ -21,7 +21,6 @@ homepage = "https://github.com/arcalot/arcaflow-plugin-sdk-python"
 python = "^3.9"
 cbor2 = "^5.4.3"
 PyYAML = "^5.4"
-twisted = "^22.10.0"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^6.5.0"
