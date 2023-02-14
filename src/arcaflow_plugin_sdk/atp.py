@@ -85,6 +85,9 @@ def run_plugin(
     except SystemExit:
         return 0
     try:
+        if message is None:
+            stderr.write("Work start message is None.")
+            return 1
         if message["id"] is None:
             stderr.write("Work start message is missing the 'id' field.")
             return 1
