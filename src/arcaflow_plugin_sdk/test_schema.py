@@ -753,6 +753,10 @@ class SerializationTest(unittest.TestCase):
         self.assertIsNone(unserialized.A)
         self.assertIsNone(unserialized.B)
 
+        unserialized = s.unserialize({"A": None, "B": None})
+        self.assertIsNone(unserialized.A)
+        self.assertIsNone(unserialized.B)
+
         unserialized = s.unserialize({"A": "Foo"})
         self.assertEqual(unserialized.A, "Foo")
         self.assertIsNone(unserialized.B)
