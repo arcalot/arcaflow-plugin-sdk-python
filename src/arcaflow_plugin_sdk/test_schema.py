@@ -689,7 +689,6 @@ class OneOfTest(unittest.TestCase):
         self.assertIsInstance(unserialized_data, OneOfData2)
 
 
-import types
 
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
@@ -773,7 +772,6 @@ class SerializationTest(unittest.TestCase):
             s.serialize(TestData1(B="Foo"))
 
     def test_required_if_not(self):
-        # List of other properties that, if not filled, lead to the current property being required.
         @dataclasses.dataclass
         class TestData1:
             A: typing.Optional[str] = None
