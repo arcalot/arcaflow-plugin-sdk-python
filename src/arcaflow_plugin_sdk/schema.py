@@ -5023,7 +5023,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         ):
             none_set = True
             for required_if_not in object_property.required_if_not:
-                if (isinstance(data, dict) and required_if_not in data) or (
+                if (isinstance(data, dict) and required_if_not in data and data[required_if_not] is not None) or (
                     hasattr(data, required_if_not)
                     and getattr(data, required_if_not) is not None
                 ):
