@@ -5004,6 +5004,14 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
 
     @staticmethod
     def _validate_not_set(data, object_property: PropertyType, path: typing.Tuple[str]):
+        """
+        This function applies required_if and required_if_not constraints on an object_property
+        in data. If a constraint has been broken, then it raises a ConstraintException.
+
+        :param data: a dictionary representation of an ObjectType
+        :param object_property: a property of an ObjectType
+        :param path: a traversal from data to object_property
+        """
         if object_property.required:
             raise ConstraintException(path, "This field is required")
         if object_property.required_if is not None:
