@@ -5011,6 +5011,12 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 if (isinstance(data, dict) and required_if in data and data[required_if] is not None) or (
                     hasattr(data, required_if) and getattr(data, required_if) is not None
                 ):
+                    # (here, required_if refers to its value)
+                    # if data is a dict, has this required_if as a key, and the
+                    # dict value paired with this required_if key is not None
+                    # or
+                    # if data is an object with attribute required_if, and
+                    # data.required_if is not None
                     raise ConstraintException(
                         path,
                         "This field is required because '{}' is set".format(
@@ -5027,6 +5033,12 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                     hasattr(data, required_if_not)
                     and getattr(data, required_if_not) is not None
                 ):
+                    # (here, required_if_not refers to its value)
+                    # if data is a dict, has this required_if_not as a key, and the
+                    # dict value paired with this required_if_not key is not None
+                    # or
+                    # if data is an object with attribute required_if_not, and
+                    # data.required_if_not is not None
                     none_set = False
                     break
             if none_set:
