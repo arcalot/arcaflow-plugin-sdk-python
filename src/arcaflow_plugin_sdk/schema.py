@@ -5005,8 +5005,14 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     @staticmethod
     def _validate_not_set(data, object_property: PropertyType, path: typing.Tuple[str]):
         """
-        This function applies required_if and required_if_not constraints on an object_property
-        in data. If a constraint has been broken, then it raises a ConstraintException.
+        Validate required_if and required_if_not constraints on a property in the given
+        data object. If a constraint has been broken, then raise a ConstraintException.
+
+        For a description of the required_if constraint visit
+        [https://arcalot.io/arcaflow/plugins/python/schema/?h=required_if#objecttype].
+
+        For a description of the required_if_not constraint visit
+        [https://arcalot.io/arcaflow/plugins/python/schema/?h=required_if_not#objecttype].
 
         :param data: a dictionary representation of an ObjectType
         :param object_property: a property of an ObjectType
