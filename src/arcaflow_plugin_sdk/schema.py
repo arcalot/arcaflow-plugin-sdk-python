@@ -5004,13 +5004,33 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
 
     @staticmethod
     def _validate_not_set(data, object_property: PropertyType, path: typing.Tuple[str]):
+        """
+        Validate required_if and required_if_not constraints on a property in the given
+        data object. If a constraint has been broken, then raise a ConstraintException.
+
+        For a description of the required_if constraint visit
+        [https://arcalot.io/arcaflow/plugins/python/schema/?h=required_if#objecttype].
+
+        For a description of the required_if_not constraint visit
+        [https://arcalot.io/arcaflow/plugins/python/schema/?h=required_if_not#objecttype].
+
+        :param data: a dictionary representation of an ObjectType
+        :param object_property: a property of an ObjectType
+        :param path: a traversal from data to object_property
+        """
         if object_property.required:
             raise ConstraintException(path, "This field is required")
         if object_property.required_if is not None:
             for required_if in object_property.required_if:
-                if (isinstance(data, dict) and required_if in data) or (
-                    hasattr(data, required_if) and getattr(data, required_if) is None
+                if (isinstance(data, dict) and required_if in data and data[required_if] is not None) or (
+                    hasattr(data, required_if) and getattr(data, required_if) is not None
                 ):
+                    # (here, required_if refers to its value)
+                    # if data is a dict, has this required_if as a key, and the
+                    # dict value paired with this required_if key is not None
+                    # or
+                    # if data is an object with attribute required_if, and
+                    # data.required_if is not None
                     raise ConstraintException(
                         path,
                         "This field is required because '{}' is set".format(
@@ -5023,10 +5043,16 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         ):
             none_set = True
             for required_if_not in object_property.required_if_not:
-                if (isinstance(data, dict) and required_if_not in data) or (
+                if (isinstance(data, dict) and required_if_not in data and data[required_if_not] is not None) or (
                     hasattr(data, required_if_not)
                     and getattr(data, required_if_not) is not None
                 ):
+                    # (here, required_if_not refers to its value)
+                    # if data is a dict, has this required_if_not as a key, and the
+                    # dict value paired with this required_if_not key is not None
+                    # or
+                    # if data is an object with attribute required_if_not, and
+                    # data.required_if_not is not None
                     none_set = False
                     break
             if none_set:

@@ -689,6 +689,7 @@ class OneOfTest(unittest.TestCase):
         self.assertIsInstance(unserialized_data, OneOfData2)
 
 
+
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
         @dataclasses.dataclass
@@ -753,12 +754,67 @@ class SerializationTest(unittest.TestCase):
         self.assertIsNone(unserialized.A)
         self.assertIsNone(unserialized.B)
 
+        unserialized = s.unserialize({"A": None, "B": None})
+        self.assertIsNone(unserialized.A)
+        self.assertIsNone(unserialized.B)
+
         unserialized = s.unserialize({"A": "Foo"})
         self.assertEqual(unserialized.A, "Foo")
         self.assertIsNone(unserialized.B)
 
         with self.assertRaises(schema.ConstraintException):
             s.unserialize({"B": "Foo"})
+
+        with self.assertRaises(schema.ConstraintException):
+            s.validate(TestData1(B="Foo"))
+
+        with self.assertRaises(schema.ConstraintException):
+            s.serialize(TestData1(B="Foo"))
+
+    def test_required_if_not(self):
+        @dataclasses.dataclass
+        class TestData1:
+            A: typing.Optional[str] = None
+            B: typing.Annotated[typing.Optional[str], schema.required_if_not("A")] = None
+
+        s = schema.build_object_schema(TestData1)
+
+        with self.assertRaises(schema.ConstraintException):
+            s.unserialize({})
+
+        with self.assertRaises(schema.ConstraintException):
+            s.unserialize({"A": None, "B": None})
+
+        unserialized = s.unserialize({"A": "Foo"})
+        self.assertEqual(unserialized.A, "Foo")
+        self.assertIsNone(unserialized.B)
+
+        unserialized = s.unserialize({"B": "Foo"})
+        self.assertEqual(unserialized.B, "Foo")
+        self.assertIsNone(unserialized.A)
+
+        s.validate(TestData1(B="Foo"))
+        s.serialize(TestData1(B="Foo"))
+
+        @dataclasses.dataclass
+        class TestData2:
+            A: typing.Optional[str] = None
+            B: typing.Optional[str] = None
+            C: typing.Annotated[typing.Optional[str], schema.required_if_not("A"), schema.required_if_not("B")] = None
+
+        s = schema.build_object_schema(TestData2)
+
+        with self.assertRaises(schema.ConstraintException):
+            s.unserialize({"A": None, "B": None, "C": None})
+
+        unserialized = s.unserialize({"C": "Foo"})
+        self.assertIsNone(unserialized.A)
+        self.assertIsNone(unserialized.B)
+        self.assertEqual(unserialized.C, "Foo")
+
+        td2_c = TestData2(C="Foo")
+        s.validate(td2_c)
+        s.serialize(td2_c)
 
     def test_int_optional(self):
         @dataclasses.dataclass
