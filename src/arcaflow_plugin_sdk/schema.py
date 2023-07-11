@@ -1247,7 +1247,6 @@ def _id_typeize(input: str) -> str:
     """
     return re.sub(_id_type_inverse_re, "_", input)
 
-
 # endregion
 
 # region Schema
@@ -5439,6 +5438,17 @@ class AnyType(AnySchema, AbstractType):
 
     def _check(self, data: Any, path: typing.Tuple[str] = tuple([])):
         if isinstance(data, list):
+            if len(data) != 0:
+                list_type_base = type(data[0])
+                for i in range(len(data)):
+                    if type(data[i]) != list_type_base:
+                        raise ConstraintException(
+                            tuple(path),
+                            "non-uniform type found in list: '{}' is not of list type '{}'".format(
+                                type(data[i]), list_type_base 
+                            ),
+            )           
+
             for i in range(len(data)):
                 new_path = list(path)
                 new_path.append("[{}]".format(i))
