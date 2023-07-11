@@ -5826,7 +5826,7 @@ class _SchemaBuilder:
                 underlying_type.display.name = meta_name
 
         if hasattr(underlying_type, "__description"):
-            underlying_type.display.name = getattr(underlying_type, "__description")
+            underlying_type.display.description = getattr(underlying_type, "__description")
         elif hasattr(base_type, "__description"):
             underlying_type.display.description = getattr(base_type, "__description")
         if (
