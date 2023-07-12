@@ -5440,12 +5440,12 @@ class AnyType(AnySchema, AbstractType):
         if isinstance(data, list):
             if len(data) != 0:
                 list_type_base = type(data[0])
-                for i in range(len(data)):
-                    if type(data[i]) != list_type_base:
+                for item in data:
+                    if type(item) != list_type_base:
                         raise ConstraintException(
                             tuple(path),
                             "non-uniform type found in list: '{}' is not of list type '{}'".format(
-                                type(data[i]), list_type_base 
+                                type(item), list_type_base 
                             ),
             )           
 
