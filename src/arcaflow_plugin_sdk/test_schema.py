@@ -293,7 +293,9 @@ class AnyTest(unittest.TestCase):
         self.assertEqual("True", t.unserialize("True"))
         self.assertEqual(None, t.unserialize(None))
         self.assertEqual({"a": "b"}, t.unserialize({"a": "b"}))
-        self.assertEqual([1, 1.0, None, "a"], t.unserialize([1, 1.0, None, "a"]))
+        t.validate({"foo": "bar"})
+        with self.assertRaises(schema.ConstraintException):
+            t.unserialize([1, 1.0, None, "a"])
         self.assertEqual([{0: ["a"]}], t.unserialize([{0: ["a"]}]))
 
         class IsAClass:
