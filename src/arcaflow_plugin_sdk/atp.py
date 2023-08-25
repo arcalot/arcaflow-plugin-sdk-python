@@ -127,7 +127,7 @@ class ATPServer:
             # Send WorkDoneMessage in a RuntimeMessage
             encoder.encode(
                 {
-                    "id": MessageType.WORKDONE,
+                    "id": MessageType.WORKDONE.value,
                     "data": {
                         "output_id": output_id,
                         "output_data": s.serialize_output(
@@ -159,7 +159,7 @@ class ATPServer:
                 if msg_id is None:
                     stderr.write("Runtime message is missing the 'id' field.")
                 # Then take action
-                if msg_id == MessageType.SIGNAL:
+                if msg_id == MessageType.SIGNAL.value:
                     signal_msg = runtime_msg["data"]
                     received_step_id = signal_msg["step_id"]
                     received_signal_id = signal_msg["signal_id"]
@@ -232,19 +232,30 @@ class PluginClient:
 
     def read_results(self) -> (str, any, str):
         """
-        This function reads the results of an execution from the plugin.
+        This function reads the signals and results of an execution from the plugin.
         """
-        message = self.decoder.decode()
-        if message["output_id"] is None:
-            raise PluginClientStateException(
-                "Missing 'output_id' in CBOR message. Possibly wrong order of calls?"
-            )
-        if message["output_data"] is None:
-            raise PluginClientStateException(
-                "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
-            )
-        if message["debug_logs"] is None:
-            raise PluginClientStateException(
-                "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
-            )
-        return message["output_id"], message["output_data"], message["debug_logs"]
+        while True:
+            runtime_msg = self.decoder.decode()
+            msg_id = runtime_msg["id"]
+            if msg_id == MessageType.WORKDONE.value:
+                signal_msg = runtime_msg["data"]
+                if signal_msg["output_id"] is None:
+                    raise PluginClientStateException(
+                        "Missing 'output_id' in CBOR message. Possibly wrong order of calls?"
+                    )
+                if signal_msg["output_data"] is None:
+                    raise PluginClientStateException(
+                        "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
+                    )
+                if signal_msg["debug_logs"] is None:
+                    raise PluginClientStateException(
+                        "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
+                    )
+                return signal_msg["output_id"], signal_msg["output_data"], signal_msg["debug_logs"]
+            elif msg_id == MessageType.SIGNAL.value:
+                # Do nothing. Should change in the future.
+                continue
+            else:
+                raise PluginClientStateException(
+                    f"Received unknown runtime message ID {msg_id}"
+                )
