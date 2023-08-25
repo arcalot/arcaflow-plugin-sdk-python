@@ -44,12 +44,12 @@ class ATPTest(unittest.TestCase):
             stdin_reader = os.fdopen(stdin_reader_fd, "r")
             stdout_writer = os.fdopen(stdout_writer_fd, "w")
 
-            result = atp.run_plugin(
-                test_schema,
+            atp_server = atp.ATPServer(
                 stdin_reader.buffer.raw,
                 stdout_writer.buffer.raw,
                 stdout_writer.buffer.raw,
             )
+            result = atp_server.run_plugin(test_schema)
             os.close(stdin_reader_fd)
             os.close(stdout_writer_fd)
             if result != 0:
@@ -84,7 +84,7 @@ class ATPTest(unittest.TestCase):
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
             client.start_output()
             hello_message = client.read_hello()
-            self.assertEqual(1, hello_message.version)
+            self.assertEqual(2, hello_message.version)
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_schema),

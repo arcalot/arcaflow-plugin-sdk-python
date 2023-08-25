@@ -19,10 +19,17 @@ import os
 import signal
 import sys
 import typing
+import threading
 
 import cbor2
 
+from enum import Enum
+
 from arcaflow_plugin_sdk import schema
+
+class MessageType(Enum):
+    WORKDONE = 1
+    SIGNAL = 2
 
 
 @dataclasses.dataclass
@@ -49,71 +56,120 @@ class HelloMessage:
 
 _HELLO_MESSAGE_SCHEMA = schema.build_object_schema(HelloMessage)
 
+class ATPServer:
 
-def _handle_exit(_signo, _stack_frame):
-    print("Exiting normally")
-    sys.exit(0)
+    stdin: io.FileIO
+    stdout: io.FileIO
+    stderr: io.FileIO
+    step_object: typing.Any
 
+    def __init__(self,
+        stdin: io.FileIO,
+        stdout: io.FileIO,
+        stderr: io.FileIO,
+    ) -> None:
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
 
-def run_plugin(
-    s: schema.SchemaType,
-    stdin: io.FileIO,
-    stdout: io.FileIO,
-    stderr: io.FileIO,
-) -> int:
-    """
-    This function wraps running a plugin.
-    """
-    if os.isatty(stdout.fileno()):
-        print("Cannot run plugin in ATP mode on an interactive terminal.")
-        return 1
+    def run_plugin(
+        self,
+        s: schema.SchemaType,
+    ) -> int:
+        """
+        This function wraps running a plugin.
+        """
+        if os.isatty(self.stdout.fileno()):
+            print("Cannot run plugin in ATP mode on an interactive terminal.")
+            return 1
+        try:
+            decoder = cbor2.decoder.CBORDecoder(self.stdin)
+            encoder = cbor2.encoder.CBOREncoder(self.stdout)
 
-    signal.signal(signal.SIGTERM, _handle_exit)
-    try:
-        decoder = cbor2.decoder.CBORDecoder(stdin)
-        encoder = cbor2.encoder.CBOREncoder(stdout)
+            # Decode empty "start output" message.
+            decoder.decode()
 
-        # Decode empty "start output" message.
-        decoder.decode()
+            # Serialize then send HelloMessage
+            start_hello_message = HelloMessage(2, s)
+            serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
+            encoder.encode(serialized_message)
+            self.stdout.flush()
 
-        start = HelloMessage(1, s)
-        serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start)
-        encoder.encode(serialized_message)
-        stdout.flush()
+            # Can fail here if only getting schema.
+            work_start_msg = decoder.decode()
+        except SystemExit:
+            return 0
+        try:
+            if work_start_msg["id"] is None:
+                self.stderr.write("Work start message is missing the 'id' field.")
+                return 1
+            if work_start_msg["config"] is None:
+                self.stderr.write("Work start message is missing the 'config' field.")
+                return 1
+            # Run the read loop
+            read_thread = threading.Thread(target=self.run_server_read_loop, args=(self, decoder, self.stderr))
+            read_thread.start()
+            # Run the step 
+            original_stdout = sys.stdout
+            original_stderr = sys.stderr
+            out_buffer = io.StringIO()
+            sys.stdout = out_buffer
+            sys.stderr = out_buffer
+            output_id, output_data = s.call_step(
+                work_start_msg["id"], s.unserialize_input(work_start_msg["id"], work_start_msg["config"])
+            )
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
 
-        message = decoder.decode()
-    except SystemExit:
+            # Send WorkDoneMessage in a RuntimeMessage
+            encoder.encode(
+                {
+                    "id": MessageType.WORKDONE,
+                    "data": {
+                        "output_id": output_id,
+                        "output_data": s.serialize_output(
+                            work_start_msg["id"], output_id, output_data
+                        ),
+                        "debug_logs": out_buffer.getvalue(),
+                    }
+                }
+            )
+            self.stdout.flush()
+            read_thread.join()
+        except SystemExit:
+            return 1
         return 0
-    try:
-        if message["id"] is None:
-            stderr.write("Work start message is missing the 'id' field.")
-            return 1
-        if message["config"] is None:
-            stderr.write("Work start message is missing the 'config' field.")
-            return 1
-        original_stdout = sys.stdout
-        original_stderr = sys.stderr
-        out_buffer = io.StringIO()
-        sys.stdout = out_buffer
-        sys.stderr = out_buffer
-        output_id, output_data = s.call_step(
-            message["id"], s.unserialize_input(message["id"], message["config"])
-        )
-        sys.stdout = original_stdout
-        sys.stderr = original_stderr
-        encoder.encode(
-            {
-                "output_id": output_id,
-                "output_data": s.serialize_output(
-                    message["id"], output_id, output_data
-                ),
-                "debug_logs": out_buffer.getvalue(),
-            }
-        )
-        stdout.flush()
-    except SystemExit:
-        return 1
-    return 0
+
+    def run_server_read_loop(
+        self,
+        step: schema.SchemaType,
+        step_id: str,
+        decoder: cbor2.decoder.CBORDecoder,
+        stderr: io.FileIO
+    ) -> None:
+        try:
+            while True:
+                # Decode the message
+                runtime_msg = decoder.decode()
+                msg_id = runtime_msg["id"]
+                # Validate
+                if msg_id is None:
+                    stderr.write("Runtime message is missing the 'id' field.")
+                # Then take action
+                if msg_id == MessageType.SIGNAL:
+                    signal_msg = runtime_msg["data"]
+                    received_step_id = signal_msg["step_id"]
+                    received_signal_id = signal_msg["signal_id"]
+                    if received_step_id != step_id:
+                        stderr.write(f"Received step ID in the signal message '{received_step_id}'"
+                                     f"does not match expected step ID '{step_id}'")
+                        return
+                    step.call_step_signal(step_id, received_signal_id, signal_msg["data"])
+                else:
+                    stderr.write(f"Unknown kind of runtime message: {msg_id}")
+
+        except cbor2.CBORDecodeError:
+            stderr.write(f"Error while decoding CBOR: {msg_id}")
 
 
 class PluginClientStateException(Exception):
