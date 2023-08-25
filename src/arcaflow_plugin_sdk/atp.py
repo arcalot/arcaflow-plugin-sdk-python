@@ -100,6 +100,9 @@ class ATPServer:
         except SystemExit:
             return 0
         try:
+            if work_start_msg is None:
+                self.stderr.write("Work start message is None.")
+                return 1
             if work_start_msg["id"] is None:
                 self.stderr.write("Work start message is missing the 'id' field.")
                 return 1
