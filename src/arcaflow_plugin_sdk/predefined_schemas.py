@@ -4,7 +4,7 @@ from arcaflow_plugin_sdk import schema
 
 cancel_signal_schema = schema.SignalSchema(
     id="cancelInput",
-    data=schema.ScopeSchema(
+    data_schema=schema.ScopeSchema(
         {
             "cancelInput": schema.ObjectSchema(
                 "cancelInput",
