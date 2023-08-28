@@ -3115,7 +3115,7 @@ class SignalSchema:
         _name("ID"),
         _description("Machine identifier for this step.")
     ]
-    data: typing.Annotated[
+    data_schema: typing.Annotated[
         ScopeSchema,
         _name("Data"),
         _description("Input or output data schema")
@@ -5563,7 +5563,6 @@ class SignalHandlerType(SignalSchema):
     SignalHandlerType describes a callable signal type.
     """
     _handler: Callable[[StepObjectT, SignalDataT], type(None)]
-    dataSchema: ScopeType
 
     def __init__(
         self,
@@ -5583,8 +5582,7 @@ class SignalHandlerType(SignalSchema):
         """
         :param params: Input data parameter for the signal handler.
         """
-        input: ScopeType = self.data_type
-        # TODO: Check if this is the correct key.
+        input: ScopeType = self.data_schema
         input.validate(params, tuple(["input"]))
         self._handler(step_data, params)
 
