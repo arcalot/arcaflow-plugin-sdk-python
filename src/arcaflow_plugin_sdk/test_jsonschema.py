@@ -44,6 +44,9 @@ class JSONSchemaTest(unittest.TestCase):
             ),
             outputs={},
             handler=noop_handler,
+            step_object_constructor=None,
+            signal_handlers=None,
+            signal_emitters=None,
         )
 
         s = jsonschema.step_input(step)
