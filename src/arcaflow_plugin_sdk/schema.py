@@ -6455,7 +6455,7 @@ class _SchemaBuilder:
                     f.type.display = DisplayValue()
                 f.type.display.description = getattr(f.type, "__description")
             types[discriminator_value] = f.type
-        if discriminator_type == str:
+        if discriminator_type is str:
             return OneOfStringType(
                 types,
                 scope,
