@@ -691,7 +691,6 @@ class OneOfTest(unittest.TestCase):
         self.assertIsInstance(unserialized_data, OneOfData2)
 
 
-
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
         @dataclasses.dataclass

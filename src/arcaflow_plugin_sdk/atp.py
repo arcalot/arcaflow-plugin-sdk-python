@@ -16,7 +16,6 @@ The message flow is as follows:
 import dataclasses
 import io
 import os
-import signal
 import sys
 import typing
 import threading
@@ -26,6 +25,7 @@ import cbor2
 from enum import Enum
 
 from arcaflow_plugin_sdk import schema
+
 
 class MessageType(Enum):
     WORKDONE = 1
@@ -56,17 +56,18 @@ class HelloMessage:
 
 _HELLO_MESSAGE_SCHEMA = schema.build_object_schema(HelloMessage)
 
-class ATPServer:
 
+class ATPServer:
     stdin: io.FileIO
     stdout: io.FileIO
     stderr: io.FileIO
     step_object: typing.Any
 
-    def __init__(self,
-        stdin: io.FileIO,
-        stdout: io.FileIO,
-        stderr: io.FileIO,
+    def __init__(
+            self,
+            stdin: io.FileIO,
+            stdout: io.FileIO,
+            stderr: io.FileIO,
     ) -> None:
         self.stdin = stdin
         self.stdout = stdout
@@ -112,7 +113,7 @@ class ATPServer:
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(self, decoder, self.stderr))
             read_thread.start()
-            # Run the step 
+            # Run the step
             original_stdout = sys.stdout
             original_stderr = sys.stderr
             out_buffer = io.StringIO()

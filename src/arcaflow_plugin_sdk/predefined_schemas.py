@@ -8,7 +8,7 @@ cancel_signal_schema = schema.SignalSchema(
         {
             "cancelInput": schema.ObjectSchema(
                 "cancelInput",
-                {}, # No fields/properties at the moment
+                {},  # No fields/properties at the moment
             )
         },
         "cancelInput",
@@ -19,7 +19,6 @@ cancel_signal_schema = schema.SignalSchema(
         icon=None,
     ),
 )
-
 
 
 @dataclass

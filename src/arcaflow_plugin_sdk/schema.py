@@ -5490,13 +5490,13 @@ class AnyType(AnySchema, AbstractType):
             if len(data) != 0:
                 list_type_base = type(data[0])
                 for item in data:
-                    if type(item) != list_type_base:
+                    if item is list_type_base:
                         raise ConstraintException(
                             tuple(path),
                             "non-uniform type found in list: '{}' is not of list type '{}'".format(
-                                type(item), list_type_base 
+                                type(item), list_type_base
                             ),
-            )           
+                        )
 
             for i in range(len(data)):
                 new_path = list(path)
@@ -5557,6 +5557,7 @@ StepInputT = TypeVar("StepInputT", bound=object)
 StepOutputT = TypeVar("StepOutputT", bound=object)
 StepObjectT = TypeVar("StepObjectT", bound=object)
 
+
 class SignalHandlerType(SignalSchema):
     """
     SignalHandlerType describes a callable signal type.
@@ -5589,6 +5590,7 @@ class SignalHandlerType(SignalSchema):
 
 
 _step_object_constructor_param = Callable[[], StepObjectT]
+
 
 class StepType(StepSchema):
     """
@@ -5632,7 +5634,7 @@ class StepType(StepSchema):
         :return: The ID for the output datatype, and the output itself.
         """
         # Initialize the step object
-        if self._step_object_constructor != None:
+        if self._step_object_constructor is not None:
             self.initializedObjectData = self._step_object_constructor()
         else:
             self.initializedObjectData = None

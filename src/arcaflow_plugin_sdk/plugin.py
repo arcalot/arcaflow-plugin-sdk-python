@@ -27,6 +27,7 @@ _step_decorator_param = Callable[[InputT], OutputT]
 _step_object_decorator_param = Callable[[schema.StepObjectT, InputT], OutputT]
 _signal_handler_decorator_param = Callable[[InputT], type(None)]
 
+
 def signal_handler(
     id: str,
     name: str,
@@ -53,7 +54,7 @@ def signal_handler(
         if len(sig.parameters) != 2:
             raise BadArgumentException(
                 "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %d" %
-                    (name, id, sig.parameters)
+                (name, id, sig.parameters)
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
@@ -112,7 +113,7 @@ def step_with_signals(
         if len(sig.parameters) != 2:
             raise BadArgumentException(
                 "The '%s' (id: %s) step must have exactly two parameters, including self. Currently has %d" %
-                    (name, id, len(sig.parameters))
+                (name, id, len(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
