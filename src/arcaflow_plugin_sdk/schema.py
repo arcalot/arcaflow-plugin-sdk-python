@@ -6449,7 +6449,7 @@ class _SchemaBuilder:
             if hasattr(f.type, "__name"):
                 if f.type.display is None:
                     f.type.display = DisplayValue()
-                f.type.display.name = getattr(f.type, "__name")
+                f.type.display.name = getattr(f.type, "__name")  # noqa: E721
             if hasattr(f.type, "__description"):
                 if f.type.display is None:
                     f.type.display = DisplayValue()
