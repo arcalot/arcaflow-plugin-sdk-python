@@ -5490,7 +5490,7 @@ class AnyType(AnySchema, AbstractType):
             if len(data) != 0:
                 list_type_base = type(data[0])
                 for item in data:
-                    if item is list_type_base:
+                    if type(item) is not list_type_base:
                         raise ConstraintException(
                             tuple(path),
                             "non-uniform type found in list: '{}' is not of list type '{}'".format(
@@ -6437,7 +6437,7 @@ class _SchemaBuilder:
                 discriminator_value = getattr(f.type, "__discriminator_value")
             if (
                 discriminator_type is not None
-                and discriminator_value is not discriminator_type
+                and type(discriminator_value) is not discriminator_type
             ):
                 raise BadArgumentException(
                     "Invalid discriminator value type: {}, the value type has been previously set to {}. Please make "
