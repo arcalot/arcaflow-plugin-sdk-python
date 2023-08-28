@@ -6437,7 +6437,7 @@ class _SchemaBuilder:
                 discriminator_value = getattr(f.type, "__discriminator_value")
             if (
                 discriminator_type is not None
-                and type(discriminator_value) != discriminator_type
+                and discriminator_value is not discriminator_type
             ):
                 raise BadArgumentException(
                     "Invalid discriminator value type: {}, the value type has been previously set to {}. Please make "
@@ -6449,7 +6449,7 @@ class _SchemaBuilder:
             if hasattr(f.type, "__name"):
                 if f.type.display is None:
                     f.type.display = DisplayValue()
-                f.type.display.name = getattr(f.type, "__name")  # noqa: E721
+                f.type.display.name = getattr(f.type, "__name")
             if hasattr(f.type, "__description"):
                 if f.type.display is None:
                     f.type.display = DisplayValue()
