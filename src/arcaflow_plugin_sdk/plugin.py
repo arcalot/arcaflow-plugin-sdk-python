@@ -88,7 +88,7 @@ def step_with_signals(
     name: str,
     description: str,
     outputs: Dict[str, Type],
-    signal_handlers: List[schema.SignalHandlerType],
+    signal_handler_method_names: List[str],
     signal_emitters: List[schema.SignalSchema],
     step_object_constructor: schema._step_object_constructor_param,
     icon: typing.Optional[str] = None,
@@ -136,7 +136,9 @@ def step_with_signals(
             )
         signal_handlers_map = {}
         signal_emitters_map = {}
-        for handler in signal_handlers:
+        object_instance = step_object_constructor()
+        for handler_id in signal_handler_method_names:
+            handler = getattr(object_instance, handler_id)
             signal_handlers_map[handler.id] = handler
         for emitter in signal_emitters:
             signal_emitters_map[emitter.id] = emitter
