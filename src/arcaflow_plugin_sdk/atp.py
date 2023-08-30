@@ -111,7 +111,12 @@ class ATPServer:
                 self.stderr.write("Work start message is missing the 'config' field.")
                 return 1
             # Run the read loop
-            read_thread = threading.Thread(target=self.run_server_read_loop, args=(self, decoder, self.stderr))
+            read_thread = threading.Thread(target=self.run_server_read_loop, args=(
+                self,  # Step
+                work_start_msg["id"],  # step ID
+                decoder,  # Decoder
+                self.stderr,  # Stderr
+            ))
             read_thread.start()
             # Run the step
             original_stdout = sys.stdout
