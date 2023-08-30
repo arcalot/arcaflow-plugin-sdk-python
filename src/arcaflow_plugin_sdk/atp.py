@@ -112,7 +112,7 @@ class ATPServer:
                 return 1
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(
-                plugin_schema, #  Plugin schema
+                plugin_schema,  # Plugin schema
                 work_start_msg["id"],  # step ID
                 decoder,  # Decoder
                 self.stderr,  # Stderr
@@ -125,7 +125,7 @@ class ATPServer:
             sys.stdout = out_buffer
             sys.stderr = out_buffer
             output_id, output_data = plugin_schema.call_step(
-                work_start_msg["id"], plugin_schema.unserialize_input(work_start_msg["id"], work_start_msg["config"])
+                work_start_msg["id"], plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
             )
             sys.stdout = original_stdout
             sys.stderr = original_stderr
