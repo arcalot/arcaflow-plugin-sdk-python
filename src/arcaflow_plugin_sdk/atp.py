@@ -75,7 +75,7 @@ class ATPServer:
 
     def run_plugin(
         self,
-        step_schema: schema.SchemaType,
+        plugin_schema: schema.SchemaType,
     ) -> int:
         """
         This function wraps running a plugin.
@@ -91,7 +91,7 @@ class ATPServer:
             decoder.decode()
 
             # Serialize then send HelloMessage
-            start_hello_message = HelloMessage(2, step_schema)
+            start_hello_message = HelloMessage(2, plugin_schema)
             serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
             encoder.encode(serialized_message)
             self.stdout.flush()
@@ -112,7 +112,7 @@ class ATPServer:
                 return 1
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(
-                step_schema, #  
+                plugin_schema, #  Plugin schema
                 work_start_msg["id"],  # step ID
                 decoder,  # Decoder
                 self.stderr,  # Stderr
@@ -124,8 +124,8 @@ class ATPServer:
             out_buffer = io.StringIO()
             sys.stdout = out_buffer
             sys.stderr = out_buffer
-            output_id, output_data = step_schema.call_step(
-                work_start_msg["id"], step_schema.unserialize_input(work_start_msg["id"], work_start_msg["config"])
+            output_id, output_data = plugin_schema.call_step(
+                work_start_msg["id"], plugin_schema.unserialize_input(work_start_msg["id"], work_start_msg["config"])
             )
             sys.stdout = original_stdout
             sys.stderr = original_stderr
@@ -136,7 +136,7 @@ class ATPServer:
                     "id": MessageType.WORKDONE.value,
                     "data": {
                         "output_id": output_id,
-                        "output_data": step_schema.serialize_output(
+                        "output_data": plugin_schema.serialize_output(
                             work_start_msg["id"], output_id, output_data
                         ),
                         "debug_logs": out_buffer.getvalue(),
@@ -151,7 +151,7 @@ class ATPServer:
 
     def run_server_read_loop(
         self,
-        step: schema.SchemaType,
+        plugin_schema: schema.SchemaType,
         step_id: str,
         decoder: cbor2.decoder.CBORDecoder,
         stderr: io.FileIO
@@ -173,7 +173,12 @@ class ATPServer:
                         stderr.write(f"Received step ID in the signal message '{received_step_id}'"
                                      f"does not match expected step ID '{step_id}'")
                         return
-                    step.call_step_signal(step_id, received_signal_id, signal_msg["data"])
+                    unserialized_data = plugin_schema.unserialize_signal_handler_input(
+                        step_id,
+                        received_signal_id,
+                        signal_msg["data"]
+                    )
+                    plugin_schema.call_step_signal(step_id, received_signal_id, unserialized_data)
                 else:
                     stderr.write(f"Unknown kind of runtime message: {msg_id}")
 

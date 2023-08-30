@@ -5681,32 +5681,55 @@ class SchemaType(Schema):
 
     steps: Dict[str, StepType]
 
-    def unserialize_input(self, step_id: str, data: Any) -> Any:
+    def unserialize_step_input(self, step_id: str, serialized_data: Any) -> Any:
         """
         This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
         automatically called by ``__call__`` before running the step with the unserialized input.
 
         :param step_id: The step ID to use to look up the schema for unserialization.
-        :param data: The raw data to unserialize.
+        :param serialized_data: The raw data to unserialize.
         :return: The unserialized data in the structure the step expects it.
         """
         if step_id not in self.steps:
             raise NoSuchStepException(step_id)
         step = self.steps[step_id]
-        return self._unserialize_input(step, data)
+        return self._unserialize_step_input(step, serialized_data)
 
     @staticmethod
-    def _unserialize_input(step: StepType, data: Any) -> Any:
+    def _unserialize_step_input(step: StepType, serialized_data: Any) -> Any:
         try:
-            return step.input.unserialize(data)
+            return step.input.unserialize(serialized_data)
+        except ConstraintException as e:
+            raise InvalidInputException(e) from e
+
+    def unserialize_signal_handler_input(self, step_id: str, signal_id: str, serialized_data: Any) -> Any:
+        """
+        This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
+        automatically called by ``__call__`` before running the step with the unserialized input.
+
+        :param step_id: The step ID to use to look up the schema for unserialization.
+        :param serialized_data: The raw data to unserialize.
+        :return: The unserialized data in the structure the step expects it.
+        """
+        if step_id not in self.steps:
+            raise NoSuchStepException(step_id)
+        step = self.steps[step_id]
+        if signal_id not in step.signal_handlers:
+            raise NoSuchSignalException(step_id, signal_id)
+        return self._unserialize_signal_handler_input(step, serialized_data)
+
+    @staticmethod
+    def _unserialize_signal_handler_input(signal: SignalHandlerType, data: Any) -> Any:
+        try:
+            return signal.data_schema.unserialize(data)
         except ConstraintException as e:
             raise InvalidInputException(e) from e
 
     def call_step(self, step_id: str, input_param: Any) -> typing.Tuple[str, Any]:
         """
         This function calls a specific step with the input parameter that has already been unserialized. It expects the
-        data to be already valid, use unserialize_input to produce a valid input. This function is automatically called
-        by ``__call__`` after unserializing the input.
+        data to be already valid, use unserialize_step_input to produce a valid input. This function is automatically
+        called by ``__call__`` after unserializing the input.
 
         :param step_id: The ID of the input step to run.
         :param input_param: The unserialized data structure the step expects.
@@ -5717,13 +5740,13 @@ class SchemaType(Schema):
         step = self.steps[step_id]
         return self._call_step(step, input_param)
 
-    def call_step_signal(self, step_id: str, signal_id: str, input_param: Any):
+    def call_step_signal(self, step_id: str, signal_id: str, unserialized_input_param: Any):
         """
         This function calls a specific step's signal with the input parameter that has already been unserialized. It expects the
-        data to be already valid, use unserialize_input to produce a valid input.
+        data to be already valid, use unserialize_signal_input to produce a valid input.
 
         :param step_id: The ID of the input step to run.
-        :param input_param: The unserialized data structure the step expects.
+        :param unserialized_input_param: The unserialized data structure the step expects.
         :return: The ID of the output, and the data structure returned from the step.
         """
         if step_id not in self.steps:
@@ -5733,17 +5756,17 @@ class SchemaType(Schema):
         if signal_id not in step.signal_handlers:
             raise NoSuchSignalException(step_id, signal_id)
         signal = step.signal_handlers[signal_id]
-        return signal(step.initializedObjectData, input_param)
+        return signal(step.initializedObjectData, unserialized_input_param)
 
     @staticmethod
     def _call_step(
         step: StepType,
-        input_param: Any,
+        unserialized_input_param: Any,
         skip_input_validation: bool = False,
         skip_output_validation: bool = False,
     ) -> typing.Tuple[str, Any]:
         return step(
-            input_param,
+            unserialized_input_param,
             skip_input_validation=skip_input_validation,
             skip_output_validation=skip_output_validation,
         )
@@ -5785,7 +5808,7 @@ class SchemaType(Schema):
         if step_id not in self.steps:
             raise NoSuchStepException(step_id)
         step = self.steps[step_id]
-        input_param = self._unserialize_input(step, data)
+        input_param = self.unserialize_step_input(step, data)
         output_id, output_data = self._call_step(
             step,
             input_param,
