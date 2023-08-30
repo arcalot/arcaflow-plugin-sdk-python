@@ -75,7 +75,7 @@ class ATPServer:
 
     def run_plugin(
         self,
-        s: schema.SchemaType,
+        step_schema: schema.SchemaType,
     ) -> int:
         """
         This function wraps running a plugin.
@@ -91,7 +91,7 @@ class ATPServer:
             decoder.decode()
 
             # Serialize then send HelloMessage
-            start_hello_message = HelloMessage(2, s)
+            start_hello_message = HelloMessage(2, step_schema)
             serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
             encoder.encode(serialized_message)
             self.stdout.flush()
@@ -112,6 +112,7 @@ class ATPServer:
                 return 1
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(
+                step_schema, #  
                 work_start_msg["id"],  # step ID
                 decoder,  # Decoder
                 self.stderr,  # Stderr
@@ -123,8 +124,8 @@ class ATPServer:
             out_buffer = io.StringIO()
             sys.stdout = out_buffer
             sys.stderr = out_buffer
-            output_id, output_data = s.call_step(
-                work_start_msg["id"], s.unserialize_input(work_start_msg["id"], work_start_msg["config"])
+            output_id, output_data = step_schema.call_step(
+                work_start_msg["id"], step_schema.unserialize_input(work_start_msg["id"], work_start_msg["config"])
             )
             sys.stdout = original_stdout
             sys.stderr = original_stderr
@@ -135,7 +136,7 @@ class ATPServer:
                     "id": MessageType.WORKDONE.value,
                     "data": {
                         "output_id": output_id,
-                        "output_data": s.serialize_output(
+                        "output_data": step_schema.serialize_output(
                             work_start_msg["id"], output_id, output_data
                         ),
                         "debug_logs": out_buffer.getvalue(),
