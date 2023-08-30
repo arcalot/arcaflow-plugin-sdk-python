@@ -174,7 +174,7 @@ class ATPServer:
                                      f"does not match expected step ID '{step_id}'")
                         return
                     unserialized_data = plugin_schema.unserialize_signal_handler_input(
-                        step_id,
+                        received_step_id,
                         received_signal_id,
                         signal_msg["data"]
                     )
