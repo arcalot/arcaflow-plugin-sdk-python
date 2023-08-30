@@ -219,6 +219,7 @@ def step(
             outputs=new_responses,
             handler=wrapped_handler,
             step_object_constructor=None,
+            signal_handler_method_names=[],
         )
 
     return step_decorator

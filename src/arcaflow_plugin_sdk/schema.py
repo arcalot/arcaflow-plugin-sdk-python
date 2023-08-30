@@ -5660,9 +5660,10 @@ class StepType(StepSchema):
         """
         Retrieves the schemas from the method names given in the constructor.
         """
-        # Constructs an instance of the class in order to retrieve attributes from it
-        if self._step_object_constructor is None:
+        # Abort if required components are not set.
+        if self._step_object_constructor is None or self.signal_handler_method_names is None:
             return
+        # Constructs an instance of the class in order to retrieve attributes from it
         object_instance = self._step_object_constructor()
         # Create a map to populate
         signal_handlers_map = {}
