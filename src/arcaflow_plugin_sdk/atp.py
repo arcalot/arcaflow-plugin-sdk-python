@@ -112,7 +112,6 @@ class ATPServer:
                 return 1
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(
-                self,  # Step
                 work_start_msg["id"],  # step ID
                 decoder,  # Decoder
                 self.stderr,  # Stderr
