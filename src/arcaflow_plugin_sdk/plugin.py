@@ -134,12 +134,7 @@ def step_with_signals(
             new_responses[response_id] = schema.StepOutputType(
                 scope,
             )
-        signal_handlers_map = {}
         signal_emitters_map = {}
-        object_instance = step_object_constructor()
-        for handler_id in signal_handler_method_names:
-            handler = getattr(object_instance, handler_id)
-            signal_handlers_map[handler.id] = handler
         for emitter in signal_emitters:
             signal_emitters_map[emitter.id] = emitter
 
@@ -153,7 +148,7 @@ def step_with_signals(
             input=build_object_schema(input_param.annotation),
             outputs=new_responses,
             handler=func,
-            signal_handlers=signal_handlers_map,
+            signal_handler_method_names=signal_handler_method_names,
             signal_emitters=signal_emitters_map,
             step_object_constructor=step_object_constructor,
         )
@@ -420,6 +415,7 @@ def build_schema(*args: schema.StepType) -> schema.SchemaType:
     for step in args:
         if step.id in steps_by_id:
             raise BadArgumentException("Duplicate step ID %s" % step.id)
+        step.inspect_methods()  # Allows it to retrieve the signal schemas from their method names
         steps_by_id[step.id] = step
     return schema.SchemaType(steps_by_id)
 

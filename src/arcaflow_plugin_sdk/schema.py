@@ -3192,17 +3192,13 @@ class StepSchema:
         _description("Possible outputs from this step."),
     ]
     signal_handlers: typing.Annotated[
-        List[
-            SignalSchema,
-        ],
+        Dict[ID_TYPE, SignalSchema],
         _name("Signal handlers"),
         _description("Signals that are input by the step."),
 
     ] = None
     signal_emitters: typing.Annotated[
-        List[
-            SignalSchema,
-        ],
+        Dict[ID_TYPE, SignalSchema],
         _name("Signal emitters"),
         _description("Signals that are output by the step."),
     ] = None
@@ -5600,6 +5596,7 @@ class StepType(StepSchema):
     _step_object_constructor: _step_object_constructor_param
     input: ScopeType
     outputs: Dict[ID_TYPE, StepOutputType]
+    signal_handler_method_names: List[str]
     signal_handlers: Dict[ID_TYPE, SignalHandlerType]
     signal_emitters: Dict[ID_TYPE, SignalSchema]
     initializedObjectData: StepObjectT
@@ -5611,13 +5608,14 @@ class StepType(StepSchema):
         step_object_constructor: _step_object_constructor_param,
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
-        signal_handlers: Dict[ID_TYPE, SignalHandlerType] = None,
+        signal_handler_method_names: List[str],
         signal_emitters: Dict[ID_TYPE, SignalSchema] = None,
         display: Optional[DisplayValue] = None,
     ):
-        super().__init__(id, input, outputs, signal_handlers=signal_handlers, signal_emitters=signal_emitters, display=display)
+        super().__init__(id, input, outputs, signal_handlers=None, signal_emitters=signal_emitters, display=display)
         self._handler = handler
         self._step_object_constructor = step_object_constructor
+        self.signal_handler_method_names = signal_handler_method_names
 
     def __call__(
         self,
@@ -5657,6 +5655,22 @@ class StepType(StepSchema):
         if not skip_output_validation:
             output.validate(output_data, tuple(["output", output_id]))
         return output_id, output_data
+
+    def inspect_methods(self):
+        """
+        Retrieves the schemas from the method names given in the constructor.
+        """
+        # Constructs an instance of the class in order to retrieve attributes from it
+        if self._step_object_constructor is None:
+            return
+        object_instance = self._step_object_constructor()
+        # Create a map to populate
+        signal_handlers_map = {}
+        for handler_method_name in self.signal_handler_method_names:
+            # Retrieve the object attributes, which will be the schemas
+            handler = getattr(object_instance, handler_method_name)
+            signal_handlers_map[handler.id] = handler
+        self.signal_handlers = signal_handlers_map
 
 
 class SchemaType(Schema):
