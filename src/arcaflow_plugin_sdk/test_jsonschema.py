@@ -45,7 +45,7 @@ class JSONSchemaTest(unittest.TestCase):
             outputs={},
             handler=noop_handler,
             step_object_constructor=None,
-            signal_handlers=None,
+            signal_handler_method_names=None,
             signal_emitters=None,
         )
 
