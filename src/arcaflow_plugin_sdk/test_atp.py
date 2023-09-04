@@ -75,13 +75,17 @@ class ATPTest(unittest.TestCase):
         stop_info = os.waitpid(pid, 0)
         exit_status = os.waitstatus_to_exitcode(stop_info[1])
         if exit_status != 0:
-            self.fail("Plugin exited with non-zero status: {}".format(exit_status))
+            self.fail(
+                "Plugin exited with non-zero status: {}".format(exit_status)
+            )
 
     def test_full_workflow(self):
         pid, stdin_writer, stdout_reader = self._execute_plugin()
 
         try:
-            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client = atp.PluginClient(
+                stdin_writer.buffer.raw, stdout_reader.buffer.raw
+            )
             client.start_output()
             hello_message = client.read_hello()
             self.assertEqual(1, hello_message.version)

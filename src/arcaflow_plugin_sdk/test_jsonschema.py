@@ -67,7 +67,10 @@ class JSONSchemaTest(unittest.TestCase):
                 "type": "object",
                 "title": "Test step input",
                 "description": "This is just a test",
-                "properties": {"a": {"type": "string"}, "field-b": {"type": "integer"}},
+                "properties": {
+                    "a": {"type": "string"},
+                    "field-b": {"type": "integer"},
+                },
                 "required": ["a", "field-b"],
                 "dependentRequired": {},
                 "additionalProperties": False,
@@ -80,7 +83,9 @@ class JSONSchemaTest(unittest.TestCase):
             {
                 "Request": schema.ObjectSchema(
                     id="Request",
-                    properties={"a": schema.PropertySchema(schema.StringSchema())},
+                    properties={
+                        "a": schema.PropertySchema(schema.StringSchema())
+                    },
                 )
             },
             "Request",
@@ -93,7 +98,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "Response1": schema.ObjectSchema(
                             id="Response1",
                             properties={
-                                "b": schema.PropertySchema(schema.StringSchema())
+                                "b": schema.PropertySchema(
+                                    schema.StringSchema()
+                                )
                             },
                         )
                     },
@@ -106,7 +113,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "Response1": schema.ObjectSchema(
                             id="Response1",
                             properties={
-                                "c": schema.PropertySchema(schema.StringSchema())
+                                "c": schema.PropertySchema(
+                                    schema.StringSchema()
+                                )
                             },
                         )
                     },

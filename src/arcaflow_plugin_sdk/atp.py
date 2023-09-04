@@ -100,7 +100,8 @@ def run_plugin(
         sys.stdout = out_buffer
         sys.stderr = out_buffer
         output_id, output_data = s.call_step(
-            message["id"], s.unserialize_input(message["id"], message["config"])
+            message["id"],
+            s.unserialize_input(message["id"], message["config"]),
         )
         sys.stdout = original_stdout
         sys.stderr = original_stderr
@@ -191,4 +192,8 @@ class PluginClient:
             raise PluginClientStateException(
                 "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
             )
-        return message["output_id"], message["output_data"], message["debug_logs"]
+        return (
+            message["output_id"],
+            message["output_data"],
+            message["debug_logs"],
+        )

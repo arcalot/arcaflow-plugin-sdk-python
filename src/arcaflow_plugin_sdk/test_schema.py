@@ -527,7 +527,9 @@ class OneOfTest(unittest.TestCase):
         self.assertIsInstance(unserialized_data, OneOfData1)
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: OneOfData2 = s_type.unserialize({"_type": "b", "b": 42})
+        unserialized_data2: OneOfData2 = s_type.unserialize(
+            {"_type": "b", "b": 42}
+        )
         self.assertIsInstance(unserialized_data2, OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
 
@@ -691,7 +693,6 @@ class OneOfTest(unittest.TestCase):
         self.assertIsInstance(unserialized_data, OneOfData2)
 
 
-
 class SerializationTest(unittest.TestCase):
     def test_serialization_cycle(self):
         @dataclasses.dataclass
@@ -718,7 +719,8 @@ class SerializationTest(unittest.TestCase):
             namespace_pattern: re.Pattern
 
             name_pattern: typing.Annotated[
-                typing.Optional[re.Pattern], schema.required_if_not("label_selector")
+                typing.Optional[re.Pattern],
+                schema.required_if_not("label_selector"),
             ] = None
 
             kill: typing.Annotated[int, schema.min(1)] = dataclasses.field(
@@ -739,7 +741,8 @@ class SerializationTest(unittest.TestCase):
 
         schema.test_object_serialization(
             KillPodConfig(
-                namespace_pattern=re.compile(".*"), name_pattern=re.compile(".*")
+                namespace_pattern=re.compile(".*"),
+                name_pattern=re.compile(".*"),
             ),
             self.fail,
         )
@@ -747,7 +750,9 @@ class SerializationTest(unittest.TestCase):
     def test_required_if(self):
         @dataclasses.dataclass
         class TestData1:
-            A: typing.Annotated[typing.Optional[str], schema.required_if("B")] = None
+            A: typing.Annotated[
+                typing.Optional[str], schema.required_if("B")
+            ] = None
             B: typing.Optional[int] = None
 
         s = schema.build_object_schema(TestData1)
@@ -777,7 +782,9 @@ class SerializationTest(unittest.TestCase):
         @dataclasses.dataclass
         class TestData1:
             A: typing.Optional[str] = None
-            B: typing.Annotated[typing.Optional[str], schema.required_if_not("A")] = None
+            B: typing.Annotated[
+                typing.Optional[str], schema.required_if_not("A")
+            ] = None
 
         s = schema.build_object_schema(TestData1)
 
@@ -802,7 +809,11 @@ class SerializationTest(unittest.TestCase):
         class TestData2:
             A: typing.Optional[str] = None
             B: typing.Optional[str] = None
-            C: typing.Annotated[typing.Optional[str], schema.required_if_not("A"), schema.required_if_not("B")] = None
+            C: typing.Annotated[
+                typing.Optional[str],
+                schema.required_if_not("A"),
+                schema.required_if_not("B"),
+            ] = None
 
         s = schema.build_object_schema(TestData2)
 
@@ -971,7 +982,9 @@ class SchemaBuilderTest(unittest.TestCase):
             {},
             "a",
         )
-        resolved_type = schema._SchemaBuilder.resolve(typing.Dict[str, str], scope)
+        resolved_type = schema._SchemaBuilder.resolve(
+            typing.Dict[str, str], scope
+        )
         self.assertIsInstance(resolved_type, schema.MapType)
         self.assertIsInstance(resolved_type.keys, schema.StringType)
         self.assertIsInstance(resolved_type.values, schema.StringType)
@@ -1018,23 +1031,32 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(object_schema, schema.ObjectType)
         self.assertIsNone(object_schema.properties["a"].display.name)
         self.assertTrue(object_schema.properties["a"].required)
-        self.assertIsInstance(object_schema.properties["a"].type, schema.StringType)
+        self.assertIsInstance(
+            object_schema.properties["a"].type, schema.StringType
+        )
         self.assertIsNone(object_schema.properties["b"].display.name)
         self.assertTrue(object_schema.properties["b"].required)
-        self.assertIsInstance(object_schema.properties["b"].type, schema.IntType)
+        self.assertIsInstance(
+            object_schema.properties["b"].type, schema.IntType
+        )
         self.assertIsNone(object_schema.properties["c"].display.name)
         self.assertTrue(object_schema.properties["c"].required)
-        self.assertIsInstance(object_schema.properties["c"].type, schema.FloatType)
+        self.assertIsInstance(
+            object_schema.properties["c"].type, schema.FloatType
+        )
         self.assertIsNone(object_schema.properties["d"].display.name)
         self.assertTrue(object_schema.properties["d"].required)
-        self.assertIsInstance(object_schema.properties["d"].type, schema.BoolType)
+        self.assertIsInstance(
+            object_schema.properties["d"].type, schema.BoolType
+        )
 
         @dataclasses.dataclass
         class TestData:
             a: str = "foo"
             b: int = 5
             c: str = dataclasses.field(
-                default="bar", metadata={"name": "C", "description": "A string"}
+                default="bar",
+                metadata={"name": "C", "description": "A string"},
             )
             d: bool = True
 
@@ -1049,17 +1071,27 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(object_schema, schema.ObjectType)
         self.assertIsNone(object_schema.properties["a"].display.name)
         self.assertFalse(object_schema.properties["a"].required)
-        self.assertIsInstance(object_schema.properties["a"].type, schema.StringType)
+        self.assertIsInstance(
+            object_schema.properties["a"].type, schema.StringType
+        )
         self.assertIsNone(object_schema.properties["b"].display.name)
         self.assertFalse(object_schema.properties["b"].required)
-        self.assertIsInstance(object_schema.properties["b"].type, schema.IntType)
+        self.assertIsInstance(
+            object_schema.properties["b"].type, schema.IntType
+        )
         self.assertEqual("C", object_schema.properties["c"].display.name)
-        self.assertEqual("A string", object_schema.properties["c"].display.description)
+        self.assertEqual(
+            "A string", object_schema.properties["c"].display.description
+        )
         self.assertFalse(object_schema.properties["c"].required)
-        self.assertIsInstance(object_schema.properties["c"].type, schema.StringType)
+        self.assertIsInstance(
+            object_schema.properties["c"].type, schema.StringType
+        )
         self.assertIsNone(object_schema.properties["d"].display.name)
         self.assertFalse(object_schema.properties["d"].required)
-        self.assertIsInstance(object_schema.properties["d"].type, schema.BoolType)
+        self.assertIsInstance(
+            object_schema.properties["d"].type, schema.BoolType
+        )
 
     def test_union(self):
         @dataclasses.dataclass
@@ -1081,7 +1113,8 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(scope.objects["B"], schema.ObjectType)
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["a"].type, schema.OneOfStringType
+            scope.objects["TestData"].properties["a"].type,
+            schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
             scope.objects["TestData"].properties["a"].type
@@ -1142,7 +1175,9 @@ class SchemaBuilderTest(unittest.TestCase):
         resolved_type = scope.objects["TestData"]
 
         self.assertFalse(resolved_type.properties["a"].required)
-        self.assertIsInstance(resolved_type.properties["a"].type, schema.StringType)
+        self.assertIsInstance(
+            resolved_type.properties["a"].type, schema.StringType
+        )
 
     def test_annotated(self):
         scope = schema.ScopeType(
@@ -1186,7 +1221,9 @@ class SchemaBuilderTest(unittest.TestCase):
     def test_annotated_required_if(self):
         @dataclasses.dataclass
         class TestData2:
-            a: typing.Annotated[typing.Optional[str], schema.required_if("b")] = None
+            a: typing.Annotated[
+                typing.Optional[str], schema.required_if("b")
+            ] = None
             b: typing.Optional[str] = None
 
         scope = schema.ScopeType(
@@ -1244,7 +1281,9 @@ class JSONSchemaTest(unittest.TestCase):
                 input = test_cases[name][0]
                 expected = test_cases[name][1]
 
-                self.assertEqual(expected, input._to_jsonschema_fragment(scope, defs))
+                self.assertEqual(
+                    expected, input._to_jsonschema_fragment(scope, defs)
+                )
 
     def test_bool(self):
         defs = schema._JSONSchemaDefs()
@@ -1258,10 +1297,18 @@ class JSONSchemaTest(unittest.TestCase):
         self.assertEqual(s["anyOf"][2]["type"], "integer")
 
     def test_string(self):
-        test_cases: typing.Dict[str, typing.Tuple[schema.StringType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema.StringType, typing.Dict]
+        ] = {
             "base": (schema.StringType(), {"type": "string"}),
-            "min": (schema.StringType(min=5), {"type": "string", "minLength": 5}),
-            "max": (schema.StringType(max=5), {"type": "string", "maxLength": 5}),
+            "min": (
+                schema.StringType(min=5),
+                {"type": "string", "minLength": 5},
+            ),
+            "max": (
+                schema.StringType(max=5),
+                {"type": "string", "maxLength": 5},
+            ),
             "pattern": (
                 schema.StringType(pattern=re.compile("^[a-z]+$")),
                 {"type": "string", "pattern": "^[a-z]+$"},
@@ -1271,7 +1318,9 @@ class JSONSchemaTest(unittest.TestCase):
         self._execute_test_cases(test_cases)
 
     def test_int(self):
-        test_cases: typing.Dict[str, typing.Tuple[schema.IntType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema.IntType, typing.Dict]
+        ] = {
             "base": (schema.IntType(), {"type": "integer"}),
             "min": (schema.IntType(min=5), {"type": "integer", "minimum": 5}),
             "max": (schema.IntType(max=5), {"type": "integer", "maximum": 5}),
@@ -1280,10 +1329,18 @@ class JSONSchemaTest(unittest.TestCase):
         self._execute_test_cases(test_cases)
 
     def test_float(self):
-        test_cases: typing.Dict[str, typing.Tuple[schema.FloatType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema.FloatType, typing.Dict]
+        ] = {
             "base": (schema.FloatType(), {"type": "number"}),
-            "min": (schema.FloatType(min=5.0), {"type": "number", "minimum": 5.0}),
-            "max": (schema.FloatType(max=5.0), {"type": "number", "maximum": 5.0}),
+            "min": (
+                schema.FloatType(min=5.0),
+                {"type": "number", "minimum": 5.0},
+            ),
+            "max": (
+                schema.FloatType(max=5.0),
+                {"type": "number", "maximum": 5.0},
+            ),
         }
 
         self._execute_test_cases(test_cases)
@@ -1296,18 +1353,25 @@ class JSONSchemaTest(unittest.TestCase):
             FIRST = 1
             SECOND = 2
 
-        test_cases: typing.Dict[str, typing.Tuple[schema._EnumType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema._EnumType, typing.Dict]
+        ] = {
             "string": (
                 schema.StringEnumType(Color),
                 {"type": "string", "enum": ["red"]},
             ),
-            "int": (schema.IntEnumType(Fibonacci), {"type": "integer", "enum": [1, 2]}),
+            "int": (
+                schema.IntEnumType(Fibonacci),
+                {"type": "integer", "enum": [1, 2]},
+            ),
         }
 
         self._execute_test_cases(test_cases)
 
     def test_list(self):
-        test_cases: typing.Dict[str, typing.Tuple[schema.ListType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema.ListType, typing.Dict]
+        ] = {
             "base": (
                 schema.ListType(schema.IntType()),
                 {"type": "array", "items": {"type": "integer"}},
@@ -1324,7 +1388,9 @@ class JSONSchemaTest(unittest.TestCase):
         self._execute_test_cases(test_cases)
 
     def test_map(self):
-        test_cases: typing.Dict[str, typing.Tuple[schema.MapType, typing.Dict]] = {
+        test_cases: typing.Dict[
+            str, typing.Tuple[schema.MapType, typing.Dict]
+        ] = {
             "base": (
                 schema.MapType(schema.IntType(), schema.StringType()),
                 {
@@ -1388,7 +1454,11 @@ class JSONSchemaTest(unittest.TestCase):
                 "TestData": {
                     "type": "object",
                     "properties": {
-                        "a": {"type": "string", "title": "A", "description": "A string"}
+                        "a": {
+                            "type": "string",
+                            "title": "A",
+                            "description": "A string",
+                        }
                     },
                     "required": ["a"],
                     "additionalProperties": False,
@@ -1397,7 +1467,11 @@ class JSONSchemaTest(unittest.TestCase):
             },
             "type": "object",
             "properties": {
-                "a": {"type": "string", "title": "A", "description": "A string"}
+                "a": {
+                    "type": "string",
+                    "title": "A",
+                    "description": "A string",
+                }
             },
             "required": ["a"],
             "additionalProperties": False,
@@ -1439,8 +1513,12 @@ class JSONSchemaTest(unittest.TestCase):
                     )
                 },
             ),
-            "A": schema.ObjectType(A, {"a": schema.PropertyType(schema.StringType())}),
-            "B": schema.ObjectType(B, {"b": schema.PropertyType(schema.StringType())}),
+            "A": schema.ObjectType(
+                A, {"a": schema.PropertyType(schema.StringType())}
+            ),
+            "B": schema.ObjectType(
+                B, {"b": schema.PropertyType(schema.StringType())}
+            ),
         }
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
@@ -1452,8 +1530,12 @@ class JSONSchemaTest(unittest.TestCase):
                         "properties": {
                             "a": {
                                 "oneOf": [
-                                    {"$ref": "#/$defs/A_discriminated_string_a"},
-                                    {"$ref": "#/$defs/B_discriminated_string_b"},
+                                    {
+                                        "$ref": "#/$defs/A_discriminated_string_a"
+                                    },
+                                    {
+                                        "$ref": "#/$defs/B_discriminated_string_b"
+                                    },
                                 ]
                             }
                         },
