@@ -45,7 +45,7 @@ def signal_handler(
     :return: A schema for the signal.
     """
 
-    def signal_decorator(func: _step_decorator_param) -> schema.StepType:
+    def signal_decorator(func: _step_decorator_param) -> schema.SignalHandlerType:
         if id == "":
             raise BadArgumentException("Signals cannot have empty IDs")
         if name == "":
@@ -53,7 +53,7 @@ def signal_handler(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %d" %
+                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %v" %
                 (name, id, sig.parameters)
             )
         input_param = list(sig.parameters.values())[1]
@@ -90,7 +90,7 @@ def step_with_signals(
     outputs: Dict[str, Type],
     signal_handler_method_names: List[str],
     signal_emitters: List[schema.SignalSchema],
-    step_object_constructor: schema._step_object_constructor_param,
+    step_object_constructor: schema.step_object_constructor_param,
     icon: typing.Optional[str] = None,
 ) -> Callable[[_step_object_decorator_param], schema.StepType]:
     """
@@ -101,6 +101,9 @@ def step_with_signals(
     :param name: The human-readable name for the step.
     :param description: The human-readable description for the step.
     :param outputs: A dict linking response IDs to response object types.
+    :param signal_handler_method_names: A list of methods for all signal handlers.
+    :param signal_emitters: A list of signal schemas for signal emitters.
+    :param step_object_constructor: A constructor lambda for the object with the step and signal methods.
     :param icon: SVG icon for this step.
     :return: A schema for the step.
     """

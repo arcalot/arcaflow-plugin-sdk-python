@@ -5583,7 +5583,7 @@ class SignalHandlerType(SignalSchema):
         self._handler(step_data, params)
 
 
-_step_object_constructor_param = Callable[[], StepObjectT]
+step_object_constructor_param = Callable[[], StepObjectT]
 
 
 class StepType(StepSchema):
@@ -5593,7 +5593,7 @@ class StepType(StepSchema):
     """
 
     _handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]]
-    _step_object_constructor: _step_object_constructor_param
+    _step_object_constructor: step_object_constructor_param
     input: ScopeType
     outputs: Dict[ID_TYPE, StepOutputType]
     signal_handler_method_names: List[str]
@@ -5605,7 +5605,7 @@ class StepType(StepSchema):
         self,
         id: str,
         handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]],
-        step_object_constructor: _step_object_constructor_param,
+        step_object_constructor: step_object_constructor_param,
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
         signal_handler_method_names: List[str],

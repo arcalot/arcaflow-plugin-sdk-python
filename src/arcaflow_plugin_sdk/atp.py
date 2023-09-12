@@ -28,8 +28,9 @@ from arcaflow_plugin_sdk import schema
 
 
 class MessageType(Enum):
-    WORKDONE = 1
+    WORK_DONE = 1
     SIGNAL = 2
+    CLIENT_DONE = 3
 
 
 @dataclasses.dataclass
@@ -133,7 +134,7 @@ class ATPServer:
             # Send WorkDoneMessage in a RuntimeMessage
             encoder.encode(
                 {
-                    "id": MessageType.WORKDONE.value,
+                    "id": MessageType.WORK_DONE.value,
                     "data": {
                         "output_id": output_id,
                         "output_data": plugin_schema.serialize_output(
@@ -164,6 +165,7 @@ class ATPServer:
                 # Validate
                 if msg_id is None:
                     stderr.write("Runtime message is missing the 'id' field.")
+                    return
                 # Then take action
                 if msg_id == MessageType.SIGNAL.value:
                     signal_msg = runtime_msg["data"]
@@ -179,11 +181,13 @@ class ATPServer:
                         signal_msg["data"]
                     )
                     plugin_schema.call_step_signal(step_id, received_signal_id, unserialized_data)
+                elif msg_id == MessageType.CLIENT_DONE.value:
+                    return
                 else:
                     stderr.write(f"Unknown kind of runtime message: {msg_id}")
 
-        except cbor2.CBORDecodeError:
-            stderr.write(f"Error while decoding CBOR: {msg_id}")
+        except cbor2.CBORDecodeError as err:
+            stderr.write(f"Error while decoding CBOR: {err}")
 
 
 class PluginClientStateException(Exception):
@@ -241,6 +245,29 @@ class PluginClient:
             }
         )
 
+    def send_signal(self, step_id: str, signal_id: str, input_data: any):
+        """
+        This function sends any signals to the plugin.
+        """
+        self.send_runtime_message(MessageType.SIGNAL, {
+                "step_id": step_id,
+                "signal_id": signal_id,
+                "data": input_data,
+            }
+        )
+
+    def send_client_done(self):
+        self.send_runtime_message(MessageType.CLIENT_DONE, {})
+
+    def send_runtime_message(self, message_type: MessageType, data: any):
+        self.encoder.encode(
+            {
+                "id": message_type.value,
+                "data": data,
+            }
+        )
+
+
     def read_results(self) -> (str, any, str):
         """
         This function reads the signals and results of an execution from the plugin.
@@ -248,7 +275,7 @@ class PluginClient:
         while True:
             runtime_msg = self.decoder.decode()
             msg_id = runtime_msg["id"]
-            if msg_id == MessageType.WORKDONE.value:
+            if msg_id == MessageType.WORK_DONE.value:
                 signal_msg = runtime_msg["data"]
                 if signal_msg["output_id"] is None:
                     raise PluginClientStateException(
