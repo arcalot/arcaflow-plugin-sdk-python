@@ -6,7 +6,7 @@ import unittest
 from threading import Event
 from typing import TextIO, Tuple, Union, List
 
-from arcaflow_plugin_sdk import atp, plugin, schema, predefined_schemas
+from arcaflow_plugin_sdk import atp, plugin, schema
 
 
 @dataclasses.dataclass

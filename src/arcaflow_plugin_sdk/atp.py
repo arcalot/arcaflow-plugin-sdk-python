@@ -267,7 +267,6 @@ class PluginClient:
             }
         )
 
-
     def read_results(self) -> (str, any, str):
         """
         This function reads the signals and results of an execution from the plugin.

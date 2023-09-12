@@ -53,8 +53,8 @@ def signal_handler(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %v" %
-                (name, id, sig.parameters)
+                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %s" %
+                (name, id, str(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
