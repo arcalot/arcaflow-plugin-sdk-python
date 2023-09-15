@@ -116,7 +116,6 @@ class ATPServer:
                 plugin_schema,  # Plugin schema
                 work_start_msg["id"],  # step ID
                 decoder,  # Decoder
-                self.stderr,  # Stderr
             ))
             read_thread.start()
             # Run the step
@@ -145,7 +144,8 @@ class ATPServer:
                 }
             )
             self.stdout.flush()
-            read_thread.join()
+            self.stdin.flush()
+            #read_thread.join()
         except SystemExit:
             return 1
         return 0
@@ -155,7 +155,6 @@ class ATPServer:
         plugin_schema: schema.SchemaType,
         step_id: str,
         decoder: cbor2.decoder.CBORDecoder,
-        stderr: io.FileIO
     ) -> None:
         try:
             while True:
@@ -164,7 +163,7 @@ class ATPServer:
                 msg_id = runtime_msg["id"]
                 # Validate
                 if msg_id is None:
-                    stderr.write("Runtime message is missing the 'id' field.")
+                    self.stderr.write("Runtime message is missing the 'id' field.")
                     return
                 # Then take action
                 if msg_id == MessageType.SIGNAL.value:
@@ -172,7 +171,7 @@ class ATPServer:
                     received_step_id = signal_msg["step_id"]
                     received_signal_id = signal_msg["signal_id"]
                     if received_step_id != step_id:
-                        stderr.write(f"Received step ID in the signal message '{received_step_id}'"
+                        self.stderr.write(f"Received step ID in the signal message '{received_step_id}'"
                                      f"does not match expected step ID '{step_id}'")
                         return
                     unserialized_data = plugin_schema.unserialize_signal_handler_input(
@@ -184,10 +183,10 @@ class ATPServer:
                 elif msg_id == MessageType.CLIENT_DONE.value:
                     return
                 else:
-                    stderr.write(f"Unknown kind of runtime message: {msg_id}")
+                    self.stderr.write(f"Unknown kind of runtime message: {msg_id}")
 
         except cbor2.CBORDecodeError as err:
-            stderr.write(f"Error while decoding CBOR: {err}")
+            self.stderr.write(f"Error while decoding CBOR: {err}")
 
 
 class PluginClientStateException(Exception):
@@ -229,7 +228,7 @@ class PluginClient:
 
     def read_hello(self) -> HelloMessage:
         """
-        This function reads the intial "Hello" message from the plugin.
+        This function reads the initial "Hello" message from the plugin.
         """
         message = self.decoder.decode()
         return _HELLO_MESSAGE_SCHEMA.unserialize(message)
