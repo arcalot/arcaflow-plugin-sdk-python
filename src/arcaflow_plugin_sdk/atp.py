@@ -111,6 +111,13 @@ class ATPServer:
             if work_start_msg["config"] is None:
                 self.stderr.write("Work start message is missing the 'config' field.")
                 return 1
+
+            # Run the step
+            original_stdout = sys.stdout
+            original_stderr = sys.stderr
+            out_buffer = io.StringIO()
+            sys.stdout = out_buffer
+            sys.stderr = out_buffer
             # Run the read loop
             read_thread = threading.Thread(target=self.run_server_read_loop, args=(
                 plugin_schema,  # Plugin schema
@@ -118,12 +125,7 @@ class ATPServer:
                 decoder,  # Decoder
             ))
             read_thread.start()
-            # Run the step
-            original_stdout = sys.stdout
-            original_stderr = sys.stderr
-            out_buffer = io.StringIO()
-            sys.stdout = out_buffer
-            sys.stderr = out_buffer
+
             output_id, output_data = plugin_schema.call_step(
                 work_start_msg["id"], plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
             )
@@ -145,7 +147,7 @@ class ATPServer:
             )
             self.stdout.flush()
             self.stdin.flush()
-            #read_thread.join()
+            read_thread.join()
         except SystemExit:
             return 1
         return 0
