@@ -19,6 +19,7 @@ import os
 import sys
 import typing
 import threading
+import signal
 
 import cbor2
 
@@ -58,6 +59,10 @@ class HelloMessage:
 _HELLO_MESSAGE_SCHEMA = schema.build_object_schema(HelloMessage)
 
 
+def signal_handler(_sig, _frame):
+    pass  # Do nothing
+
+
 class ATPServer:
     stdin: io.FileIO
     stdout: io.FileIO
@@ -81,6 +86,7 @@ class ATPServer:
         """
         This function wraps running a plugin.
         """
+        signal.signal(signal.SIGINT, signal_handler)  # Ignore sigint. Only care about arcaflow signals.
         if os.isatty(self.stdout.fileno()):
             print("Cannot run plugin in ATP mode on an interactive terminal.")
             return 1
@@ -127,10 +133,9 @@ class ATPServer:
             read_thread.start()
 
             output_id, output_data = plugin_schema.call_step(
-                work_start_msg["id"], plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
+                work_start_msg["id"],
+                plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
             )
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
 
             # Send WorkDoneMessage in a RuntimeMessage
             encoder.encode(
@@ -145,9 +150,11 @@ class ATPServer:
                     }
                 }
             )
-            self.stdout.flush()
-            self.stdin.flush()
+            self.stdout.flush()  # Sends it to the ATP client immediately. Needed so it can realize it's done.
             read_thread.join()
+            # Don't reset stdout/stderr until after the read thread is done.
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
         except SystemExit:
             return 1
         return 0
