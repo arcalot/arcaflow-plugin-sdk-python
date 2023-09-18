@@ -5605,7 +5605,7 @@ class StepType(StepSchema):
         self,
         id: str,
         handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]],
-        step_object_constructor: step_object_constructor_param,
+        step_object_constructor: step_object_constructor_param or None,
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
         signal_handler_method_names: List[str],

@@ -35,8 +35,8 @@ def signal_handler(
     icon: typing.Optional[str] = None,
 ) -> Callable[[_signal_handler_decorator_param], schema.SignalHandlerType]:
     """
-    ``@plugin.signal_handler`` is a decorator that takes a function with a single parameter and creates a schema for it that you can
-    use with ``plugin.step``.
+    ``@plugin.signal_handler`` is a decorator that takes a function with a single parameter and creates a schema for it
+    that you can use with ``plugin.step``.
 
     :param id: The identifier for the signal handler.
     :param name: The human-readable name for the signal handler.

@@ -29,6 +29,11 @@ from arcaflow_plugin_sdk import schema
 
 
 class MessageType(Enum):
+    """
+    An integer ID that indicates the type of runtime message that is stored
+    in the data field. The corresponding class can then be used to deserialize
+    the inner data. Look at the go SDK for the reference data structure.
+    """
     WORK_DONE = 1
     SIGNAL = 2
     CLIENT_DONE = 3
@@ -151,7 +156,7 @@ class ATPServer:
                 }
             )
             self.stdout.flush()  # Sends it to the ATP client immediately. Needed so it can realize it's done.
-            read_thread.join()
+            read_thread.join()  # Wait for the read thread to finish.
             # Don't reset stdout/stderr until after the read thread is done.
             sys.stdout = original_stdout
             sys.stderr = original_stderr
@@ -179,15 +184,16 @@ class ATPServer:
                     signal_msg = runtime_msg["data"]
                     received_step_id = signal_msg["step_id"]
                     received_signal_id = signal_msg["signal_id"]
-                    if received_step_id != step_id:
+                    if received_step_id != step_id:  # Ensure they match.
                         self.stderr.write(f"Received step ID in the signal message '{received_step_id}'"
-                                     f"does not match expected step ID '{step_id}'")
+                                          f"does not match expected step ID '{step_id}'")
                         return
                     unserialized_data = plugin_schema.unserialize_signal_handler_input(
                         received_step_id,
                         received_signal_id,
                         signal_msg["data"]
                     )
+                    # The data is verified and unserialized. Now call the signal.
                     plugin_schema.call_step_signal(step_id, received_signal_id, unserialized_data)
                 elif msg_id == MessageType.CLIENT_DONE.value:
                     return
