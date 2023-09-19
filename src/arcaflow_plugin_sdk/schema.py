@@ -72,6 +72,7 @@ import math
 import pprint
 import re
 import sys
+import threading
 import traceback
 import types
 import typing
@@ -5599,7 +5600,9 @@ class StepType(StepSchema):
     signal_handler_method_names: List[str]
     signal_handlers: Dict[ID_TYPE, SignalHandlerType]
     signal_emitters: Dict[ID_TYPE, SignalSchema]
-    initializedObjectData: StepObjectT
+    initialized_object_data: StepObjectT
+    object_data_ready: bool = False
+    object_cv: threading.Condition = threading.Condition()
 
     def __init__(
         self,
@@ -5631,14 +5634,16 @@ class StepType(StepSchema):
         """
         # Initialize the step object
         if self._step_object_constructor is not None:
-            self.initializedObjectData = self._step_object_constructor()
+            self.initialized_object_data = self._step_object_constructor()
         else:
-            self.initializedObjectData = None
-        self._step_object_constructor
+            self.initialized_object_data = None
+        self.object_data_ready = True
+        with self.object_cv:
+            self.object_cv.notify_all()
         input: ScopeType = self.input
         if not skip_input_validation:
             input.validate(params, tuple(["input"]))
-        result = self._handler(self.initializedObjectData, params)
+        result = self._handler(self.initialized_object_data, params)
         if len(result) != 2:
             raise BadArgumentException(
                 "The step returned {} results instead of 2. Did your step return the correct results?".format(
@@ -5751,7 +5756,11 @@ class SchemaType(Schema):
         """
         step = self.get_step(step_id)
         signal = self.get_signal(step_id, signal_id)
-        return signal(step.initializedObjectData, unserialized_input_param)
+        if not step.object_data_ready:
+            with step.object_cv:
+                # wait to be notified of it being ready. Test this by adding a sleep before the step call.
+                step.object_cv.wait()
+        return signal(step.initialized_object_data, unserialized_input_param)
 
     @staticmethod
     def _call_step(

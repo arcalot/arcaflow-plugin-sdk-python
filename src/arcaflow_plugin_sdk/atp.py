@@ -17,6 +17,7 @@ import dataclasses
 import io
 import os
 import sys
+import time
 import typing
 import threading
 import signal
@@ -136,7 +137,6 @@ class ATPServer:
                 decoder,  # Decoder
             ))
             read_thread.start()
-
             output_id, output_data = plugin_schema.call_step(
                 work_start_msg["id"],
                 plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
@@ -258,6 +258,7 @@ class PluginClient:
                 "config": input_data,
             }
         )
+        self.stdin.flush()
 
     def send_signal(self, step_id: str, signal_id: str, input_data: any):
         """
@@ -280,6 +281,7 @@ class PluginClient:
                 "data": data,
             }
         )
+        self.stdin.flush()
 
     def read_results(self) -> (str, any, str):
         """

@@ -69,6 +69,7 @@ class SignalTestStep:
         description="Records the value, and optionally ends the step.",
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
+        print("Got signal")
         self.signal_values.append(signal_input.value)
         if signal_input.final:
             self.exit_event.set()
@@ -83,7 +84,7 @@ class ATPTest(unittest.TestCase):
         stdin_reader_fd, stdin_writer_fd = os.pipe()
         stdout_reader_fd, stdout_writer_fd = os.pipe()
         pid = os.fork()
-        if pid == 0:
+        if pid == 0:  # The forked process
             os.close(stdin_writer_fd)
             os.close(stdout_reader_fd)
 
@@ -102,7 +103,7 @@ class ATPTest(unittest.TestCase):
                 print("Plugin exited with non-zero status: {}".format(result))
                 os._exit(1)
             os._exit(0)
-        elif pid > 0:
+        elif pid > 0:  # The original process
             os.close(stdin_reader_fd)
             os.close(stdout_writer_fd)
 
@@ -116,7 +117,7 @@ class ATPTest(unittest.TestCase):
     def _cleanup(self, pid, stdin_writer, stdout_reader):
         stdin_writer.close()
         stdout_reader.close()
-        time.sleep(1)
+        time.sleep(0.1)
         os.kill(pid, signal.SIGTERM)
         stop_info = os.waitpid(pid, 0)
         exit_status = os.waitstatus_to_exitcode(stop_info[1])
@@ -160,18 +161,23 @@ class ATPTest(unittest.TestCase):
                 schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
-            client.start_work("signal_test_step", {"wait_time_seconds": "0.5"})
+            client.start_work("signal_test_step", {"wait_time_seconds": "5"})
+            print("Start work sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "false", "value": "1"},
                                )
+            print("Signal sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "false", "value": "2"},
                                )
+            print("Signal sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "true", "value": "3"},
                                )
-            output_id, output_data, _ = client.read_results()
+            print("Signal sent. Reading results...")
+            output_id, output_data, debug_logs = client.read_results()
             client.send_client_done()
+            print(f"debug_logs:\n{debug_logs}\nend of debug logs")
             self.assertEqual(output_id, "success")
             self.assertListEqual(output_data["signals_received"], [1, 2, 3])
         finally:
