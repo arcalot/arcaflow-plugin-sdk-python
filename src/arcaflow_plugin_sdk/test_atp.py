@@ -69,7 +69,6 @@ class SignalTestStep:
         description="Records the value, and optionally ends the step.",
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
-        print("Got signal")
         self.signal_values.append(signal_input.value)
         if signal_input.final:
             self.exit_event.set()
@@ -162,22 +161,18 @@ class ATPTest(unittest.TestCase):
             )
 
             client.start_work("signal_test_step", {"wait_time_seconds": "5"})
-            print("Start work sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "false", "value": "1"},
                                )
-            print("Signal sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "false", "value": "2"},
                                )
-            print("Signal sent")
             client.send_signal("signal_test_step", "record_value",
                                {"final": "true", "value": "3"},
                                )
-            print("Signal sent. Reading results...")
             output_id, output_data, debug_logs = client.read_results()
             client.send_client_done()
-            print(f"debug_logs:\n{debug_logs}\nend of debug logs")
+            self.assertEqual(debug_logs, "")
             self.assertEqual(output_id, "success")
             self.assertListEqual(output_data["signals_received"], [1, 2, 3])
         finally:
