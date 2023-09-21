@@ -72,6 +72,7 @@ import math
 import pprint
 import re
 import sys
+import threading
 import traceback
 import types
 import typing
@@ -114,6 +115,19 @@ class NoSuchStepException(Exception):
 
     def __str__(self):
         return "No such step: %s" % self.step
+
+
+@dataclass
+class NoSuchSignalException(Exception):
+    """
+    ``NoSuchSignalException`` indicates that the given signal is not supported by the plugin's step.
+    """
+
+    step: str
+    signal: str
+
+    def __str__(self):
+        return "No such signal '%s' in step '%s'" % self.signal, self.step
 
 
 @dataclass
@@ -3090,6 +3104,27 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 
 @dataclass
+class SignalSchema:
+    """
+    Holds the definition for a single signal. This can be used for input or output signals.
+
+    To create, set the ID, and create a scope for the data input or output.
+
+    """
+    id: typing.Annotated[
+        ID_TYPE,
+        _name("ID"),
+        _description("Machine identifier for this step.")
+    ]
+    data_schema: typing.Annotated[
+        ScopeSchema,
+        _name("Data"),
+        _description("Input or output data schema")
+    ]
+    display: DISPLAY_TYPE = None
+
+
+@dataclass
 class StepSchema:
     """
     This class holds the definition for a single step, it's input and output definitions.
@@ -3157,6 +3192,17 @@ class StepSchema:
         _name("Outputs"),
         _description("Possible outputs from this step."),
     ]
+    signal_handlers: typing.Annotated[
+        Dict[ID_TYPE, SignalSchema],
+        _name("Signal handlers"),
+        _description("Signals that are input by the step."),
+
+    ] = None
+    signal_emitters: typing.Annotated[
+        Dict[ID_TYPE, SignalSchema],
+        _name("Signal emitters"),
+        _description("Signals that are output by the step."),
+    ] = None
     display: DISPLAY_TYPE = None
 
 
@@ -5441,13 +5487,13 @@ class AnyType(AnySchema, AbstractType):
             if len(data) != 0:
                 list_type_base = type(data[0])
                 for item in data:
-                    if type(item) != list_type_base:
+                    if type(item) is not list_type_base:
                         raise ConstraintException(
                             tuple(path),
                             "non-uniform type found in list: '{}' is not of list type '{}'".format(
-                                type(item), list_type_base 
+                                type(item), list_type_base
                             ),
-            )           
+                        )
 
             for i in range(len(data)):
                 new_path = list(path)
@@ -5502,8 +5548,43 @@ class StepOutputType(StepOutputSchema, AbstractType):
         return self.schema.serialize(data, path)
 
 
+SignalDataT = TypeVar("SignalDataT", bound=object)
+
 StepInputT = TypeVar("StepInputT", bound=object)
 StepOutputT = TypeVar("StepOutputT", bound=object)
+StepObjectT = TypeVar("StepObjectT", bound=object)
+
+
+class SignalHandlerType(SignalSchema):
+    """
+    SignalHandlerType describes a callable signal type.
+    """
+    _handler: Callable[[StepObjectT, SignalDataT], type(None)]
+
+    def __init__(
+        self,
+        id: str,
+        handler: Callable[[SignalDataT], type(None)],
+        data_schema: ScopeType,
+        display: Optional[DisplayValue] = None,
+    ):
+        super().__init__(id, data_schema, display)
+        self._handler = handler
+
+    def __call__(
+        self,
+        step_data: StepObjectT,
+        params: SignalDataT,
+    ):
+        """
+        :param params: Input data parameter for the signal handler.
+        """
+        input: ScopeType = self.data_schema
+        input.validate(params, tuple(["input"]))
+        self._handler(step_data, params)
+
+
+step_object_constructor_param = Callable[[], StepObjectT]
 
 
 class StepType(StepSchema):
@@ -5512,20 +5593,32 @@ class StepType(StepSchema):
     possible outputs identified by a string.
     """
 
-    _handler: Callable[[StepInputT], typing.Tuple[str, StepOutputT]]
+    _handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]]
+    _step_object_constructor: step_object_constructor_param
     input: ScopeType
     outputs: Dict[ID_TYPE, StepOutputType]
+    signal_handler_method_names: List[str]
+    signal_handlers: Dict[ID_TYPE, SignalHandlerType]
+    signal_emitters: Dict[ID_TYPE, SignalSchema]
+    initialized_object_data: StepObjectT
+    object_data_ready: bool = False
+    object_cv: threading.Condition = threading.Condition()
 
     def __init__(
         self,
         id: str,
-        handler: Callable[[StepInputT], typing.Tuple[str, StepOutputT]],
+        handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]],
+        step_object_constructor: step_object_constructor_param or None,
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
+        signal_handler_method_names: List[str],
+        signal_emitters: Dict[ID_TYPE, SignalSchema] = None,
         display: Optional[DisplayValue] = None,
     ):
-        super().__init__(id, input, outputs, display)
+        super().__init__(id, input, outputs, signal_handlers=None, signal_emitters=signal_emitters, display=display)
         self._handler = handler
+        self._step_object_constructor = step_object_constructor
+        self.signal_handler_method_names = signal_handler_method_names
 
     def __call__(
         self,
@@ -5539,10 +5632,18 @@ class StepType(StepSchema):
         :param skip_output_validation: Do not validate returned output data. Use at your own risk.
         :return: The ID for the output datatype, and the output itself.
         """
+        # Initialize the step object
+        if self._step_object_constructor is not None:
+            self.initialized_object_data = self._step_object_constructor()
+        else:
+            self.initialized_object_data = None
+        self.object_data_ready = True
+        with self.object_cv:
+            self.object_cv.notify_all()
         input: ScopeType = self.input
         if not skip_input_validation:
             input.validate(params, tuple(["input"]))
-        result = self._handler(params)
+        result = self._handler(self.initialized_object_data, params)
         if len(result) != 2:
             raise BadArgumentException(
                 "The step returned {} results instead of 2. Did your step return the correct results?".format(
@@ -5560,6 +5661,23 @@ class StepType(StepSchema):
             output.validate(output_data, tuple(["output", output_id]))
         return output_id, output_data
 
+    def inspect_methods(self):
+        """
+        Retrieves the schemas from the method names given in the constructor.
+        """
+        # Abort if required components are not set.
+        if self._step_object_constructor is None or self.signal_handler_method_names is None:
+            return
+        # Constructs an instance of the class in order to retrieve attributes from it
+        object_instance = self._step_object_constructor()
+        # Create a map to populate
+        signal_handlers_map = {}
+        for handler_method_name in self.signal_handler_method_names:
+            # Retrieve the object attributes, which will be the schemas
+            handler = getattr(object_instance, handler_method_name)
+            signal_handlers_map[handler.id] = handler
+        self.signal_handlers = signal_handlers_map
+
 
 class SchemaType(Schema):
     """
@@ -5568,51 +5686,91 @@ class SchemaType(Schema):
 
     steps: Dict[str, StepType]
 
-    def unserialize_input(self, step_id: str, data: Any) -> Any:
+    def get_step(self, step_id: str):
+        if step_id not in self.steps:
+            raise NoSuchStepException(step_id)
+        return self.steps[step_id]
+
+    def get_signal(self, step_id: str, signal_id: str):
+        step = self.get_step(step_id)
+        if signal_id not in step.signal_handlers:
+            raise NoSuchSignalException(step_id, signal_id)
+        return step.signal_handlers[signal_id]
+
+    def unserialize_step_input(self, step_id: str, serialized_data: Any) -> Any:
         """
         This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
         automatically called by ``__call__`` before running the step with the unserialized input.
 
         :param step_id: The step ID to use to look up the schema for unserialization.
-        :param data: The raw data to unserialize.
+        :param serialized_data: The raw data to unserialize.
         :return: The unserialized data in the structure the step expects it.
         """
-        if step_id not in self.steps:
-            raise NoSuchStepException(step_id)
-        step = self.steps[step_id]
-        return self._unserialize_input(step, data)
+        return self._unserialize_step_input(self.get_step(step_id), serialized_data)
 
     @staticmethod
-    def _unserialize_input(step: StepType, data: Any) -> Any:
+    def _unserialize_step_input(step: StepType, serialized_data: Any) -> Any:
         try:
-            return step.input.unserialize(data)
+            return step.input.unserialize(serialized_data)
+        except ConstraintException as e:
+            raise InvalidInputException(e) from e
+
+    def unserialize_signal_handler_input(self, step_id: str, signal_id: str, serialized_data: Any) -> Any:
+        """
+        This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
+        automatically called by ``__call__`` before running the step with the unserialized input.
+
+        :param step_id: The step ID to use to look up the schema for unserialization.
+        :param serialized_data: The raw data to unserialize.
+        :return: The unserialized data in the structure the step expects it.
+        """
+        return self._unserialize_signal_handler_input(self.get_signal(step_id, signal_id), serialized_data)
+
+    @staticmethod
+    def _unserialize_signal_handler_input(signal: SignalHandlerType, data: Any) -> Any:
+        try:
+            return signal.data_schema.unserialize(data)
         except ConstraintException as e:
             raise InvalidInputException(e) from e
 
     def call_step(self, step_id: str, input_param: Any) -> typing.Tuple[str, Any]:
         """
         This function calls a specific step with the input parameter that has already been unserialized. It expects the
-        data to be already valid, use unserialize_input to produce a valid input. This function is automatically called
-        by ``__call__`` after unserializing the input.
+        data to be already valid, use unserialize_step_input to produce a valid input. This function is automatically
+        called by ``__call__`` after unserializing the input.
 
         :param step_id: The ID of the input step to run.
         :param input_param: The unserialized data structure the step expects.
         :return: The ID of the output, and the data structure returned from the step.
         """
-        if step_id not in self.steps:
-            raise NoSuchStepException(step_id)
-        step = self.steps[step_id]
-        return self._call_step(step, input_param)
+        return self._call_step(self.get_step(step_id), input_param)
+
+    def call_step_signal(self, step_id: str, signal_id: str, unserialized_input_param: Any):
+        """
+        This function calls a specific step's signal with the input parameter that has already been unserialized. It expects the
+        data to be already valid, use unserialize_signal_input to produce a valid input.
+
+        :param step_id: The ID of the input step to run.
+        :param unserialized_input_param: The unserialized data structure the step expects.
+        :return: The ID of the output, and the data structure returned from the step.
+        """
+        step = self.get_step(step_id)
+        signal = self.get_signal(step_id, signal_id)
+        if not step.object_data_ready:
+            with step.object_cv:
+                # wait to be notified of it being ready. Test this by adding a sleep before the step call.
+                step.object_cv.wait()
+        return signal(step.initialized_object_data, unserialized_input_param)
 
     @staticmethod
     def _call_step(
         step: StepType,
-        input_param: Any,
+        unserialized_input_param: Any,
         skip_input_validation: bool = False,
         skip_output_validation: bool = False,
     ) -> typing.Tuple[str, Any]:
         return step(
-            input_param,
+            unserialized_input_param,
             skip_input_validation=skip_input_validation,
             skip_output_validation=skip_output_validation,
         )
@@ -5627,10 +5785,7 @@ class SchemaType(Schema):
         :param output_data: The data structure returned from the step.
         :return:
         """
-        if step_id not in self.steps:
-            raise NoSuchStepException(step_id)
-        step = self.steps[step_id]
-        return self._serialize_output(step, output_id, output_data)
+        return self._serialize_output(self.get_step(step_id), output_id, output_data)
 
     @staticmethod
     def _serialize_output(step, output_id: str, output_data: Any) -> Any:
@@ -5651,10 +5806,8 @@ class SchemaType(Schema):
         :param skip_serialization: skip result serialization to basic types
         :return: the result ID, and the resulting data in the structure matching the result ID
         """
-        if step_id not in self.steps:
-            raise NoSuchStepException(step_id)
-        step = self.steps[step_id]
-        input_param = self._unserialize_input(step, data)
+        step = self.get_step(step_id)
+        input_param = self._unserialize_step_input(step, data)
         output_id, output_data = self._call_step(
             step,
             input_param,
@@ -6319,7 +6472,7 @@ class _SchemaBuilder:
                 discriminator_value = getattr(f.type, "__discriminator_value")
             if (
                 discriminator_type is not None
-                and type(discriminator_value) != discriminator_type
+                and type(discriminator_value) is not discriminator_type
             ):
                 raise BadArgumentException(
                     "Invalid discriminator value type: {}, the value type has been previously set to {}. Please make "
@@ -6337,7 +6490,7 @@ class _SchemaBuilder:
                     f.type.display = DisplayValue()
                 f.type.display.description = getattr(f.type, "__description")
             types[discriminator_value] = f.type
-        if discriminator_type == str:
+        if discriminator_type is str:
             return OneOfStringType(
                 types,
                 scope,
