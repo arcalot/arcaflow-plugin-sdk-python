@@ -33,7 +33,7 @@ jobs:
           black .
           flake8 .
       - name: Install Python Poetry
-        uses: snok/install-poetry@v1.3.3
+        uses: snok/install-poetry@v1.3.4
       - name: Install project dependencies
         run: poetry install --no-interaction --with dev
       - name: Run tests with coverage
