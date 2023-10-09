@@ -23,12 +23,15 @@ import signal
 
 import cbor2
 
-from enum import Enum
+from enum import IntEnum
 
 from arcaflow_plugin_sdk import schema
 
 
-class MessageType(Enum):
+ATP_SERVER_VERSION = 2
+
+
+class MessageType(IntEnum):
     """
     An integer ID that indicates the type of runtime message that is stored
     in the data field. The corresponding class can then be used to deserialize
@@ -42,7 +45,7 @@ class MessageType(Enum):
 @dataclasses.dataclass
 class HelloMessage:
     """
-    This message is the the initial greeting message a plugin sends to the output.
+    This message is the initial greeting message a plugin sends to the output.
     """
 
     version: typing.Annotated[
@@ -64,24 +67,20 @@ class HelloMessage:
 _HELLO_MESSAGE_SCHEMA = schema.build_object_schema(HelloMessage)
 
 
-def signal_handler(_sig, _frame):
-    pass  # Do nothing
-
-
 class ATPServer:
-    stdin: io.FileIO
-    stdout: io.FileIO
+    input_pipe: io.FileIO
+    output_pipe: io.FileIO
     stderr: io.FileIO
     step_object: typing.Any
 
     def __init__(
             self,
-            stdin: io.FileIO,
-            stdout: io.FileIO,
+            input_pipe: io.FileIO,
+            output_pipe: io.FileIO,
             stderr: io.FileIO,
     ) -> None:
-        self.stdin = stdin
-        self.stdout = stdout
+        self.input_pipe = input_pipe
+        self.output_pipe = output_pipe
         self.stderr = stderr
 
     def run_plugin(
@@ -91,76 +90,72 @@ class ATPServer:
         """
         This function wraps running a plugin.
         """
-        signal.signal(signal.SIGINT, signal_handler)  # Ignore sigint. Only care about arcaflow signals.
-        if os.isatty(self.stdout.fileno()):
+        signal.signal(signal.SIGINT, signal.SIG_IGN)  # Ignore sigint. Only care about arcaflow signals.
+        if os.isatty(self.output_pipe.fileno()):
             print("Cannot run plugin in ATP mode on an interactive terminal.")
             return 1
-        try:
-            decoder = cbor2.decoder.CBORDecoder(self.stdin)
-            encoder = cbor2.encoder.CBOREncoder(self.stdout)
+        decoder = cbor2.decoder.CBORDecoder(self.input_pipe)
+        encoder = cbor2.encoder.CBOREncoder(self.output_pipe)
 
-            # Decode empty "start output" message.
-            decoder.decode()
+        # Decode empty "start output" message.
+        decoder.decode()
 
-            # Serialize then send HelloMessage
-            start_hello_message = HelloMessage(2, plugin_schema)
-            serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
-            encoder.encode(serialized_message)
-            self.stdout.flush()
+        # Serialize then send HelloMessage
+        start_hello_message = HelloMessage(ATP_SERVER_VERSION, plugin_schema)
+        serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
+        encoder.encode(serialized_message)
+        self.output_pipe.flush()
 
-            # Can fail here if only getting schema.
-            work_start_msg = decoder.decode()
-        except SystemExit:
-            return 0
-        try:
-            if work_start_msg is None:
-                self.stderr.write("Work start message is None.")
-                return 1
-            if work_start_msg["id"] is None:
-                self.stderr.write("Work start message is missing the 'id' field.")
-                return 1
-            if work_start_msg["config"] is None:
-                self.stderr.write("Work start message is missing the 'config' field.")
-                return 1
-
-            # Run the step
-            original_stdout = sys.stdout
-            original_stderr = sys.stderr
-            out_buffer = io.StringIO()
-            sys.stdout = out_buffer
-            sys.stderr = out_buffer
-            # Run the read loop
-            read_thread = threading.Thread(target=self.run_server_read_loop, args=(
-                plugin_schema,  # Plugin schema
-                work_start_msg["id"],  # step ID
-                decoder,  # Decoder
-            ))
-            read_thread.start()
-            output_id, output_data = plugin_schema.call_step(
-                work_start_msg["id"],
-                plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
-            )
-
-            # Send WorkDoneMessage in a RuntimeMessage
-            encoder.encode(
-                {
-                    "id": MessageType.WORK_DONE.value,
-                    "data": {
-                        "output_id": output_id,
-                        "output_data": plugin_schema.serialize_output(
-                            work_start_msg["id"], output_id, output_data
-                        ),
-                        "debug_logs": out_buffer.getvalue(),
-                    }
-                }
-            )
-            self.stdout.flush()  # Sends it to the ATP client immediately. Needed so it can realize it's done.
-            read_thread.join()  # Wait for the read thread to finish.
-            # Don't reset stdout/stderr until after the read thread is done.
-            sys.stdout = original_stdout
-            sys.stderr = original_stderr
-        except SystemExit:
+        # Can fail here if only getting schema.
+        work_start_msg = decoder.decode()
+        if work_start_msg is None:
+            self.stderr.write("Work start message is None.")
             return 1
+        if work_start_msg["id"] is None:
+            self.stderr.write("Work start message is missing the 'id' field.")
+            return 1
+        if work_start_msg["config"] is None:
+            self.stderr.write("Work start message is missing the 'config' field.")
+            return 1
+
+        # Run the step
+        # First replace stdout so that prints are handled by us, instead of potentially interfering with the atp pipes.
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        out_buffer = io.StringIO()
+        sys.stdout = out_buffer
+        sys.stderr = out_buffer
+        # Run the read loop
+        read_thread = threading.Thread(target=self.run_server_read_loop, args=(
+            plugin_schema,  # Plugin schema
+            work_start_msg["id"],  # step ID
+            decoder,  # Decoder
+        ))
+        read_thread.start()
+        output_id, output_data = plugin_schema.call_step(
+            work_start_msg["id"],
+            plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
+        )
+
+        # Send WorkDoneMessage in a RuntimeMessage
+        encoder.encode(
+            {
+                "id": MessageType.WORK_DONE.value,
+                "data": {
+                    "output_id": output_id,
+                    "output_data": plugin_schema.serialize_output(
+                        work_start_msg["id"], output_id, output_data
+                    ),
+                    "debug_logs": out_buffer.getvalue(),
+                }
+            }
+        )
+        self.output_pipe.flush()  # Sends it to the ATP client immediately. Needed so it can realize it's done.
+        read_thread.join()  # Wait for the read thread to finish.
+        # Don't reset stdout/stderr until after the read thread is done.
+        sys.stdout = original_stdout
+        sys.stderr = original_stderr
+
         return 0
 
     def run_server_read_loop(
@@ -179,7 +174,7 @@ class ATPServer:
                     self.stderr.write("Runtime message is missing the 'id' field.")
                     return
                 # Then take action
-                if msg_id == MessageType.SIGNAL.value:
+                if msg_id == MessageType.SIGNAL:
                     signal_msg = runtime_msg["data"]
                     received_step_id = signal_msg["step_id"]
                     received_signal_id = signal_msg["signal_id"]
@@ -194,7 +189,7 @@ class ATPServer:
                     )
                     # The data is verified and unserialized. Now call the signal.
                     plugin_schema.call_step_signal(step_id, received_signal_id, unserialized_data)
-                elif msg_id == MessageType.CLIENT_DONE.value:
+                elif msg_id == MessageType.CLIENT_DONE:
                     return
                 else:
                     self.stderr.write(f"Unknown kind of runtime message: {msg_id}")
@@ -205,7 +200,7 @@ class ATPServer:
 
 class PluginClientStateException(Exception):
     """
-    This
+    This exception is for client ATP client errors, like problems decoding
     """
 
     msg: str
@@ -276,7 +271,7 @@ class PluginClient:
     def send_runtime_message(self, message_type: MessageType, data: any):
         self.encoder.encode(
             {
-                "id": message_type.value,
+                "id": message_type,
                 "data": data,
             }
         )
@@ -289,7 +284,7 @@ class PluginClient:
         while True:
             runtime_msg = self.decoder.decode()
             msg_id = runtime_msg["id"]
-            if msg_id == MessageType.WORK_DONE.value:
+            if msg_id == MessageType.WORK_DONE:
                 signal_msg = runtime_msg["data"]
                 if signal_msg["output_id"] is None:
                     raise PluginClientStateException(
@@ -304,7 +299,7 @@ class PluginClient:
                         "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
                     )
                 return signal_msg["output_id"], signal_msg["output_data"], signal_msg["debug_logs"]
-            elif msg_id == MessageType.SIGNAL.value:
+            elif msg_id == MessageType.SIGNAL:
                 # Do nothing. Should change in the future.
                 continue
             else:

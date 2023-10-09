@@ -5577,6 +5577,7 @@ class SignalHandlerType(SignalSchema):
         params: SignalDataT,
     ):
         """
+        :param step_data: The instantiated object that stores step run-specific data.
         :param params: Input data parameter for the signal handler.
         """
         input: ScopeType = self.data_schema
@@ -5687,9 +5688,10 @@ class SchemaType(Schema):
     steps: Dict[str, StepType]
 
     def get_step(self, step_id: str):
-        if step_id not in self.steps:
+        found_step = self.steps.get(step_id)
+        if found_step is None:
             raise NoSuchStepException(step_id)
-        return self.steps[step_id]
+        return found_step
 
     def get_signal(self, step_id: str, signal_id: str):
         step = self.get_step(step_id)
@@ -5756,8 +5758,8 @@ class SchemaType(Schema):
         """
         step = self.get_step(step_id)
         signal = self.get_signal(step_id, signal_id)
-        if not step.object_data_ready:
-            with step.object_cv:
+        with step.object_cv:
+            if not step.object_data_ready:
                 # wait to be notified of it being ready. Test this by adding a sleep before the step call.
                 step.object_cv.wait()
         return signal(step.initialized_object_data, unserialized_input_param)
