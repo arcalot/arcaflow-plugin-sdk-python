@@ -358,7 +358,7 @@ class PluginClient:
         )
         self.to_server_pipe.flush()
 
-    def read_single_result(self) -> (str, any, str):
+    def read_single_result(self) -> (str, str, any, str):
         """
         This function reads the next signal or result of an execution from the plugin.
         """
@@ -379,7 +379,7 @@ class PluginClient:
                     raise PluginClientStateException(
                         "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
                     )
-                return signal_msg["output_id"], signal_msg["output_data"], signal_msg["debug_logs"]
+                return runtime_msg["run_id"], signal_msg["output_id"], signal_msg["output_data"], signal_msg["debug_logs"]
             elif msg_id == MessageType.SIGNAL:
                 # Do nothing. Should change in the future.
                 continue

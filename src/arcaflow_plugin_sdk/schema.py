@@ -5785,7 +5785,7 @@ class SchemaType(Schema):
         """
         step = self.get_step(step_id)
         signal = self.get_signal(step_id, signal_id)
-        local_step_data: _StepLocalData = step.setup_run_data(run_id)  # to
+        local_step_data: _StepLocalData = step.setup_run_data(run_id)
         with local_step_data.step_running_condition:
             if not local_step_data.step_running:
                 # wait to be notified of it being ready. Test this by adding a sleep before the step call.
