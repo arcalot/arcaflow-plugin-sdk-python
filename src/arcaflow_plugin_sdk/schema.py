@@ -5573,20 +5573,32 @@ class SignalHandlerType(SignalSchema):
 
     def __call__(
         self,
-        step_data: StepObjectT,
-        params: SignalDataT,
+        step_object_data: StepObjectT,
+        signal_input: SignalDataT,
     ):
         """
         :param step_data: The instantiated object that stores step run-specific data.
         :param params: Input data parameter for the signal handler.
         """
         input: ScopeType = self.data_schema
-        input.validate(params, tuple(["input"]))
-        self._handler(step_data, params)
+        input.validate(signal_input, tuple(["input"]))
+        self._handler(step_object_data, signal_input)
 
 
 step_object_constructor_param = Callable[[], StepObjectT]
 
+class _StepLocalData:
+    """
+    Data associated with a single step, including the constructed object,
+    and the data needed to synchronize and notify steps of the step
+    being ready.
+    """
+    initialized_object: StepObjectT
+    step_running: bool = False  # So signals to wait if sent before the step.
+    step_running_condition: threading.Condition = threading.Condition()
+
+    def __init__(self, initialized_object: StepObjectT):
+        self.initialized_object = initialized_object
 
 class StepType(StepSchema):
     """
@@ -5601,9 +5613,8 @@ class StepType(StepSchema):
     signal_handler_method_names: List[str]
     signal_handlers: Dict[ID_TYPE, SignalHandlerType]
     signal_emitters: Dict[ID_TYPE, SignalSchema]
-    initialized_object_data: StepObjectT
-    object_data_ready: bool = False
-    object_cv: threading.Condition = threading.Condition()
+    initialized_object_data: Dict[str, _StepLocalData] = {}  # Maps run_id to data
+    initialization_lock: threading.Lock = threading.Lock()
 
     def __init__(
         self,
@@ -5621,8 +5632,20 @@ class StepType(StepSchema):
         self._step_object_constructor = step_object_constructor
         self.signal_handler_method_names = signal_handler_method_names
 
+    def setup_run_data(self, run_id: str):
+        with self.initialization_lock:
+            if run_id in self.initialized_object_data:
+                return self.initialized_object_data[run_id]
+            if self._step_object_constructor is not None:
+                new_run_data = _StepLocalData(self._step_object_constructor())
+            else:
+                new_run_data = _StepLocalData(None)
+            self.initialized_object_data[run_id] = new_run_data
+            return new_run_data
+
     def __call__(
         self,
+        run_id: str,
         params: StepInputT,
         skip_input_validation: bool = False,
         skip_output_validation: bool = False,
@@ -5634,17 +5657,18 @@ class StepType(StepSchema):
         :return: The ID for the output datatype, and the output itself.
         """
         # Initialize the step object
-        if self._step_object_constructor is not None:
-            self.initialized_object_data = self._step_object_constructor()
-        else:
-            self.initialized_object_data = None
-        self.object_data_ready = True
-        with self.object_cv:
-            self.object_cv.notify_all()
+        step_local_data: _StepLocalData = self.setup_run_data(run_id)
+        # Notify potentially waiting signals that the step is running
+        # Ideally, this would be done after, but just before is the only realistic option without more threads or sleep
+        step_local_data.step_running = True
+        with step_local_data.step_running_condition:
+            step_local_data.step_running_condition.notify_all()
         input: ScopeType = self.input
+        # Validate input
         if not skip_input_validation:
             input.validate(params, tuple(["input"]))
-        result = self._handler(self.initialized_object_data, params)
+        # Run the step
+        result = self._handler(step_local_data.initialized_object, params)
         if len(result) != 2:
             raise BadArgumentException(
                 "The step returned {} results instead of 2. Did your step return the correct results?".format(
@@ -5735,43 +5759,49 @@ class SchemaType(Schema):
         except ConstraintException as e:
             raise InvalidInputException(e) from e
 
-    def call_step(self, step_id: str, input_param: Any) -> typing.Tuple[str, Any]:
+    def call_step(self, run_id: str, step_id: str, input_param: Any) -> typing.Tuple[str, Any]:
         """
         This function calls a specific step with the input parameter that has already been unserialized. It expects the
         data to be already valid, use unserialize_step_input to produce a valid input. This function is automatically
         called by ``__call__`` after unserializing the input.
 
+        :param run_id: A unique ID for the run.
         :param step_id: The ID of the input step to run.
         :param input_param: The unserialized data structure the step expects.
         :return: The ID of the output, and the data structure returned from the step.
         """
-        return self._call_step(self.get_step(step_id), input_param)
+        return self._call_step(self.get_step(step_id), run_id, input_param)
 
-    def call_step_signal(self, step_id: str, signal_id: str, unserialized_input_param: Any):
+    def call_step_signal(self, run_id: str, step_id: str, signal_id: str, unserialized_input_param: Any):
         """
         This function calls a specific step's signal with the input parameter that has already been unserialized. It expects the
         data to be already valid, use unserialize_signal_input to produce a valid input.
 
+        :param run_id: A unique ID for the run, which must match signals associated with this step execution.
         :param step_id: The ID of the input step to run.
+        :param signal_id: The signal ID as defined by the plugin.
         :param unserialized_input_param: The unserialized data structure the step expects.
         :return: The ID of the output, and the data structure returned from the step.
         """
         step = self.get_step(step_id)
         signal = self.get_signal(step_id, signal_id)
-        with step.object_cv:
-            if not step.object_data_ready:
+        local_step_data: _StepLocalData = step.setup_run_data(run_id)  # to
+        with local_step_data.step_running_condition:
+            if not local_step_data.step_running:
                 # wait to be notified of it being ready. Test this by adding a sleep before the step call.
-                step.object_cv.wait()
-        return signal(step.initialized_object_data, unserialized_input_param)
+                local_step_data.step_running_condition.wait()
+        return signal(local_step_data.initialized_object, unserialized_input_param)
 
     @staticmethod
     def _call_step(
         step: StepType,
+        run_id: str,
         unserialized_input_param: Any,
         skip_input_validation: bool = False,
         skip_output_validation: bool = False,
     ) -> typing.Tuple[str, Any]:
         return step(
+            run_id,
             unserialized_input_param,
             skip_input_validation=skip_input_validation,
             skip_output_validation=skip_output_validation,

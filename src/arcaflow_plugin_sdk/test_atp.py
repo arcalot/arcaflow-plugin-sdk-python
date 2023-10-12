@@ -130,16 +130,16 @@ class ATPTest(unittest.TestCase):
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
             client.start_output()
             hello_message = client.read_hello()
-            self.assertEqual(2, hello_message.version)
+            self.assertEqual(3, hello_message.version)
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_schema),
                 schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
-            client.start_work("hello-world", {"name": "Arca Lot"})
+            client.start_work(self.id(), "hello-world", {"name": "Arca Lot"})
 
-            output_id, output_data, debug_logs = client.read_results()
+            output_id, output_data, debug_logs = client.read_single_result()
             client.send_client_done()
             self.assertEqual(output_id, "success")
             self.assertEqual("Hello world!\n", debug_logs)
@@ -153,24 +153,24 @@ class ATPTest(unittest.TestCase):
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
             client.start_output()
             hello_message = client.read_hello()
-            self.assertEqual(2, hello_message.version)
+            self.assertEqual(3, hello_message.version)
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_signals_schema),
                 schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
-            client.start_work("signal_test_step", {"wait_time_seconds": "5"})
-            client.send_signal("signal_test_step", "record_value",
+            client.start_work(self.id(), "signal_test_step", {"wait_time_seconds": "5"})
+            client.send_signal(self.id(), "record_value",
                                {"final": "false", "value": "1"},
                                )
-            client.send_signal("signal_test_step", "record_value",
+            client.send_signal(self.id(), "record_value",
                                {"final": "false", "value": "2"},
                                )
-            client.send_signal("signal_test_step", "record_value",
+            client.send_signal(self.id(), "record_value",
                                {"final": "true", "value": "3"},
                                )
-            output_id, output_data, debug_logs = client.read_results()
+            output_id, output_data, debug_logs = client.read_single_result()
             client.send_client_done()
             self.assertEqual(debug_logs, "")
             self.assertEqual(output_id, "success")
