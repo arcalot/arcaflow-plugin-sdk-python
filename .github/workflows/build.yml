@@ -32,10 +32,6 @@ jobs:
           isort --profile black .
           black .
           flake8 .
-      - name: Download python/poetry dependencies
-        run: wget https://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
-      - name: Install python/poetry dependencies
-        run: sudo apt install ./libffi6_3.2.1-8_amd64.deb && sudo apt install -y libffi-dev libtinfo6
       - name: Install poetry
         run: |
           python -m pip install poetry==1.4.2
@@ -59,13 +55,13 @@ jobs:
       - name: Run tests with coverage
         run: |
           # Run the unit tests
-          poython -m poetry run coverage run -a -m unittest discover -v src
+          python -m poetry run coverage run -a -m unittest discover -v src
           # Run the example plugin
-          poython -m poetry run coverage run -a ./example_plugin.py -f example.yaml
+          python -m poetry run coverage run -a ./example_plugin.py -f example.yaml
           # Test the example plugin
-          poython -m poetry run coverage run -a ./test_example_plugin.py
+          python -m poetry run coverage run -a ./test_example_plugin.py
           # Generate the coverage HTML report
-          poython -m poetry run coverage html
+          python -m poetry run coverage html
       - name: Publish coverage report to job summary
         # publishing only once
         if: ${{ matrix.python-version == '3.9'}}
