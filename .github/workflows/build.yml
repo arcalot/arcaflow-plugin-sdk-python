@@ -37,8 +37,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: poetry-install-logs
-          path: arcaflow-plugin-sdk-python
+          name: logs
+          path: *.log
       - name: Install project dependencies
         run: poetry install --no-interaction --with dev
       - name: Run tests with coverage
