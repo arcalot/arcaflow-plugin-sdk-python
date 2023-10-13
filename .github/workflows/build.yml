@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         python-version: [ '3.9', '3.10', 'pypy3.9' ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -32,6 +32,10 @@ jobs:
           isort --profile black .
           black .
           flake8 .
+      - name: Download python/poetry dependencies
+        run: wget https://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
+      - name: Install python/poetry dependencies
+        run: sudo apt install ./libffi6_3.2.1-8_amd64.deb && sudo apt install -y libffi-dev
       - name: Install Python Poetry
         uses: snok/install-poetry@v1.3.4
       - uses: actions/upload-artifact@v3
