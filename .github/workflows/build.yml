@@ -35,7 +35,7 @@ jobs:
       - name: Download python/poetry dependencies
         run: wget https://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
       - name: Install python/poetry dependencies
-        run: sudo apt install ./libffi6_3.2.1-8_amd64.deb && sudo apt install -y libffi-dev
+        run: sudo apt install ./libffi6_3.2.1-8_amd64.deb && sudo apt install -y libffi-dev libtinfo6
       - name: Install Python Poetry
         uses: snok/install-poetry@v1.3.4
       - uses: actions/upload-artifact@v3
