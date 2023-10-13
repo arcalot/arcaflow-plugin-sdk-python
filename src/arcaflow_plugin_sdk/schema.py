@@ -5827,7 +5827,7 @@ class SchemaType(Schema):
             raise InvalidOutputException(e) from e
 
     def __call__(
-        self, step_id: str, data: Any, skip_serialization: bool = False
+        self, run_id: str, step_id: str, data: Any, skip_serialization: bool = False
     ) -> typing.Tuple[str, Any]:
         """
         This function takes the input data, unserializes it for the specified step, calls the specified step, and,
@@ -5842,6 +5842,7 @@ class SchemaType(Schema):
         input_param = self._unserialize_step_input(step, data)
         output_id, output_data = self._call_step(
             step,
+            run_id,
             input_param,
             # Skip duplicate verification
             skip_input_validation=True,

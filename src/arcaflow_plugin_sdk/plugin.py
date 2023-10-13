@@ -448,7 +448,7 @@ def _execute_file(
         sys.stdout = out_buffer
         sys.stderr = out_buffer
     try:
-        output_id, output_data = s(step_id, data)
+        output_id, output_data = s("file_run", step_id, data)
         output = {
             "output_id": output_id,
             "output_data": output_data,
