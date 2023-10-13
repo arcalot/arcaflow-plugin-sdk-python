@@ -34,6 +34,11 @@ jobs:
           flake8 .
       - name: Install Python Poetry
         uses: snok/install-poetry@v1.3.4
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: poetry-install-logs
+          path: arcaflow-plugin-sdk-python/arcaflow-plugin-sdk-python/*.log
       - name: Install project dependencies
         run: poetry install --no-interaction --with dev
       - name: Run tests with coverage
