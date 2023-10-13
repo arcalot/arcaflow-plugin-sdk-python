@@ -38,7 +38,7 @@ jobs:
         if: failure()
         with:
           name: poetry-install-logs
-          path: arcaflow-plugin-sdk-python/arcaflow-plugin-sdk-python/*.log
+          path: arcaflow-plugin-sdk-python
       - name: Install project dependencies
         run: poetry install --no-interaction --with dev
       - name: Run tests with coverage
