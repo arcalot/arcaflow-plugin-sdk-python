@@ -21,9 +21,11 @@ class ExamplePluginTest(unittest.TestCase):
         )
 
     def test_functional(self):
-        input = example_plugin.InputParams(name=example_plugin.FullName("Arca", "Lot"))
+        step_input = example_plugin.InputParams(name=example_plugin.FullName("Arca", "Lot"))
 
-        output_id, output_data = example_plugin.hello_world(input)
+        # Note: The call to hello_world is to the output of the decorator, not the function itself.
+        # So it's calling the StepType
+        output_id, output_data = example_plugin.hello_world(self.id(), step_input)
 
         # The example plugin always returns an error:
         self.assertEqual("success", output_id)
