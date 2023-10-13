@@ -30,6 +30,16 @@ def hello_world(params: Input) -> Tuple[str, Union[Output]]:
     return "success", Output("Hello, {}!".format(params.name))
 
 
+@plugin.step(
+    id="hello-world-broken",
+    name="Broken!",
+    description="Throws an exception with the text 'abcde'",
+    outputs={"success": Output},
+)
+def hello_world_broken(_: Input) -> Tuple[str, Union[Output]]:
+    print("Hello world!")
+    raise Exception("abcde")
+
 @dataclasses.dataclass
 class StepTestInput:
     wait_time_seconds: float
@@ -47,8 +57,14 @@ class SignalTestOutput:
 
 
 class SignalTestStep:
-    signal_values: List[int] = []
-    exit_event = Event()
+    signal_values: List[int]
+    exit_event: Event
+
+    def __init__(self):
+        # Due to the way Python works, this MUST be done here, and not inlined above, or else it will be
+        # shared by all objects, resulting in a shared list and event, which would cause problems.
+        self.signal_values = []
+        self.exit_event = Event()
 
     @plugin.step_with_signals(
         id="signal_test_step",
@@ -66,15 +82,19 @@ class SignalTestStep:
     @plugin.signal_handler(
         id="record_value",
         name="record value",
-        description="Records the value, and optionally ends the step.",
+        description="Records the value, and optionally ends the step. Throws error if it's less than 0, for testing.",
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
+        if signal_input.value < 0:
+            self.exit_event.set()
+            raise Exception("Value below zero.")
         self.signal_values.append(signal_input.value)
         if signal_input.final:
             self.exit_event.set()
 
 
 test_schema = plugin.build_schema(hello_world)
+test_broken_schema = plugin.build_schema(hello_world_broken)
 test_signals_schema = plugin.build_schema(SignalTestStep.signal_test_step)
 
 
@@ -123,54 +143,56 @@ class ATPTest(unittest.TestCase):
         if exit_status != 0:
             self.fail("Plugin exited with non-zero status: {}".format(exit_status))
 
-    def test_full_simple_workflow(self):
+    def test_step_simple(self):
         pid, stdin_writer, stdout_reader = self._execute_plugin(test_schema)
 
         try:
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
             client.start_output()
             hello_message = client.read_hello()
-            self.assertEqual(2, hello_message.version)
+            self.assertEqual(3, hello_message.version)
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_schema),
                 schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
-            client.start_work("hello-world", {"name": "Arca Lot"})
+            client.start_work(self.id(), "hello-world", {"name": "Arca Lot"})
 
-            output_id, output_data, debug_logs = client.read_results()
+            run_id, output_id, output_data, debug_logs = client.read_single_result()
+            self.assertEqual(run_id, self.id())
             client.send_client_done()
             self.assertEqual(output_id, "success")
             self.assertEqual("Hello world!\n", debug_logs)
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
-    def test_full_workflow_with_signals(self):
+    def test_step_with_signals(self):
         pid, stdin_writer, stdout_reader = self._execute_plugin(test_signals_schema)
 
         try:
             client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
             client.start_output()
             hello_message = client.read_hello()
-            self.assertEqual(2, hello_message.version)
+            self.assertEqual(3, hello_message.version)
 
             self.assertEqual(
                 schema.SCHEMA_SCHEMA.serialize(test_signals_schema),
                 schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
             )
 
-            client.start_work("signal_test_step", {"wait_time_seconds": "5"})
-            client.send_signal("signal_test_step", "record_value",
+            client.start_work(self.id(), "signal_test_step", {"wait_time_seconds": "5"})
+            client.send_signal(self.id(), "record_value",
                                {"final": "false", "value": "1"},
                                )
-            client.send_signal("signal_test_step", "record_value",
+            client.send_signal(self.id(), "record_value",
                                {"final": "false", "value": "2"},
                                )
-            client.send_signal("signal_test_step", "record_value",
+            client.send_signal(self.id(), "record_value",
                                {"final": "true", "value": "3"},
                                )
-            output_id, output_data, debug_logs = client.read_results()
+            run_id, output_id, output_data, debug_logs = client.read_single_result()
+            self.assertEqual(run_id, self.id())
             client.send_client_done()
             self.assertEqual(debug_logs, "")
             self.assertEqual(output_id, "success")
@@ -178,6 +200,148 @@ class ATPTest(unittest.TestCase):
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
+    def test_multi_step_with_signals(self):
+        """
+        Starts two steps simultaneously, sends them separate data from signals, then verifies
+        that each step got the dats intended for it.
+        """
+        pid, stdin_writer, stdout_reader = self._execute_plugin(test_signals_schema)
+
+        try:
+            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
+            hello_message = client.read_hello()
+            self.assertEqual(3, hello_message.version)
+
+            self.assertEqual(
+                schema.SCHEMA_SCHEMA.serialize(test_signals_schema),
+                schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
+            )
+            step_a_id = self.id() + "_a"
+            step_b_id = self.id() + "_b"
+
+            client.start_work(step_a_id, "signal_test_step", {"wait_time_seconds": "5"})
+            client.start_work(step_b_id, "signal_test_step", {"wait_time_seconds": "5"})
+            client.send_signal(step_a_id, "record_value",
+                               {"final": "false", "value": "1"},
+                               )
+            client.send_signal(step_b_id, "record_value",
+                               {"final": "true", "value": "2"},
+                               )
+            b_run_id, b_output_id, b_output_data, b_debug_logs = client.read_single_result()
+
+            client.send_signal(step_a_id, "record_value",
+                               {"final": "true", "value": "3"},
+                               )
+            a_run_id, a_output_id, a_output_data, a_debug_logs = client.read_single_result()
+            client.send_client_done()
+            self.assertEqual(a_run_id, step_a_id, "Expected 'a' run ID")
+            self.assertEqual(b_run_id, step_b_id, "Expected 'b' run ID")
+            self.assertEqual(b_debug_logs, "")
+            self.assertEqual(b_debug_logs, "")
+            self.assertEqual(a_output_id, "success")
+            self.assertEqual(b_output_id, "success")
+            self.assertListEqual(a_output_data["signals_received"], [1, 3])
+            self.assertListEqual(b_output_data["signals_received"], [2])
+        finally:
+            self._cleanup(pid, stdin_writer, stdout_reader)
+
+    def test_broken_step(self):
+        """
+        Runs a step that throws an exception, which is something that should be caught by the plugin, but
+        we need to test for it since the uncaught exceptions are the hardest to debug without proper handling.
+        """
+        pid, stdin_writer, stdout_reader = self._execute_plugin(test_broken_schema)
+
+        try:
+            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
+            client.read_hello()
+
+            client.start_work(self.id(), "hello-world-broken", {"name": "Arca Lot"})
+
+            with self.assertRaises(atp.PluginClientStateException) as context:
+                _, _, _, _ = client.read_single_result()
+            client.send_client_done()
+            self.assertIn("abcde", str(context.exception))
+        finally:
+            self._cleanup(pid, stdin_writer, stdout_reader)
+
+    def test_wrong_step(self):
+        """
+        Tests the error reporting due to an invalid step being called.
+        """
+        pid, stdin_writer, stdout_reader = self._execute_plugin(test_schema)
+
+        try:
+            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
+            client.read_hello()
+
+            client.start_work(self.id(), "WRONG", {"name": "Arca Lot"})
+
+            with self.assertRaises(atp.PluginClientStateException) as context:
+                _, _, _, _ = client.read_single_result()
+            client.send_client_done()
+            self.assertIn("No such step: WRONG", str(context.exception))
+        finally:
+            self._cleanup(pid, stdin_writer, stdout_reader)
+
+    def test_invalid_runtime_message_id(self):
+        """
+        Tests the error reporting due to an invalid step being called.
+        """
+        pid, stdin_writer, stdout_reader = self._execute_plugin(test_schema)
+
+        try:
+            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
+            client.read_hello()
+
+            client.send_runtime_message(1000, "", "")
+
+            with self.assertRaises(atp.PluginClientStateException) as context:
+                _, _, _, _ = client.read_single_result()
+            client.send_client_done()
+            self.assertIn("Unknown runtime message ID: 1000", str(context.exception))
+        finally:
+            self._cleanup(pid, stdin_writer, stdout_reader)
+
+    def test_error_in_signal(self):
+        pid, stdin_writer, stdout_reader = self._execute_plugin(test_signals_schema)
+
+        try:
+            client = atp.PluginClient(stdin_writer.buffer.raw, stdout_reader.buffer.raw)
+            client.start_output()
+            hello_message = client.read_hello()
+            self.assertEqual(3, hello_message.version)
+
+            self.assertEqual(
+                schema.SCHEMA_SCHEMA.serialize(test_signals_schema),
+                schema.SCHEMA_SCHEMA.serialize(hello_message.schema),
+            )
+
+            client.start_work(self.id(), "signal_test_step", {"wait_time_seconds": "5"})
+            client.send_signal(self.id(), "record_value",
+                               {"final": "false", "value": "1"},
+                               )
+            client.send_signal(self.id(), "record_value",
+                               {"final": "false", "value": "-1"},
+                               )
+            run_id, output_id, output_data, debug_logs = client.read_single_result()
+            self.assertEqual(run_id, self.id())
+            self.assertEqual(debug_logs, "")
+            self.assertEqual(output_id, "success")
+            self.assertListEqual(output_data["signals_received"], [1])
+
+            # Note: The exception is raised after the step finishes in the test class
+            with self.assertRaises(atp.PluginClientStateException) as context:
+                _, _, _, _ = client.read_single_result()
+            client.send_client_done()
+            self.assertIn("Value below zero.", str(context.exception))
+
+        finally:
+            self._cleanup(pid, stdin_writer, stdout_reader)
 
 if __name__ == "__main__":
     unittest.main()
