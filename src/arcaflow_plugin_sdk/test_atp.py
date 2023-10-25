@@ -40,6 +40,7 @@ def hello_world_broken(_: Input) -> Tuple[str, Union[Output]]:
     print("Hello world!")
     raise Exception("abcde")
 
+
 @dataclasses.dataclass
 class StepTestInput:
     wait_time_seconds: float
@@ -133,14 +134,14 @@ class ATPTest(unittest.TestCase):
         else:
             self.fail("Fork failed")
 
-    def _cleanup(self, pid, stdin_writer, stdout_reader):
+    def _cleanup(self, pid, stdin_writer, stdout_reader, can_fail: bool = False):
         stdin_writer.close()
         stdout_reader.close()
         time.sleep(0.1)
         os.kill(pid, signal.SIGTERM)
         stop_info = os.waitpid(pid, 0)
         exit_status = os.waitstatus_to_exitcode(stop_info[1])
-        if exit_status != 0:
+        if exit_status != 0 and not can_fail:
             self.fail("Plugin exited with non-zero status: {}".format(exit_status))
 
     def test_step_simple(self):
@@ -159,11 +160,11 @@ class ATPTest(unittest.TestCase):
 
             client.start_work(self.id(), "hello-world", {"name": "Arca Lot"})
 
-            run_id, output_id, output_data, debug_logs = client.read_single_result()
-            self.assertEqual(run_id, self.id())
+            result = client.read_single_result()
+            self.assertEqual(result.run_id, self.id())
             client.send_client_done()
-            self.assertEqual(output_id, "success")
-            self.assertEqual("Hello world!\n", debug_logs)
+            self.assertEqual(result.output_id, "success")
+            self.assertEqual("Hello world!\n", result.debug_logs)
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
@@ -191,12 +192,12 @@ class ATPTest(unittest.TestCase):
             client.send_signal(self.id(), "record_value",
                                {"final": "true", "value": "3"},
                                )
-            run_id, output_id, output_data, debug_logs = client.read_single_result()
-            self.assertEqual(run_id, self.id())
+            result = client.read_single_result()
+            self.assertEqual(result.run_id, self.id())
             client.send_client_done()
-            self.assertEqual(debug_logs, "")
-            self.assertEqual(output_id, "success")
-            self.assertListEqual(output_data["signals_received"], [1, 2, 3])
+            self.assertEqual(result.debug_logs, "")
+            self.assertEqual(result.output_id, "success")
+            self.assertListEqual(result.output_data["signals_received"], [1, 2, 3])
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
@@ -228,21 +229,21 @@ class ATPTest(unittest.TestCase):
             client.send_signal(step_b_id, "record_value",
                                {"final": "true", "value": "2"},
                                )
-            b_run_id, b_output_id, b_output_data, b_debug_logs = client.read_single_result()
+            step_b_result = client.read_single_result()
 
             client.send_signal(step_a_id, "record_value",
                                {"final": "true", "value": "3"},
                                )
-            a_run_id, a_output_id, a_output_data, a_debug_logs = client.read_single_result()
+            step_a_result = client.read_single_result()
             client.send_client_done()
-            self.assertEqual(a_run_id, step_a_id, "Expected 'a' run ID")
-            self.assertEqual(b_run_id, step_b_id, "Expected 'b' run ID")
-            self.assertEqual(b_debug_logs, "")
-            self.assertEqual(b_debug_logs, "")
-            self.assertEqual(a_output_id, "success")
-            self.assertEqual(b_output_id, "success")
-            self.assertListEqual(a_output_data["signals_received"], [1, 3])
-            self.assertListEqual(b_output_data["signals_received"], [2])
+            self.assertEqual(step_a_result.run_id, step_a_id, "Expected 'a' run ID")
+            self.assertEqual(step_b_result.run_id, step_b_id, "Expected 'b' run ID")
+            self.assertEqual(step_b_result.debug_logs, "")
+            self.assertEqual(step_a_result.debug_logs, "")
+            self.assertEqual(step_a_result.output_id, "success")
+            self.assertEqual(step_b_result.output_id, "success")
+            self.assertListEqual(step_a_result.output_data["signals_received"], [1, 3])
+            self.assertListEqual(step_b_result.output_data["signals_received"], [2])
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
@@ -265,7 +266,7 @@ class ATPTest(unittest.TestCase):
             client.send_client_done()
             self.assertIn("abcde", str(context.exception))
         finally:
-            self._cleanup(pid, stdin_writer, stdout_reader)
+            self._cleanup(pid, stdin_writer, stdout_reader, True)
 
     def test_wrong_step(self):
         """
@@ -285,7 +286,7 @@ class ATPTest(unittest.TestCase):
             client.send_client_done()
             self.assertIn("No such step: WRONG", str(context.exception))
         finally:
-            self._cleanup(pid, stdin_writer, stdout_reader)
+            self._cleanup(pid, stdin_writer, stdout_reader, True)
 
     def test_invalid_runtime_message_id(self):
         """
@@ -305,7 +306,7 @@ class ATPTest(unittest.TestCase):
             client.send_client_done()
             self.assertIn("Unknown runtime message ID: 1000", str(context.exception))
         finally:
-            self._cleanup(pid, stdin_writer, stdout_reader)
+            self._cleanup(pid, stdin_writer, stdout_reader, True)
 
     def test_error_in_signal(self):
         pid, stdin_writer, stdout_reader = self._execute_plugin(test_signals_schema)
@@ -328,11 +329,11 @@ class ATPTest(unittest.TestCase):
             client.send_signal(self.id(), "record_value",
                                {"final": "false", "value": "-1"},
                                )
-            run_id, output_id, output_data, debug_logs = client.read_single_result()
-            self.assertEqual(run_id, self.id())
-            self.assertEqual(debug_logs, "")
-            self.assertEqual(output_id, "success")
-            self.assertListEqual(output_data["signals_received"], [1])
+            result = client.read_single_result()
+            self.assertEqual(result.run_id, self.id())
+            self.assertEqual(result.debug_logs, "")
+            self.assertEqual(result.output_id, "success")
+            self.assertListEqual(result.output_data["signals_received"], [1])
 
             # Note: The exception is raised after the step finishes in the test class
             with self.assertRaises(atp.PluginClientStateException) as context:
@@ -341,7 +342,8 @@ class ATPTest(unittest.TestCase):
             self.assertIn("Value below zero.", str(context.exception))
 
         finally:
-            self._cleanup(pid, stdin_writer, stdout_reader)
+            self._cleanup(pid, stdin_writer, stdout_reader, True)
+
 
 if __name__ == "__main__":
     unittest.main()

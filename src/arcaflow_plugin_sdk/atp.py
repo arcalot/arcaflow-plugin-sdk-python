@@ -74,13 +74,13 @@ class ATPServer:
     input_pipe: io.FileIO
     output_pipe: io.FileIO
     stderr: io.FileIO
-    step_ids: typing.Dict[str, str] = {} # Run ID to step IDs
-    encoder: cbor2.encoder
-    decoder: cbor2.decoder
+    step_ids: typing.Dict[str, str]  # Run ID to step IDs
+    encoder: cbor2.CBOREncoder
+    decoder: cbor2.CBOREncoder
     user_out_buffer: io.StringIO
-    encoder_lock = threading.Lock()
+    encoder_lock: threading.Lock
     plugin_schema: schema.SchemaType
-    running_threads: typing.List[threading.Thread] = []
+    running_threads: typing.List[threading.Thread]
 
     def __init__(
             self,
@@ -91,6 +91,9 @@ class ATPServer:
         self.input_pipe = input_pipe
         self.output_pipe = output_pipe
         self.stderr = stderr
+        self.step_ids = {}
+        self.encoder_lock = threading.Lock()
+        self.running_threads = []
 
     def run_plugin(
         self,
@@ -103,8 +106,8 @@ class ATPServer:
         if os.isatty(self.output_pipe.fileno()):
             print("Cannot run plugin in ATP mode on an interactive terminal.")
             return 1
-        self.decoder = cbor2.decoder.CBORDecoder(self.input_pipe)
-        self.encoder = cbor2.encoder.CBOREncoder(self.output_pipe)
+        self.decoder = cbor2.CBORDecoder(self.input_pipe)
+        self.encoder = cbor2.CBOREncoder(self.output_pipe)
         self.plugin_schema = plugin_schema
         self.handle_handshake()
 
@@ -115,10 +118,8 @@ class ATPServer:
         sys.stdout = self.user_out_buffer
         sys.stderr = self.user_out_buffer
 
-        # Run the read loop
-        read_thread = threading.Thread(target=self.run_server_read_loop, args=())
-        read_thread.start()
-        read_thread.join()  # Wait for the read thread to finish.
+        # Run the read loop. This blocks to wait for the loop to finish.
+        self.run_server_read_loop()
         # Wait for the step/signal threads to finish. If it gets stuck here then there is another thread blocked.
         for thread in self.running_threads:
             thread.join()
@@ -143,40 +144,43 @@ class ATPServer:
             while True:
                 # Decode the message
                 runtime_msg = self.decoder.decode()
-                msg_id = runtime_msg["id"]
-                run_id = runtime_msg["run_id"]
+                msg_id = runtime_msg.get("id", None)
                 # Validate
                 if msg_id is None:
-                    self.stderr.write("Runtime message is missing the 'id' field.")
+                    self.send_error_message("", step_fatal=False, server_fatal=True,
+                                            error_msg="Runtime message is missing the 'id' field.")
                     return
+                run_id = runtime_msg["run_id"]
                 # Then take action
                 if msg_id == MessageType.WORK_START:
                     work_start_msg = runtime_msg["data"]
                     try:
                         self.handle_work_start(run_id, work_start_msg)
                     except Exception as e:
-                        self.send_error_message(run_id, True, False,
-                                                f"Exception while handling work start: {e} {traceback.format_exc()}")
+                        self.send_error_message(run_id, step_fatal=True, server_fatal=False,
+                                                error_msg="Exception while handling work start: "
+                                                f"{e} {traceback.format_exc()}")
                 elif msg_id == MessageType.SIGNAL:
                     signal_msg = runtime_msg["data"]
                     try:
                         self.handle_signal(run_id, signal_msg)
                     except Exception as e:
-                        self.send_error_message(run_id, False, False,
-                                                f"Exception while handling signal: {e} {traceback.format_exc()}")
+                        self.send_error_message(run_id, step_fatal=False, server_fatal=False,
+                                                error_msg=f"Exception while handling signal: {e} {traceback.format_exc()}")
                 elif msg_id == MessageType.CLIENT_DONE:
                     return
                 else:
-                    self.send_error_message(run_id, False, False, f"Unknown runtime message ID: {msg_id}")
+                    self.send_error_message(run_id, step_fatal=False, server_fatal=False,
+                                            error_msg=f"Unknown runtime message ID: {msg_id}")
                     self.stderr.write(f"Unknown kind of runtime message: {msg_id}")
 
         except cbor2.CBORDecodeError as err:
             self.stderr.write(f"Error while decoding CBOR: {err}")
-            self.send_error_message("", False, True,
-                                    f"Error occurred while decoding CBOR: {err} {traceback.format_exc()}")
+            self.send_error_message("", step_fatal=False, server_fatal=True,
+                                    error_msg=f"Error occurred while decoding CBOR: {err} {traceback.format_exc()}")
         except Exception as e:
-            self.send_error_message("", False, True,
-                                    f"Exception occurred in ATP server read loop: {e} {traceback.format_exc()}")
+            self.send_error_message("", step_fatal=False, server_fatal=True,
+                                    error_msg=f"Exception occurred in ATP server read loop: {e} {traceback.format_exc()}")
 
     def handle_signal(self, run_id, signal_msg):
         saved_step_id = self.step_ids[run_id]
@@ -197,38 +201,45 @@ class ATPServer:
         try:
             self.plugin_schema.call_step_signal(run_id, step_id, signal_id, unserialized_input_param)
         except Exception as e:
-            self.send_error_message(run_id, False, False,
-                                    f"Error while calling signal for step with run ID {run_id}: {e} "
+            self.send_error_message(run_id, step_fatal=False, server_fatal=False,
+                                    error_msg=f"Error while calling signal for step with run ID {run_id}: {e} "
                                     f"{traceback.format_exc()}"
                                     )
 
     def handle_work_start(self, run_id: str, work_start_msg: typing.Dict[str, any]):
         if work_start_msg is None:
-            self.send_error_message(run_id, True, False,
-                                    "Work start message is None.")
+            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
+                                    error_msg="Work start message is None.")
             return
         if "id" not in work_start_msg:
-            self.send_error_message(run_id, True, False,
-                                    "Work start message is missing the 'id' field.")
+            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
+                                    error_msg="Work start message is missing the 'id' field.")
             return
         if "config" not in work_start_msg:
-            self.send_error_message(run_id, True, False,
-                                    "Work start message is missing the 'config' field.")
+            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
+                                    error_msg="Work start message is missing the 'config' field.")
             return
         # Save for later
         self.step_ids[run_id] = work_start_msg["id"]
 
         # Now run the step, so start in a new thread
-        run_thread = threading.Thread(target=self.start_step, args=(run_id, work_start_msg))
+        run_thread = threading.Thread(
+            target=self.start_step,
+            args=(
+                run_id,
+                work_start_msg["id"],
+                work_start_msg["config"],
+            )
+        )
         self.running_threads.append(run_thread)  # Save so that we can join with it at the end.
         run_thread.start()
 
-    def start_step(self, run_id: str, work_start_msg: any):
+    def start_step(self, run_id: str, step_id: str, config: typing.Any):
         try:
             output_id, output_data = self.plugin_schema.call_step(
                 run_id,
-                work_start_msg["id"],
-                self.plugin_schema.unserialize_step_input(work_start_msg["id"], work_start_msg["config"])
+                step_id,
+                self.plugin_schema.unserialize_step_input(step_id, config)
             )
 
             # Send WorkDoneMessage
@@ -238,14 +249,14 @@ class ATPServer:
                 {
                     "output_id": output_id,
                     "output_data": self.plugin_schema.serialize_output(
-                        work_start_msg["id"], output_id, output_data
+                        step_id, output_id, output_data
                     ),
                     "debug_logs": self.user_out_buffer.getvalue(),
                 },
             )
         except Exception as e:
-            self.send_error_message(run_id, True, False,
-                                    f"Error while calling step {run_id}/{work_start_msg.get('id', 'missing')}:"
+            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
+                                    error_msg=f"Error while calling step {run_id}/{step_id}:"
                                     f"{e} {traceback.format_exc()}")
             return
 
@@ -289,6 +300,14 @@ class PluginClientStateException(Exception):
         return self.msg
 
 
+@dataclasses.dataclass
+class StepResult():
+    run_id: str
+    output_id: str
+    output_data: any
+    debug_logs: str
+
+
 class PluginClient:
     """
     This is a rudimentary client that reads information from a plugin and starts work on the plugin. The functions
@@ -297,7 +316,7 @@ class PluginClient:
 
     to_server_pipe: io.FileIO  # Usually the stdin of the sub-process
     to_client_pipe: io.FileIO  # Usually the stdout of the sub-process
-    decoder: cbor2.decoder.CBORDecoder
+    decoder: cbor2.CBORDecoder
 
     def __init__(
         self,
@@ -306,8 +325,8 @@ class PluginClient:
     ):
         self.to_server_pipe = to_server_pipe
         self.to_client_pipe = to_client_pipe
-        self.decoder = cbor2.decoder.CBORDecoder(to_client_pipe)
-        self.encoder = cbor2.encoder.CBOREncoder(to_server_pipe)
+        self.decoder = cbor2.CBORDecoder(to_client_pipe)
+        self.encoder = cbor2.CBOREncoder(to_server_pipe)
 
     def start_output(self) -> None:
         self.encoder.encode(None)
@@ -339,14 +358,14 @@ class PluginClient:
         self.send_runtime_message(
             MessageType.SIGNAL,
             run_id,
-        {
+            {
                 "signal_id": signal_id,
                 "data": input_data,
             }
         )
 
     def send_client_done(self):
-        self.send_runtime_message(MessageType.CLIENT_DONE, "", "")
+        self.send_runtime_message(MessageType.CLIENT_DONE, "", {})
 
     def send_runtime_message(self, message_type: MessageType, run_id: str, data: any):
         self.encoder.encode(
@@ -358,9 +377,9 @@ class PluginClient:
         )
         self.to_server_pipe.flush()
 
-    def read_single_result(self) -> (str, str, any, str):
+    def read_single_result(self) -> StepResult:
         """
-        This function reads the next signal or result of an execution from the plugin.
+        This function reads until it gets the next result of an execution from the plugin, or an error.
         """
         while True:
             runtime_msg = self.decoder.decode()
@@ -379,7 +398,12 @@ class PluginClient:
                     raise PluginClientStateException(
                         "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
                     )
-                return runtime_msg["run_id"], signal_msg["output_id"], signal_msg["output_data"], signal_msg["debug_logs"]
+                return StepResult(
+                    run_id=runtime_msg["run_id"],
+                    output_id=signal_msg["output_id"],
+                    output_data=signal_msg["output_data"],
+                    debug_logs=signal_msg["debug_logs"],
+                )
             elif msg_id == MessageType.SIGNAL:
                 # Do nothing. Should change in the future.
                 continue

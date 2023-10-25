@@ -5587,6 +5587,7 @@ class SignalHandlerType(SignalSchema):
 
 step_object_constructor_param = Callable[[], StepObjectT]
 
+
 class _StepLocalData:
     """
     Data associated with a single step, including the constructed object,
@@ -5600,6 +5601,7 @@ class _StepLocalData:
     def __init__(self, initialized_object: StepObjectT):
         self.initialized_object = initialized_object
 
+
 class StepType(StepSchema):
     """
     StepSchema describes the schema for a single step. The input is always one ObjectType, while there are multiple
@@ -5612,9 +5614,9 @@ class StepType(StepSchema):
     outputs: Dict[ID_TYPE, StepOutputType]
     signal_handler_method_names: List[str]
     signal_handlers: Dict[ID_TYPE, SignalHandlerType]
-    signal_emitters: Dict[ID_TYPE, SignalSchema]
-    initialized_object_data: Dict[str, _StepLocalData] = {}  # Maps run_id to data
-    initialization_lock: threading.Lock = threading.Lock()
+    signal_emitters: Optional[Dict[ID_TYPE, SignalSchema]]
+    initialized_object_data: Dict[str, _StepLocalData]  # Maps run_id to data
+    initialization_lock: threading.Lock
 
     def __init__(
         self,
@@ -5624,13 +5626,17 @@ class StepType(StepSchema):
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
         signal_handler_method_names: List[str],
-        signal_emitters: Dict[ID_TYPE, SignalSchema] = None,
+        signal_emitters: Optional[Dict[ID_TYPE, SignalSchema]] = None,
         display: Optional[DisplayValue] = None,
     ):
         super().__init__(id, input, outputs, signal_handlers=None, signal_emitters=signal_emitters, display=display)
         self._handler = handler
         self._step_object_constructor = step_object_constructor
         self.signal_handler_method_names = signal_handler_method_names
+        self.initialized_object_data = {}
+        self.signal_emitters = signal_emitters
+        self.display = display
+        self.initialization_lock = threading.Lock()
 
     def setup_run_data(self, run_id: str):
         with self.initialization_lock:

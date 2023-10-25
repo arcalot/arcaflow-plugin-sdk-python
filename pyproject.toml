@@ -19,7 +19,7 @@ homepage = "https://github.com/arcalot/arcaflow-plugin-sdk-python"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-cbor2 = "^5.4.3"
+cbor2 = "^5.5.0"
 PyYAML = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
