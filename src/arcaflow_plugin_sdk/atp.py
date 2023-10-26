@@ -36,6 +36,7 @@ class MessageType(IntEnum):
     in the data field. The corresponding class can then be used to deserialize
     the inner data. Look at the go SDK for the reference data structure.
     """
+
     WORK_START = 1
     WORK_DONE = 2
     SIGNAL = 3
@@ -81,10 +82,10 @@ class ATPServer:
     running_threads: typing.List[threading.Thread]
 
     def __init__(
-            self,
-            input_pipe: io.FileIO,
-            output_pipe: io.FileIO,
-            stderr: io.FileIO,
+        self,
+        input_pipe: io.FileIO,
+        output_pipe: io.FileIO,
+        stderr: io.FileIO,
     ) -> None:
         self.input_pipe = input_pipe
         self.output_pipe = output_pipe
@@ -100,7 +101,9 @@ class ATPServer:
         """
         This function wraps running a plugin.
         """
-        signal.signal(signal.SIGINT, signal.SIG_IGN)  # Ignore sigint. Only care about arcaflow signals.
+        signal.signal(
+            signal.SIGINT, signal.SIG_IGN
+        )  # Ignore sigint. Only care about arcaflow signals.
         if os.isatty(self.output_pipe.fileno()):
             print("Cannot run plugin in ATP mode on an interactive terminal.")
             return 1
@@ -133,8 +136,12 @@ class ATPServer:
         self.decoder.decode()
 
         # Serialize then send HelloMessage
-        start_hello_message = HelloMessage(ATP_SERVER_VERSION, self.plugin_schema)
-        serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(start_hello_message)
+        start_hello_message = HelloMessage(
+            ATP_SERVER_VERSION, self.plugin_schema
+        )
+        serialized_message = _HELLO_MESSAGE_SCHEMA.serialize(
+            start_hello_message
+        )
         self.send_message(serialized_message)
 
     def run_server_read_loop(self) -> None:
@@ -145,8 +152,12 @@ class ATPServer:
                 msg_id = runtime_msg.get("id", None)
                 # Validate
                 if msg_id is None:
-                    self.send_error_message("", step_fatal=False, server_fatal=True,
-                                            error_msg="Runtime message is missing the 'id' field.")
+                    self.send_error_message(
+                        "",
+                        step_fatal=False,
+                        server_fatal=True,
+                        error_msg="Runtime message is missing the 'id' field.",
+                    )
                     return
                 run_id = runtime_msg["run_id"]
                 # Then take action
@@ -155,67 +166,121 @@ class ATPServer:
                     try:
                         self.handle_work_start(run_id, work_start_msg)
                     except Exception as e:
-                        self.send_error_message(run_id, step_fatal=True, server_fatal=False,
-                                                error_msg="Exception while handling work start: "
-                                                f"{e} {traceback.format_exc()}")
+                        self.send_error_message(
+                            run_id,
+                            step_fatal=True,
+                            server_fatal=False,
+                            error_msg="Exception while handling work start: "
+                            f"{e} {traceback.format_exc()}",
+                        )
                 elif msg_id == MessageType.SIGNAL:
                     signal_msg = runtime_msg["data"]
                     try:
                         self.handle_signal(run_id, signal_msg)
                     except Exception as e:
-                        self.send_error_message(run_id, step_fatal=False, server_fatal=False,
-                                                error_msg=f"Exception while handling signal: {e} {traceback.format_exc()}")
+                        self.send_error_message(
+                            run_id,
+                            step_fatal=False,
+                            server_fatal=False,
+                            error_msg=f"Exception while handling signal: {e} {traceback.format_exc()}",
+                        )
                 elif msg_id == MessageType.CLIENT_DONE:
                     return
                 else:
-                    self.send_error_message(run_id, step_fatal=False, server_fatal=False,
-                                            error_msg=f"Unknown runtime message ID: {msg_id}")
-                    self.stderr.write(f"Unknown kind of runtime message: {msg_id}")
+                    self.send_error_message(
+                        run_id,
+                        step_fatal=False,
+                        server_fatal=False,
+                        error_msg=f"Unknown runtime message ID: {msg_id}",
+                    )
+                    self.stderr.write(
+                        f"Unknown kind of runtime message: {msg_id}"
+                    )
 
         except cbor2.CBORDecodeError as err:
             self.stderr.write(f"Error while decoding CBOR: {err}")
-            self.send_error_message("", step_fatal=False, server_fatal=True,
-                                    error_msg=f"Error occurred while decoding CBOR: {err} {traceback.format_exc()}")
+            self.send_error_message(
+                "",
+                step_fatal=False,
+                server_fatal=True,
+                error_msg=f"Error occurred while decoding CBOR: {err} {traceback.format_exc()}",
+            )
         except Exception as e:
-            self.send_error_message("", step_fatal=False, server_fatal=True,
-                                    error_msg=f"Exception occurred in ATP server read loop: {e} {traceback.format_exc()}")
+            self.send_error_message(
+                "",
+                step_fatal=False,
+                server_fatal=True,
+                error_msg=f"Exception occurred in ATP server read loop: {e} {traceback.format_exc()}",
+            )
 
     def handle_signal(self, run_id, signal_msg):
         saved_step_id = self.step_ids[run_id]
         received_signal_id = signal_msg["signal_id"]
 
-        unserialized_data = self.plugin_schema.unserialize_signal_handler_input(
-            saved_step_id,
-            received_signal_id,
-            signal_msg["data"]
+        unserialized_data = (
+            self.plugin_schema.unserialize_signal_handler_input(
+                saved_step_id, received_signal_id, signal_msg["data"]
+            )
         )
         # The data is verified and unserialized. Now call the signal in its own thread.
-        run_thread = threading.Thread(target=self.run_signal,
-                                      args=(run_id, saved_step_id, received_signal_id, unserialized_data))
+        run_thread = threading.Thread(
+            target=self.run_signal,
+            args=(
+                run_id,
+                saved_step_id,
+                received_signal_id,
+                unserialized_data,
+            ),
+        )
         self.running_threads.append(run_thread)
         run_thread.start()
 
-    def run_signal(self, run_id: str, step_id: str, signal_id: str, unserialized_input_param: any):
+    def run_signal(
+        self,
+        run_id: str,
+        step_id: str,
+        signal_id: str,
+        unserialized_input_param: any,
+    ):
         try:
-            self.plugin_schema.call_step_signal(run_id, step_id, signal_id, unserialized_input_param)
+            self.plugin_schema.call_step_signal(
+                run_id, step_id, signal_id, unserialized_input_param
+            )
         except Exception as e:
-            self.send_error_message(run_id, step_fatal=False, server_fatal=False,
-                                    error_msg=f"Error while calling signal for step with run ID {run_id}: {e} "
-                                    f"{traceback.format_exc()}"
-                                    )
+            self.send_error_message(
+                run_id,
+                step_fatal=False,
+                server_fatal=False,
+                error_msg=f"Error while calling signal for step with run ID {run_id}: {e} "
+                f"{traceback.format_exc()}",
+            )
 
-    def handle_work_start(self, run_id: str, work_start_msg: typing.Dict[str, any]):
+    def handle_work_start(
+        self, run_id: str, work_start_msg: typing.Dict[str, any]
+    ):
         if work_start_msg is None:
-            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
-                                    error_msg="Work start message is None.")
+            self.send_error_message(
+                run_id,
+                step_fatal=True,
+                server_fatal=False,
+                error_msg="Work start message is None.",
+            )
             return
         if "id" not in work_start_msg:
-            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
-                                    error_msg="Work start message is missing the 'id' field.")
+            self.send_error_message(
+                run_id,
+                step_fatal=True,
+                server_fatal=False,
+                error_msg="Work start message is missing the 'id' field.",
+            )
             return
         if "config" not in work_start_msg:
-            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
-                                    error_msg="Work start message is missing the 'config' field.")
+            self.send_error_message(
+                run_id,
+                step_fatal=True,
+                server_fatal=False,
+                error_msg="Work start message is missing the 'config' field.",
+            )
             return
         # Save for later
         self.step_ids[run_id] = work_start_msg["id"]
@@ -227,9 +292,11 @@ class ATPServer:
                 run_id,
                 work_start_msg["id"],
                 work_start_msg["config"],
-            )
+            ),
         )
-        self.running_threads.append(run_thread)  # Save so that we can join with it at the end.
+        self.running_threads.append(
+            run_thread
+        )  # Save so that we can join with it at the end.
         run_thread.start()
 
     def start_step(self, run_id: str, step_id: str, config: typing.Any):
@@ -237,7 +304,7 @@ class ATPServer:
             output_id, output_data = self.plugin_schema.call_step(
                 run_id,
                 step_id,
-                self.plugin_schema.unserialize_step_input(step_id, config)
+                self.plugin_schema.unserialize_step_input(step_id, config),
             )
 
             # Send WorkDoneMessage
@@ -253,9 +320,13 @@ class ATPServer:
                 },
             )
         except Exception as e:
-            self.send_error_message(run_id, step_fatal=True, server_fatal=False,
-                                    error_msg=f"Error while calling step {run_id}/{step_id}:"
-                                    f"{e} {traceback.format_exc()}")
+            self.send_error_message(
+                run_id,
+                step_fatal=True,
+                server_fatal=False,
+                error_msg=f"Error while calling step {run_id}/{step_id}:"
+                f"{e} {traceback.format_exc()}",
+            )
             return
 
     def send_message(self, data: any):
@@ -263,7 +334,9 @@ class ATPServer:
             self.encoder.encode(data)
             self.output_pipe.flush()  # Sends it to the ATP client immediately.
 
-    def send_runtime_message(self, message_type: MessageType, run_id: str, data: any):
+    def send_runtime_message(
+        self, message_type: MessageType, run_id: str, data: any
+    ):
         self.send_message(
             {
                 "id": message_type,
@@ -272,7 +345,9 @@ class ATPServer:
             }
         )
 
-    def send_error_message(self, run_id: str, step_fatal: bool, server_fatal: bool, error_msg: str):
+    def send_error_message(
+        self, run_id: str, step_fatal: bool, server_fatal: bool, error_msg: str
+    ):
         self.send_runtime_message(
             MessageType.ERROR,
             run_id,
@@ -346,7 +421,7 @@ class PluginClient:
             {
                 "id": step_id,
                 "config": config,
-            }
+            },
         )
 
     def send_signal(self, run_id: str, signal_id: str, input_data: any):
@@ -359,13 +434,15 @@ class PluginClient:
             {
                 "signal_id": signal_id,
                 "data": input_data,
-            }
+            },
         )
 
     def send_client_done(self):
         self.send_runtime_message(MessageType.CLIENT_DONE, "", {})
 
-    def send_runtime_message(self, message_type: MessageType, run_id: str, data: any):
+    def send_runtime_message(
+        self, message_type: MessageType, run_id: str, data: any
+    ):
         self.encoder.encode(
             {
                 "id": message_type,
@@ -407,7 +484,8 @@ class PluginClient:
                 continue
             elif msg_id == MessageType.ERROR:
                 raise PluginClientStateException(
-                    "Error received from ATP Server (plugin): " + str(runtime_msg['data']).replace('\\n', '\n')
+                    "Error received from ATP Server (plugin): "
+                    + str(runtime_msg["data"]).replace("\\n", "\n")
                 )
             else:
                 raise PluginClientStateException(

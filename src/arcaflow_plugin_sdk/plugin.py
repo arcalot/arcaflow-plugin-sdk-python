@@ -45,7 +45,9 @@ def signal_handler(
     :return: A schema for the signal.
     """
 
-    def signal_decorator(func: _step_decorator_param) -> schema.SignalHandlerType:
+    def signal_decorator(
+        func: _step_decorator_param,
+    ) -> schema.SignalHandlerType:
         if id == "":
             raise BadArgumentException("Signals cannot have empty IDs")
         if name == "":
@@ -53,8 +55,8 @@ def signal_handler(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %s" %
-                (name, id, str(sig.parameters))
+                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %s"
+                % (name, id, str(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
@@ -107,6 +109,7 @@ def step_with_signals(
     :param icon: SVG icon for this step.
     :return: A schema for the step.
     """
+
     def step_decorator(func: _step_object_decorator_param) -> schema.StepType:
         if id == "":
             raise BadArgumentException("Steps cannot have an empty ID")
@@ -115,8 +118,8 @@ def step_with_signals(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) step must have exactly two parameters, including self. Currently has %d" %
-                (name, id, len(sig.parameters))
+                "The '%s' (id: %s) step must have exactly two parameters, including self. Currently has %d"
+                % (name, id, len(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
@@ -186,7 +189,8 @@ def step(
         sig = inspect.signature(func)
         if len(sig.parameters) != 1:
             raise BadArgumentException(
-                "The '%s' (id: %s) step must have exactly one parameter: step input object" % (name, id)
+                "The '%s' (id: %s) step must have exactly one parameter: step input object"
+                % (name, id)
             )
         input_param = list(sig.parameters.values())[0]
         if input_param.annotation is inspect.Parameter.empty:
@@ -317,13 +321,17 @@ def run(
         if options.json_schema is not None:
             if action is not None:
                 raise _ExitException(
-                    64, "--{} and --json-schema cannot be used together".format(action)
+                    64,
+                    "--{} and --json-schema cannot be used together".format(
+                        action
+                    ),
                 )
             action = "json-schema"
         if options.schema is not None:
             if action is not None:
                 raise _ExitException(
-                    64, "--{} and --schema cannot be used together".format(action)
+                    64,
+                    "--{} and --schema cannot be used together".format(action),
                 )
             action = "schema"
         if options.atp is not None:
@@ -355,7 +363,10 @@ def run(
             return _execute_file(step_id, s, options, stdin, stdout, stderr)
         elif action == "atp":
             from arcaflow_plugin_sdk import atp
-            atp_server = atp.ATPServer(stdin.buffer, stdout.buffer, stdout.buffer)
+
+            atp_server = atp.ATPServer(
+                stdin.buffer, stdout.buffer, stdout.buffer
+            )
             return atp_server.run_plugin(s)
         elif action == "json-schema":
             return _print_json_schema(step_id, s, options, stdout)
@@ -487,14 +498,18 @@ def _print_json_schema(step_id, s, options, stdout):
     if step_id not in s.steps:
         raise _ExitException(
             64,
-            'Unknown step "{}". Steps: {}'.format(step_id, str(list(s.steps.keys()))),
+            'Unknown step "{}". Steps: {}'.format(
+                step_id, str(list(s.steps.keys()))
+            ),
         )
     if options.json_schema == "input":
         data = jsonschema.step_input(s.steps[step_id])
     elif options.json_schema == "output":
         data = jsonschema.step_outputs(s.steps[step_id])
     else:
-        raise _ExitException(64, "--json-schema must be one of 'input' or 'output'")
+        raise _ExitException(
+            64, "--json-schema must be one of 'input' or 'output'"
+        )
     stdout.write(json.dumps(data, indent="  "))
     return 0
 
