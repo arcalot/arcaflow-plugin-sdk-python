@@ -6874,8 +6874,7 @@ def test_object_serialization(
 
     :param dc: the dataclass to use for tests.
     :param t: the schema for the dataclass. If none is passed, the schema is
-        built automatically using
-              ``schema.build_object_schema()``
+        built automatically using ``schema.build_object_schema()``
     """
     try:
         if t is None:
