@@ -33,7 +33,7 @@ jobs:
       - name: Check import order (isort)
         run: isort --check --profile black --line-length 79 .
       - name: Check docstring formatting
-        run: docformatter --check --recursive --black --docstring-length 1 79 --wrap-descriptions 79 --wrap-summaries 79 .
+        run: docformatter --check --recursive --black --wrap-descriptions 79 --wrap-summaries 79 .
       - name: Check style
         run: black --check --line-length 79 .
       - name: Error linting
