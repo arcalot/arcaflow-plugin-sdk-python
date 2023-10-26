@@ -27,8 +27,8 @@ class ExamplePluginTest(unittest.TestCase):
             name=example_plugin.FullName("Arca", "Lot")
         )
 
-        # Note: The call to hello_world is to the output of the decorator, not the function itself.
-        # So it's calling the StepType
+        # Note: The call to hello_world is to the output of the decorator, not
+        # the function itself, so it's calling the StepType
         output_id, output_data = example_plugin.hello_world(
             self.id(), step_input
         )

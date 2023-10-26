@@ -433,12 +433,13 @@ def build_schema(*args: schema.StepType) -> schema.SchemaType:
 
     >>> plugin_schema("hello-world", {"name": "Arca Lot"})
     ('success', {'message': 'Hello, Arca Lot!'})
-    """
+    """  # noqa: E501
     steps_by_id: Dict[str, schema.StepType] = {}
     for step in args:
         if step.id in steps_by_id:
             raise BadArgumentException("Duplicate step ID %s" % step.id)
-        step.inspect_methods()  # Allows it to retrieve the signal schemas from their method names
+        # Allows it to retrieve the signal schemas from their method names
+        step.inspect_methods()
         steps_by_id[step.id] = step
     return schema.SchemaType(steps_by_id)
 

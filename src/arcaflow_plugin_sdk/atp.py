@@ -110,7 +110,8 @@ class ATPServer:
         self.plugin_schema = plugin_schema
         self.handle_handshake()
 
-        # First replace stdout so that prints are handled by us, instead of potentially interfering with the atp pipes.
+        # First replace stdout so that prints are handled by us, instead of
+        # potentially interfering with the atp pipes.
         original_stdout = sys.stdout
         original_stderr = sys.stderr
         self.user_out_buffer = io.StringIO()
@@ -119,11 +120,13 @@ class ATPServer:
 
         # Run the read loop. This blocks to wait for the loop to finish.
         self.run_server_read_loop()
-        # Wait for the step/signal threads to finish. If it gets stuck here then there is another thread blocked.
+        # Wait for the step/signal threads to finish. If it gets stuck here
+        # then there is another thread blocked.
         for thread in self.running_threads:
             thread.join()
 
-        # Don't reset stdout/stderr until after the read and step/signal threads are done.
+        # Don't reset stdout/stderr until after the read and step/signal
+        # threads are done.
         sys.stdout = original_stdout
         sys.stderr = original_stderr
 
@@ -231,7 +234,8 @@ class ATPServer:
                 saved_step_id, received_signal_id, signal_msg["data"]
             )
         )
-        # The data is verified and unserialized. Now call the signal in its own thread.
+        # The data is verified and unserialized. Now call the signal in its own
+        # thread.
         run_thread = threading.Thread(
             target=self.run_signal,
             args=(

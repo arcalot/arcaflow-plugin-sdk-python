@@ -62,7 +62,7 @@ Schema schemas
 This region holds two variables, ``SCOPE_SCHEMA`` and ``SCHEMA_SCHEMA``. You can use these variables to work with
 schemas themselves. For example, you can create a client that calls Arcaflow plugins and use these classes to
 unserialize schemas that the plugins send.
-"""
+"""  # noqa: E501
 import collections
 import dataclasses
 import enum
@@ -347,7 +347,7 @@ def description(description: str):
 
     :param description: The description to apply
     :return: Callable
-    """
+    """  # noqa: E501
 
     def call(t):
         t.__description = description
@@ -569,7 +569,7 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
     >>> unserialized_data = s.unserialize({"some_field": {"foo": "A", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
-    """
+    """  # noqa: E501
 
     def call(t):
         """:param typing.Union[OneOfStringSchema, OneOfIntSchema] t:
@@ -664,7 +664,7 @@ def discriminator_value(
     >>> unserialized_data = s.unserialize({"some_field": {"_type": "Foo", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
-    """
+    """  # noqa: E501
 
     def call(t):
         if (
@@ -738,7 +738,7 @@ def min(param: typing.Union[int, float]) -> Validator:
     >>> unserialized_data = s.unserialize({"some_field": 42})
     >>> unserialized_data.some_field
     42
-    """
+    """  # noqa: E501
 
     def call(t):
         effective_t = t
@@ -799,7 +799,7 @@ most 5
     >>> unserialized_data = s.unserialize({"some_field": 4})
     >>> unserialized_data.some_field
     4
-    """
+    """  # noqa: E501
 
     def call(t):
         """:param typing.Union[IntSchema, FloatSchema, StringSchema,
@@ -866,7 +866,7 @@ match the pattern ^[a-z]+$
     >>> unserialized_data = s.unserialize({"some_field": "asdf"})
     >>> unserialized_data.some_field
     'asdf'
-    """
+    """  # noqa: E501
 
     def call(t):
         """:param typing.Union[StringSchema,PropertySchema] t:
@@ -943,7 +943,7 @@ required because 'some_other_field' is set
     'bar'
     >>> unserialized_data.some_other_field
     'foo'
-    """
+    """  # noqa: E501
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
@@ -1022,7 +1022,7 @@ required because 'some_other_field' is not set
     'foo'
     >>> unserialized_data.some_field
     'bar'
-    """
+    """  # noqa: E501
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
@@ -1094,7 +1094,7 @@ conflicts 'some_other_field', set one of the two, not both
     >>> unserialized_data = s.unserialize({"some_field": "bar"})
     >>> unserialized_data.some_field
     'bar'
-    """
+    """  # noqa: E501
 
     def call(t):
         """
@@ -1282,7 +1282,7 @@ def _id_typeize(input: str) -> str:
     'Hello_world_'
     >>> _id_typeize('Hello\\nworld')
     'Hello_world'
-    """
+    """  # noqa: E501
     return re.sub(_id_type_inverse_re, "_", input)
 
 
@@ -1347,7 +1347,7 @@ class Unit:
     ...     "nanosecond",
     ...     "nanoseconds"
     ... )
-    """
+    """  # noqa: E501
 
     name_short_singular: typing.Annotated[
         str,
@@ -1786,7 +1786,7 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... })
     >>> s.valid_values()
     ['apple', 'banana', 'orange']
-    """
+    """  # noqa: E501
 
     values: typing.Annotated[
         Dict[str, DisplayValue],
@@ -1809,7 +1809,7 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         strings.
 
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
-        """
+        """  # noqa: E501
         return {"type": "string", "enum": list(self.values.keys())}
 
     def _to_openapi_fragment(
@@ -1818,7 +1818,7 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         """This method generates an OpenAPI fragment for string enums.
 
         See: https://spec.openapis.org/oas/v3.1.0#data-types
-        """
+        """  # noqa: E501
         return {"type": "string", "enum": list(self.values.keys())}
 
 
@@ -1839,7 +1839,7 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... })
     >>> s.valid_values()
     [1, 2, 3]
-    """
+    """  # noqa: E501
 
     values: typing.Annotated[
         Dict[int, DisplayValue],
@@ -1860,7 +1860,7 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         integers.
 
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
-        """
+        """  # noqa: E501
         return {"type": "integer", "enum": list(self.values.keys())}
 
     def _to_openapi_fragment(
@@ -1869,7 +1869,7 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         """This method generates an OpenAPI fragment for string enums.
 
         See: https://spec.openapis.org/oas/v3.1.0#data-types
-        """
+        """  # noqa: E501
         return {
             "type": "integer",
             "format": "int64",
@@ -1892,7 +1892,7 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=5,
     ...     pattern=re.compile("^[a-z]+$")
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[int],
@@ -1923,7 +1923,7 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         """This method generates an JSON schema fragment for strings.
 
         See: https://json-schema.org/understanding-json-schema/reference/string.html
-        """
+        """  # noqa: E501
         result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
@@ -1939,7 +1939,7 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         """This method generates an OpenAPI fragment for strings.
 
         See: https://swagger.io/docs/specification/data-models/data-types/#string
-        """
+        """  # noqa: E501
         result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
@@ -1961,7 +1961,7 @@ class PatternSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.PatternSchema()
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -1989,7 +1989,7 @@ class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=5,
     ...     units=schema.UNIT_BYTE
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[int],
@@ -2055,7 +2055,7 @@ class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=100,
     ...     units=schema.UNIT_PERCENT
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[float],
@@ -2121,7 +2121,7 @@ class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=100,
     ...     units=schema.UNIT_PERCENT
     ... )
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2208,7 +2208,7 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     min=2,
     ...     max=3,
     ... )
-    """
+    """  # noqa: E501
 
     items: typing.Annotated[
         VALUE_TYPE,
@@ -2521,7 +2521,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         if self.id in defs.defs:
             return {"$ref": "#/$defs/" + self.id}
 
-        # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
+        # Add the object in the beginning to avoid an endless loop. Properties
+        # will be filled up below
         defs.defs[self.id] = {
             "type": "object",
             "properties": {},
@@ -2550,7 +2551,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         if self.id in defs.components:
             return {"$ref": "#/components/schemas/" + self.id}
 
-        # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
+        # Add the object in the beginning to avoid an endless loop. Properties
+        # will be filled up below
         defs.components[self.id] = {
             "type": "object",
             "properties": {},
@@ -2636,7 +2638,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         )
     ...     }
     ... )
-    """
+    """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
@@ -2768,7 +2770,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-    """
+    """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
@@ -2885,7 +2887,7 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...        "a": schema.PropertySchema(ref)
     ...    }
     ... )
-    """
+    """  # noqa: E501
 
     id: typing.Annotated[
         ID_TYPE,
@@ -2919,7 +2921,7 @@ class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     Create an any schema:
 
     >>> ref = schema.AnySchema()
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2970,7 +2972,7 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...        "a": schema.PropertySchema(ref)
     ...    }
     ... )
-    """
+    """  # noqa: E501
 
     objects: typing.Annotated[
         Dict[ID_TYPE, ObjectSchema],
@@ -3061,7 +3063,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     schema.DisplayValue("Test output"),
     ...     error=False,
     ... )
-    """
+    """  # noqa: E501
 
     schema: typing.Annotated[
         ScopeSchema,
@@ -3117,7 +3119,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         'object'
         >>> json_schema["properties"]["foo"]["type"]
         'string'
-        """
+        """  # noqa: E501
         return self._to_jsonschema_fragment(self.schema, _JSONSchemaDefs())
 
     def to_openapi(self):
@@ -3160,7 +3162,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         '#/components/schemas/a'
         >>> openapi["components"]["schemas"]["a"]["properties"]["foo"]["type"]
         'string'
-        """
+        """  # noqa: E501
         return self._to_openapi_fragment(self.schema, _OpenAPIComponents())
 
     def _to_jsonschema_fragment(
@@ -3439,7 +3441,7 @@ class StringEnumType(_EnumType, StringEnumSchema):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: 'plum' is not a valid value for 'Fruits'
-    """
+    """  # noqa: E501
 
     def __init__(self, t: Type[EnumT]):
         self._type = t
@@ -3497,7 +3499,7 @@ class IntEnumType(_EnumType, IntEnumSchema):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: '4' is not a valid value for 'PrimeNumbers'
-    """
+    """  # noqa: E501
 
     def __init__(self, t: Type[EnumT]):
         self._type = t
@@ -3533,7 +3535,7 @@ class BoolType(BoolSchema, AbstractType):
     >>> bool_type = schema.BoolType()
 
     Now you can use the type to unseralize, validate, or serialize values.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -3591,7 +3593,7 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, string found ()
-        """
+        """  # noqa: E501
         if isinstance(data, bool):
             return data
         if isinstance(data, int):
@@ -3656,7 +3658,7 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, <class 'int'> found
-        """
+        """  # noqa: E501
         if not isinstance(data, bool):
             raise ConstraintException(
                 path, "Boolean value expected, {} found".format(type(data))
@@ -3690,7 +3692,7 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, <class 'int'> found
-        """
+        """  # noqa: E501
         if isinstance(data, bool):
             return data
         raise ConstraintException(
@@ -3713,7 +3715,7 @@ class StringType(StringSchema, AbstractType):
     ... )
 
     You can now unserialize, validate, or serialize the data.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -3731,7 +3733,7 @@ class StringType(StringSchema, AbstractType):
         ... )
         >>> s.unserialize(123)
         '123'
-        """
+        """  # noqa: E501
         if isinstance(data, int):
             data = str(data)
         self.validate(data, path)
@@ -3766,7 +3768,7 @@ class StringType(StringSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: String must be at most 5 characters, 6 given
-        """
+        """  # noqa: E501
         if not isinstance(data, str):
             raise ConstraintException(
                 path, "Must be a string, {} given".format(type(data))
@@ -3837,7 +3839,7 @@ class PatternType(PatternSchema, AbstractType):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Invalid regular expression (unterminated \
 character set at position 0)
-        """
+        """  # noqa: E501
         if not isinstance(data, str):
             raise ConstraintException(path, "Must be a string")
         try:
@@ -3876,7 +3878,7 @@ character set at position 0)
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Not a regular expression
-        """
+        """  # noqa: E501
         if not isinstance(data, re.Pattern):
             raise ConstraintException(path, "Not a regular expression")
 
@@ -3907,7 +3909,7 @@ class IntType(IntSchema, AbstractType):
     ... )
 
     Now you can use this type to unserialize, validate, or serialize.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -3957,7 +3959,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         if isinstance(data, str):
             if self.units is not None:
                 try:
@@ -4011,7 +4013,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         if not isinstance(data, int):
             raise ConstraintException(
                 path,
@@ -4076,7 +4078,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         self.validate(data, path)
         return data
 
@@ -4100,7 +4102,7 @@ class FloatType(FloatSchema, AbstractType):
     ... )
 
     Now you can use this type to unserialize, validate, or serialize.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -4154,7 +4156,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         if isinstance(data, str):
             if self.units is not None:
                 try:
@@ -4211,7 +4213,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         if not isinstance(data, float):
             raise ConstraintException(
                 path, "Must be an float, {} given".format(type(data).__name__)
@@ -4276,7 +4278,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         self.validate(data, path)
         return data
 
@@ -4304,7 +4306,7 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
     ... )
 
     Now you can use the list type to unserialize, validate, and serialize.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -4349,7 +4351,7 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'item 0': String must be at least 1 \
 characters, 0 given
-        """
+        """  # noqa: E501
         if not isinstance(data, list):
             raise ConstraintException(
                 path, "Must be a list, {} given".format(type(data).__name__)
@@ -4401,7 +4403,7 @@ characters, 0 given
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'item 0': String must be at least 1 \
 characters, 0 given
-        """
+        """  # noqa: E501
         self._validate(data, path)
         for i in range(len(data)):
             new_path = list(path)
@@ -4433,7 +4435,7 @@ characters, 0 given
 
         >>> list_type.serialize(["a"])
         ['a']
-        """
+        """  # noqa: E501
         self._validate(data, path)
         result = []
         for i in range(len(data)):
@@ -4486,7 +4488,7 @@ class MapType(MapSchema, AbstractType, Generic[MapT]):
     ... )
 
     Now you can use the map type to unserialize, validate, or serialize data.
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -4531,7 +4533,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         entries = self._validate(data, path)
         result: MapT = {}
         for key in entries.keys():
@@ -4592,7 +4594,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         self._validate(data, path)
         for key in data.keys():
             value = data[key]
@@ -4648,7 +4650,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         entries = self._validate(data, path)
         result = {}
         for key in entries.keys():
@@ -4729,7 +4731,7 @@ class PropertyType(PropertySchema, Generic[PropertyT]):
 
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
-    """
+    """  # noqa: E501
 
     field_override: str = ""
 
@@ -4806,7 +4808,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     StringType(min=None, max=None, pattern=None)
 
     You can now use the object_type to unserialize, validate, and serialize properties.
-    """
+    """  # noqa: E501
 
     _cls: Type[ObjectT]
     properties: Dict[str, PropertyType]
@@ -4870,8 +4872,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
 
         if len(properties) > 0:
             for property_id, property in properties.items():
-                # Determine what the field is called we are supposed to access. (This may be different from the
-                # serialized representation.)
+                # Determine what the field is called we are supposed to
+                # access. (This may be different from the serialized
+                # representation.)
                 field_id = property_id
                 if property.field_override != "":
                     field_id = property.field_override
@@ -4891,12 +4894,16 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                             "', '".join(init_type_hints.keys()),
                         )
                     )
-                # TODO in the future we should check if the data types of the constructor match with the property.
-                # This can be a source of bugs when the code assumes the data is of one type, but the actual data
-                # type is different. This is not a problem if the schema is auto-generated, but hand-written schemas
-                # can accidentally introduce this issue.
+                # TODO in the future we should check if the data types
+                # of the constructor match with the property. This can
+                # be a source of bugs when the code assumes the data is
+                # of one type, but the actual data type is different.
+                # This is not a problem if the schema is auto-generated,
+                # but hand-written schemas can accidentally introduce
+                # this issue.
                 #
-                # See: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
+                # See:
+                # https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
 
                 # Check if the property can be read:
                 if field_id not in class_type_hints:
@@ -4913,12 +4920,15 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                             "', '".join(class_type_hints.keys()),
                         )
                     )
-                # TODO in the future we should check if the data types of the properties match with the property.
-                # This can be a source of bugs when the code assumes the data is of one type, but the actual data
-                # type is different. This is not a problem if the schema is auto-generated, but hand-written schemas
-                # can accidentally introduce this issue.
+                # TODO in the future we should check if the data types of the
+                # properties match with the property. This can be a source of
+                # bugs when the code assumes the data is of one type, but the
+                # actual data type is different. This is not a problem if the
+                # schema is auto-generated, but hand-written schemas can
+                # accidentally introduce this issue.
                 #
-                # See: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
+                # See:
+                # https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
 
     @classmethod
     def _resolve_class_type_hints(
@@ -4979,7 +4989,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'TestData': Must be a dict, got str
-        """
+        """  # noqa: E501
         if not isinstance(data, dict):
             raise ConstraintException(
                 path, "Must be a dict, got {}".format(type(data).__name__)
@@ -5054,7 +5064,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'TestData -> a': String must be at least \
 1 characters, 0 given
-        """
+        """  # noqa: E501
         if not isinstance(data, self._cls):
             raise ConstraintException(
                 path,
@@ -5177,7 +5187,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         :param data: a dictionary representation of an ObjectType
         :param object_property: a property of an ObjectType
         :param path: a traversal from data to object_property
-        """
+        """  # noqa: E501
         if object_property.required:
             raise ConstraintException(path, "This field is required")
         if object_property.required_if is not None:
@@ -5217,11 +5227,10 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                     and getattr(data, required_if_not) is not None
                 ):
                     # (here, required_if_not refers to its value)
-                    # if data is a dict, has this required_if_not as a key, and the
-                    # dict value paired with this required_if_not key is not None
-                    # or
-                    # if data is an object with attribute required_if_not, and
-                    # data.required_if_not is not None
+                    # if data is a dict, has this required_if_not as a key,
+                    # and the dict value paired with this required_if_not
+                    # key is not None or if data is an object with attribute
+                    # required_if_not, and data.required_if_not is not None
                     none_set = False
                     break
             if none_set:
@@ -5618,7 +5627,7 @@ class AnyType(AnySchema, AbstractType):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Unsupported data type for 'any' type: TestClass
-    """
+    """  # noqa: E501
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -5638,7 +5647,7 @@ class AnyType(AnySchema, AbstractType):
             if len(data) != 0:
                 list_type_base = type(data[0])
                 for item in data:
-                    if type(item) is not list_type_base:
+                    if not isinstance(item, list_type_base):
                         raise ConstraintException(
                             tuple(path),
                             "non-uniform type found in list: '{}' is not of"
@@ -5731,7 +5740,8 @@ class SignalHandlerType(SignalSchema):
         signal_input: SignalDataT,
     ):
         """
-        :param step_data: The instantiated object that stores step run-specific data.
+        :param step_data: The instantiated object that stores step
+            run-specific data.
         :param params: Input data parameter for the signal handler.
         """
         input: ScopeType = self.data_schema
@@ -5823,14 +5833,17 @@ class StepType(StepSchema):
     ) -> typing.Tuple[str, StepOutputT]:
         """
         :param params: Input parameter for the step.
-        :param skip_input_validation: Do not perform input data type validation. Use at your own risk.
-        :param skip_output_validation: Do not validate returned output data. Use at your own risk.
+        :param skip_input_validation: Do not perform input data type
+            validation. Use at your own risk.
+        :param skip_output_validation: Do not validate returned output data.
+            Use at your own risk.
         :return: The ID for the output datatype, and the output itself.
         """
         # Initialize the step object
         step_local_data: _StepLocalData = self.setup_run_data(run_id)
         # Notify potentially waiting signals that the step is running
-        # Ideally, this would be done after, but just before is the only realistic option without more threads or sleep
+        # Ideally, this would be done after, but just before is the only
+        # realistic option without more threads or sleep
         step_local_data.step_running = True
         with step_local_data.step_running_condition:
             step_local_data.step_running_condition.notify_all()
@@ -5865,7 +5878,8 @@ class StepType(StepSchema):
             or self.signal_handler_method_names is None
         ):
             return
-        # Constructs an instance of the class in order to retrieve attributes from it
+        # Constructs an instance of the class in order to retrieve attributes
+        # from it
         object_instance = self._step_object_constructor()
         # Create a map to populate
         signal_handlers_map = {}
@@ -5985,7 +5999,8 @@ class SchemaType(Schema):
         local_step_data: _StepLocalData = step.setup_run_data(run_id)
         with local_step_data.step_running_condition:
             if not local_step_data.step_running:
-                # wait to be notified of it being ready. Test this by adding a sleep before the step call.
+                # wait to be notified of it being ready. Test this by adding a
+                # sleep before the step call.
                 local_step_data.step_running_condition.wait()
         return signal(
             local_step_data.initialized_object, unserialized_input_param
@@ -6765,9 +6780,8 @@ class _SchemaBuilder:
             discriminator_value = f.type.id
             if hasattr(f.type, "__discriminator_value"):
                 discriminator_value = getattr(f.type, "__discriminator_value")
-            if (
-                discriminator_type is not None
-                and type(discriminator_value) is not discriminator_type
+            if discriminator_type is not None and not isinstance(
+                discriminator_value, discriminator_type
             ):
                 raise BadArgumentException(
                     "Invalid discriminator value type: {}, the value type has"
@@ -6810,7 +6824,8 @@ def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
     unserializing responses from underlying tools into output data types.
 
     :param t: the type to build a schema for.
-    :param _skip_validation: Skip schema validation. For internal use only when constructing ``SCOPE_SCHEMA``.
+    :param _skip_validation: Skip schema validation. For internal use only
+        when constructing ``SCOPE_SCHEMA``.
     :return: the built object schema
     """
     scope = ScopeType({}, t.__name__)
@@ -6858,7 +6873,8 @@ def test_object_serialization(
     compares that the two objects are equal.
 
     :param dc: the dataclass to use for tests.
-    :param t: the schema for the dataclass. If none is passed, the schema is built automatically using
+    :param t: the schema for the dataclass. If none is passed, the schema is
+        built automatically using
               ``schema.build_object_schema()``
     """
     try:

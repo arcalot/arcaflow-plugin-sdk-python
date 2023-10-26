@@ -62,8 +62,9 @@ class SignalTestStep:
     exit_event: Event
 
     def __init__(self):
-        # Due to the way Python works, this MUST be done here, and not inlined above, or else it will be
-        # shared by all objects, resulting in a shared list and event, which would cause problems.
+        # Due to the way Python works, this MUST be done here, and not inlined
+        # above, or else it will be shared by all objects, resulting in a
+        # shared list and event, which would cause problems.
         self.signal_values = []
         self.exit_event = Event()
 
@@ -397,7 +398,8 @@ class ATPTest(unittest.TestCase):
             self.assertEqual(result.output_id, "success")
             self.assertListEqual(result.output_data["signals_received"], [1])
 
-            # Note: The exception is raised after the step finishes in the test class
+            # Note: The exception is raised after the step finishes in the test
+            # class
             with self.assertRaises(atp.PluginClientStateException) as context:
                 _, _, _, _ = client.read_single_result()
             client.send_client_done()
