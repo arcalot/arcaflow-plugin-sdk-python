@@ -76,7 +76,7 @@ class ATPServer:
     stderr: io.FileIO
     step_ids: typing.Dict[str, str]  # Run ID to step IDs
     encoder: cbor2.CBOREncoder
-    decoder: cbor2.CBOREncoder
+    decoder: cbor2.CBORDecoder
     user_out_buffer: io.StringIO
     encoder_lock: threading.Lock
     plugin_schema: schema.SchemaType
@@ -301,7 +301,7 @@ class PluginClientStateException(Exception):
 
 
 @dataclasses.dataclass
-class StepResult():
+class StepResult:
     run_id: str
     output_id: str
     output_data: any
