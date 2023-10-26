@@ -1,7 +1,7 @@
-"""
-The Arcaflow Transport Protocol is a protocol to communicate between the Engine and a plugin. This library provides
-the services to do so. The main use-case is running over STDIO, so the communication protocol is designed to run 1:1,
-it is not possible to use multiple clients (engines) with a plugin.
+"""The Arcaflow Transport Protocol is a protocol to communicate between the
+Engine and a plugin. This library provides the services to do so. The main use-
+case is running over STDIO, so the communication protocol is designed to run
+1:1, it is not possible to use multiple clients (engines) with a plugin.
 
 The message flow is as follows:
 
@@ -31,10 +31,11 @@ ATP_SERVER_VERSION = 3
 
 
 class MessageType(IntEnum):
-    """
-    An integer ID that indicates the type of runtime message that is stored
-    in the data field. The corresponding class can then be used to deserialize
-    the inner data. Look at the go SDK for the reference data structure.
+    """An integer ID that indicates the type of runtime message that is stored
+    in the data field.
+
+    The corresponding class can then be used to deserialize the inner data.
+    Look at the go SDK for the reference data structure.
     """
 
     WORK_START = 1
@@ -46,9 +47,8 @@ class MessageType(IntEnum):
 
 @dataclasses.dataclass
 class HelloMessage:
-    """
-    This message is the initial greeting message a plugin sends to the output.
-    """
+    """This message is the initial greeting message a plugin sends to the
+    output."""
 
     version: typing.Annotated[
         int,
@@ -60,8 +60,8 @@ class HelloMessage:
         schema.Schema,
         schema.name("Schema"),
         schema.description(
-            "Schema information describing the required inputs and outputs, as well as the steps offered by this "
-            "plugin."
+            "Schema information describing the required inputs and outputs, as"
+            " well as the steps offered by this plugin."
         ),
     ]
 
@@ -98,9 +98,7 @@ class ATPServer:
         self,
         plugin_schema: schema.SchemaType,
     ) -> int:
-        """
-        This function wraps running a plugin.
-        """
+        """This function wraps running a plugin."""
         signal.signal(
             signal.SIGINT, signal.SIG_IGN
         )  # Ignore sigint. Only care about arcaflow signals.
@@ -170,8 +168,10 @@ class ATPServer:
                             run_id,
                             step_fatal=True,
                             server_fatal=False,
-                            error_msg="Exception while handling work start: "
-                            f"{e} {traceback.format_exc()}",
+                            error_msg=(
+                                "Exception while handling work start: "
+                                f"{e} {traceback.format_exc()}"
+                            ),
                         )
                 elif msg_id == MessageType.SIGNAL:
                     signal_msg = runtime_msg["data"]
@@ -182,7 +182,10 @@ class ATPServer:
                             run_id,
                             step_fatal=False,
                             server_fatal=False,
-                            error_msg=f"Exception while handling signal: {e} {traceback.format_exc()}",
+                            error_msg=(
+                                "Exception while handling signal:"
+                                f" {e} {traceback.format_exc()}"
+                            ),
                         )
                 elif msg_id == MessageType.CLIENT_DONE:
                     return
@@ -203,14 +206,20 @@ class ATPServer:
                 "",
                 step_fatal=False,
                 server_fatal=True,
-                error_msg=f"Error occurred while decoding CBOR: {err} {traceback.format_exc()}",
+                error_msg=(
+                    "Error occurred while decoding CBOR:"
+                    f" {err} {traceback.format_exc()}"
+                ),
             )
         except Exception as e:
             self.send_error_message(
                 "",
                 step_fatal=False,
                 server_fatal=True,
-                error_msg=f"Exception occurred in ATP server read loop: {e} {traceback.format_exc()}",
+                error_msg=(
+                    "Exception occurred in ATP server read loop:"
+                    f" {e} {traceback.format_exc()}"
+                ),
             )
 
     def handle_signal(self, run_id, signal_msg):
@@ -251,8 +260,10 @@ class ATPServer:
                 run_id,
                 step_fatal=False,
                 server_fatal=False,
-                error_msg=f"Error while calling signal for step with run ID {run_id}: {e} "
-                f"{traceback.format_exc()}",
+                error_msg=(
+                    "Error while calling signal for step with run ID"
+                    f" {run_id}: {e} {traceback.format_exc()}"
+                ),
             )
 
     def handle_work_start(
@@ -324,8 +335,10 @@ class ATPServer:
                 run_id,
                 step_fatal=True,
                 server_fatal=False,
-                error_msg=f"Error while calling step {run_id}/{step_id}:"
-                f"{e} {traceback.format_exc()}",
+                error_msg=(
+                    f"Error while calling step {run_id}/{step_id}:"
+                    f"{e} {traceback.format_exc()}"
+                ),
             )
             return
 
@@ -360,9 +373,8 @@ class ATPServer:
 
 
 class PluginClientStateException(Exception):
-    """
-    This exception is for client ATP client errors, like problems decoding
-    """
+    """This exception is for client ATP client errors, like problems
+    decoding."""
 
     msg: str
 
@@ -382,9 +394,10 @@ class StepResult:
 
 
 class PluginClient:
-    """
-    This is a rudimentary client that reads information from a plugin and starts work on the plugin. The functions
-    must be executed in order.
+    """This is a rudimentary client that reads information from a plugin and
+    starts work on the plugin.
+
+    The functions must be executed in order.
     """
 
     to_server_pipe: io.FileIO  # Usually the stdin of the sub-process
@@ -405,16 +418,13 @@ class PluginClient:
         self.encoder.encode(None)
 
     def read_hello(self) -> HelloMessage:
-        """
-        This function reads the initial "Hello" message from the plugin.
-        """
+        """This function reads the initial "Hello" message from the plugin."""
         message = self.decoder.decode()
         return _HELLO_MESSAGE_SCHEMA.unserialize(message)
 
     def start_work(self, run_id: str, step_id: str, config: any):
-        """
-        After the Hello message has been read, this function starts work in a plugin with the specified data.
-        """
+        """After the Hello message has been read, this function starts work in
+        a plugin with the specified data."""
         self.send_runtime_message(
             MessageType.WORK_START,
             run_id,
@@ -425,9 +435,7 @@ class PluginClient:
         )
 
     def send_signal(self, run_id: str, signal_id: str, input_data: any):
-        """
-        This function sends any signals to the plugin.
-        """
+        """This function sends any signals to the plugin."""
         self.send_runtime_message(
             MessageType.SIGNAL,
             run_id,
@@ -453,9 +461,8 @@ class PluginClient:
         self.to_server_pipe.flush()
 
     def read_single_result(self) -> StepResult:
-        """
-        This function reads until it gets the next result of an execution from the plugin, or an error.
-        """
+        """This function reads until it gets the next result of an execution
+        from the plugin, or an error."""
         while True:
             runtime_msg = self.decoder.decode()
             msg_id = runtime_msg["id"]
@@ -463,15 +470,18 @@ class PluginClient:
                 signal_msg = runtime_msg["data"]
                 if signal_msg["output_id"] is None:
                     raise PluginClientStateException(
-                        "Missing 'output_id' in CBOR message. Possibly wrong order of calls?"
+                        "Missing 'output_id' in CBOR message. Possibly wrong"
+                        " order of calls?"
                     )
                 if signal_msg["output_data"] is None:
                     raise PluginClientStateException(
-                        "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
+                        "Missing 'output_data' in CBOR message. Possibly wrong"
+                        " order of calls?"
                     )
                 if signal_msg["debug_logs"] is None:
                     raise PluginClientStateException(
-                        "Missing 'output_data' in CBOR message. Possibly wrong order of calls?"
+                        "Missing 'output_data' in CBOR message. Possibly wrong"
+                        " order of calls?"
                     )
                 return StepResult(
                     run_id=runtime_msg["run_id"],

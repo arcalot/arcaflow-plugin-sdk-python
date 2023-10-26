@@ -1531,10 +1531,14 @@ class JSONSchemaTest(unittest.TestCase):
                             "a": {
                                 "oneOf": [
                                     {
-                                        "$ref": "#/$defs/A_discriminated_string_a"
+                                        "$ref": (
+                                            "#/$defs/A_discriminated_string_a"
+                                        )
                                     },
                                     {
-                                        "$ref": "#/$defs/B_discriminated_string_b"
+                                        "$ref": (
+                                            "#/$defs/B_discriminated_string_b"
+                                        )
                                     },
                                 ]
                             }
@@ -1602,9 +1606,7 @@ class JSONSchemaTest(unittest.TestCase):
 
 
 def load_tests(loader, tests, ignore):
-    """
-    This function adds the doctests to the discovery process.
-    """
+    """This function adds the doctests to the discovery process."""
     tests.addTests(doctest.DocTestSuite(schema))
     return tests
 

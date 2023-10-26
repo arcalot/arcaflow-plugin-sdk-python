@@ -17,7 +17,10 @@ cancel_signal_schema = schema.SignalSchema(
     data_schema=cancel_signal_input_schema,
     display=schema.DisplayValue(
         name="Step Cancel",
-        description="The signal that instructs the plugin to finish execution gracefully.",
+        description=(
+            "The signal that instructs the plugin to finish execution"
+            " gracefully."
+        ),
         icon=None,
     ),
 )

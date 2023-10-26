@@ -85,7 +85,10 @@ class SignalTestStep:
     @plugin.signal_handler(
         id="record_value",
         name="record value",
-        description="Records the value, and optionally ends the step. Throws error if it's less than 0, for testing.",
+        description=(
+            "Records the value, and optionally ends the step. Throws error if"
+            " it's less than 0, for testing."
+        ),
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
         if signal_input.value < 0:
@@ -224,10 +227,8 @@ class ATPTest(unittest.TestCase):
             self._cleanup(pid, stdin_writer, stdout_reader)
 
     def test_multi_step_with_signals(self):
-        """
-        Starts two steps simultaneously, sends them separate data from signals, then verifies
-        that each step got the dats intended for it.
-        """
+        """Starts two steps simultaneously, sends them separate data from
+        signals, then verifies that each step got the dats intended for it."""
         pid, stdin_writer, stdout_reader = self._execute_plugin(
             test_signals_schema
         )
@@ -292,10 +293,9 @@ class ATPTest(unittest.TestCase):
             self._cleanup(pid, stdin_writer, stdout_reader)
 
     def test_broken_step(self):
-        """
-        Runs a step that throws an exception, which is something that should be caught by the plugin, but
-        we need to test for it since the uncaught exceptions are the hardest to debug without proper handling.
-        """
+        """Runs a step that throws an exception, which is something that should
+        be caught by the plugin, but we need to test for it since the uncaught
+        exceptions are the hardest to debug without proper handling."""
         pid, stdin_writer, stdout_reader = self._execute_plugin(
             test_broken_schema
         )
@@ -319,9 +319,7 @@ class ATPTest(unittest.TestCase):
             self._cleanup(pid, stdin_writer, stdout_reader, True)
 
     def test_wrong_step(self):
-        """
-        Tests the error reporting due to an invalid step being called.
-        """
+        """Tests the error reporting due to an invalid step being called."""
         pid, stdin_writer, stdout_reader = self._execute_plugin(test_schema)
 
         try:
@@ -341,9 +339,7 @@ class ATPTest(unittest.TestCase):
             self._cleanup(pid, stdin_writer, stdout_reader, True)
 
     def test_invalid_runtime_message_id(self):
-        """
-        Tests the error reporting due to an invalid step being called.
-        """
+        """Tests the error reporting due to an invalid step being called."""
         pid, stdin_writer, stdout_reader = self._execute_plugin(test_schema)
 
         try:
