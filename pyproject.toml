@@ -34,6 +34,7 @@ autoflake = "^2.2.1"
 docformatter = "^1.7.5"
 flake8 = "^6.1.0"
 autopep8 = "^2.0.4"
+pytest-repeat = "^0.9.3"
 
 
 [build-system]
