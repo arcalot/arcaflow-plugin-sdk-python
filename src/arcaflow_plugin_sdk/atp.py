@@ -16,18 +16,16 @@ The message flow is as follows:
 import dataclasses
 import io
 import os
-import sys
-import typing
-import threading
 import signal
+import sys
+import threading
 import traceback
+import typing
+from enum import IntEnum
 
 import cbor2
 
-from enum import IntEnum
-
 from arcaflow_plugin_sdk import schema
-
 
 ATP_SERVER_VERSION = 3
 

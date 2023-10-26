@@ -4,7 +4,7 @@ import signal
 import time
 import unittest
 from threading import Event
-from typing import TextIO, Tuple, Union, List
+from typing import List, TextIO, Tuple, Union
 
 from arcaflow_plugin_sdk import atp, plugin, schema
 
