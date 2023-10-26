@@ -36,6 +36,14 @@ flake8 = "^6.1.0"
 autopep8 = "^2.0.4"
 pytest-repeat = "^0.9.3"
 
+[tool.isort]
+profile = 'black'
+
+[tool.docformatter]
+recursive = true
+wrap-summaries = 79
+wrap-descriptions = 79
+
 
 [build-system]
 requires = ["poetry-core"]

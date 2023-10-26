@@ -34,9 +34,7 @@ jobs:
         run: isort --check --profile black --line-length 79 .
       - name: Check docstring formatting
         run: docformatter --check --recursive --black --wrap-descriptions 79 --wrap-summaries 79 .
-      - name: Check style
-        run: black --check --line-length 79 .
-      - name: Error linting
+      - name: Error and style linting
         id: flake8
         run: flake8 --max-line-length 79 --ignore E203,W503 .
       - name: Check error linting
