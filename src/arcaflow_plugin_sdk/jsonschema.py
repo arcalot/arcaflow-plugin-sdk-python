@@ -2,8 +2,9 @@ from arcaflow_plugin_sdk import schema
 
 
 def step_input(t: schema.StepSchema) -> dict:
-    """
-    This function takes a schema step and creates a JSON schema object from the input parameter.
+    """This function takes a schema step and creates a JSON schema object from
+    the input parameter.
+
     :return: the JSON schema represented as a dict.
     """
     result = t.input.to_jsonschema()
@@ -15,8 +16,9 @@ def step_input(t: schema.StepSchema) -> dict:
 
 
 def step_outputs(t: schema.StepSchema):
-    """
-    This function takes a schema step and creates a JSON schema object from the output parameters.
+    """This function takes a schema step and creates a JSON schema object from
+    the output parameters.
+
     :return: the JSON schema represented as a dict.
     """
     result = {

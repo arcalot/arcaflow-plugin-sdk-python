@@ -9,9 +9,7 @@ from arcaflow_plugin_sdk import annotations, plugin, schema, validation
 
 @dataclass
 class FullName:
-    """
-    A full name holds the first and last name of an individual.
-    """
+    """A full name holds the first and last name of an individual."""
 
     first_name: typing.Annotated[
         str,
@@ -37,9 +35,8 @@ class FullName:
 
 @dataclass
 class Nickname:
-    """
-    A nickname is a simplified form of the name that only holds the preferred name of an individual.
-    """
+    """A nickname is a simplified form of the name that only holds the
+    preferred name of an individual."""
 
     nick: typing.Annotated[
         str,
@@ -58,9 +55,8 @@ class Nickname:
 
 @dataclass
 class InputParams:
-    """
-    This is the data structure for the input parameters of the step defined below.
-    """
+    """This is the data structure for the input parameters of the step defined
+    below."""
 
     name: typing.Annotated[
         typing.Union[
@@ -96,24 +92,20 @@ class InputParams:
 
 @dataclass
 class SuccessOutput:
-    """
-    This is the output data structure for the success case.
-    """
+    """This is the output data structure for the success case."""
 
     message: str
 
 
 @dataclass
 class ErrorOutput:
-    """
-    This is the output data structure in the error  case.
-    """
+    """This is the output data structure in the error  case."""
 
     error: str
 
 
-# The following is a decorator (starting with @). We add this in front of our function to define the metadata for our
-# step.
+# The following is a decorator (starting with @). We add this in front of
+# our function to define the metadata for our step.
 @plugin.step(
     id="hello-world",
     name="Hello world!",
@@ -123,13 +115,13 @@ class ErrorOutput:
 def hello_world(
     params: InputParams,
 ) -> typing.Tuple[str, typing.Union[SuccessOutput, ErrorOutput]]:
-    """
-    The function  is the implementation for the step. It needs the decorator above to make it into a  step. The type
-    hints for the params are required.
+    """The function  is the implementation for the step. It needs the decorator
+    above to make it into a  step. The type hints for the params are required.
 
     :param params:
 
-    :return: the string identifying which output it is, as well the output structure
+    :return: the string identifying which output it is, as well the output
+        structure
     """
 
     return "success", SuccessOutput("Hello, {}!".format(params.name))

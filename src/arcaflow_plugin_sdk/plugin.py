@@ -34,9 +34,9 @@ def signal_handler(
     description: str,
     icon: typing.Optional[str] = None,
 ) -> Callable[[_signal_handler_decorator_param], schema.SignalHandlerType]:
-    """
-    ``@plugin.signal_handler`` is a decorator that takes a function with a single parameter and creates a schema for it
-    that you can use with ``plugin.step``.
+    """``@plugin.signal_handler`` is a decorator that takes a function with a
+    single parameter and creates a schema for it that you can use with
+    ``plugin.step``.
 
     :param id: The identifier for the signal handler.
     :param name: The human-readable name for the signal handler.
@@ -45,7 +45,9 @@ def signal_handler(
     :return: A schema for the signal.
     """
 
-    def signal_decorator(func: _step_decorator_param) -> schema.SignalHandlerType:
+    def signal_decorator(
+        func: _step_decorator_param,
+    ) -> schema.SignalHandlerType:
         if id == "":
             raise BadArgumentException("Signals cannot have empty IDs")
         if name == "":
@@ -53,20 +55,21 @@ def signal_handler(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) signal must have exactly two parameters, including self. Currently has %s" %
-                (name, id, str(sig.parameters))
+                "The '%s' (id: %s) signal must have exactly two parameters,"
+                " including self. Currently has %s"
+                % (name, id, str(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
             raise BadArgumentException(
-                "The '%s' (id: %s) signal parameter must have a type annotation"
-                % (name, id)
+                "The '%s' (id: %s) signal parameter must have a type"
+                " annotation" % (name, id)
             )
         if isinstance(input_param.annotation, str):
             raise BadArgumentException(
-                "Stringized type annotation encountered in %s (id: %s). Please make sure you "
-                "don't import annotations from __future__ to avoid this problem."
-                % (name, id)
+                "Stringized type annotation encountered in %s (id: %s). Please"
+                " make sure you don't import annotations from __future__ to"
+                " avoid this problem." % (name, id)
             )
 
         return schema.SignalHandlerType(
@@ -93,20 +96,23 @@ def step_with_signals(
     step_object_constructor: schema.step_object_constructor_param,
     icon: typing.Optional[str] = None,
 ) -> Callable[[_step_object_decorator_param], schema.StepType]:
-    """
-    ``@plugin.step_with_signals`` is a decorator that takes a class and a method with a single parameter (plus self)
-    and creates a schema for it that you can use with ``plugin.build_schema``.
+    """``@plugin.step_with_signals`` is a decorator that takes a class and a
+    method with a single parameter (plus self) and creates a schema for it that
+    you can use with ``plugin.build_schema``.
 
     :param id: The identifier for the step.
     :param name: The human-readable name for the step.
     :param description: The human-readable description for the step.
     :param outputs: A dict linking response IDs to response object types.
-    :param signal_handler_method_names: A list of methods for all signal handlers.
+    :param signal_handler_method_names: A list of methods for all signal
+        handlers.
     :param signal_emitters: A list of signal schemas for signal emitters.
-    :param step_object_constructor: A constructor lambda for the object with the step and signal methods.
+    :param step_object_constructor: A constructor lambda for the object with
+        the step and signal methods.
     :param icon: SVG icon for this step.
     :return: A schema for the step.
     """
+
     def step_decorator(func: _step_object_decorator_param) -> schema.StepType:
         if id == "":
             raise BadArgumentException("Steps cannot have an empty ID")
@@ -115,8 +121,9 @@ def step_with_signals(
         sig = inspect.signature(func)
         if len(sig.parameters) != 2:
             raise BadArgumentException(
-                "The '%s' (id: %s) step must have exactly two parameters, including self. Currently has %d" %
-                (name, id, len(sig.parameters))
+                "The '%s' (id: %s) step must have exactly two parameters,"
+                " including self. Currently has %d"
+                % (name, id, len(sig.parameters))
             )
         input_param = list(sig.parameters.values())[1]
         if input_param.annotation is inspect.Parameter.empty:
@@ -126,9 +133,9 @@ def step_with_signals(
             )
         if isinstance(input_param.annotation, str):
             raise BadArgumentException(
-                "Stringized type annotation encountered in %s (id: %s). Please make sure you "
-                "don't import annotations from __future__ to avoid this problem."
-                % (name, id)
+                "Stringized type annotation encountered in %s (id: %s). Please"
+                " make sure you don't import annotations from __future__ to"
+                " avoid this problem." % (name, id)
             )
 
         new_responses: Dict[str, schema.StepOutputType] = {}
@@ -166,9 +173,9 @@ def step(
     outputs: Dict[str, Type],
     icon: typing.Optional[str] = None,
 ) -> Callable[[_step_decorator_param], schema.StepType]:
-    """
-    ``@plugin.step`` is a decorator that takes a function with a single parameter and creates a schema for it that you can
-    use with ``plugin.build_schema``.
+    """``@plugin.step`` is a decorator that takes a function with a single
+    parameter and creates a schema for it that you can use with
+    ``plugin.build_schema``.
 
     :param id: The identifier for the step.
     :param name: The human-readable name for the step.
@@ -186,7 +193,8 @@ def step(
         sig = inspect.signature(func)
         if len(sig.parameters) != 1:
             raise BadArgumentException(
-                "The '%s' (id: %s) step must have exactly one parameter: step input object" % (name, id)
+                "The '%s' (id: %s) step must have exactly one parameter: step"
+                " input object" % (name, id)
             )
         input_param = list(sig.parameters.values())[0]
         if input_param.annotation is inspect.Parameter.empty:
@@ -196,9 +204,9 @@ def step(
             )
         if isinstance(input_param.annotation, str):
             raise BadArgumentException(
-                "Stringized type annotation encountered in %s (id: %s). Please make sure you "
-                "don't import annotations from __future__ to avoid this problem."
-                % (name, id)
+                "Stringized type annotation encountered in %s (id: %s). Please"
+                " make sure you don't import annotations from __future__ to"
+                " avoid this problem." % (name, id)
             )
 
         new_responses: Dict[str, schema.StepOutputType] = {}
@@ -250,9 +258,9 @@ def run(
     stdout: io.TextIOWrapper = stdout,
     stderr: io.TextIOWrapper = stderr,
 ) -> int:
-    """
-    Run takes a schema and runs it as a command line utility. It returns the exit code of the program. It is intended
-    to be used as an entry point for your plugin.
+    """Run takes a schema and runs it as a command line utility. It returns the
+    exit code of the program. It is intended to be used as an entry point for
+    your plugin.
 
     :param s: the schema to run
     :param argv: command line arguments
@@ -267,7 +275,10 @@ def run(
             "-f",
             "--file",
             dest="filename",
-            help="Configuration file to read configuration from. Pass - to read from stdin.",
+            help=(
+                "Configuration file to read configuration from. Pass - to read"
+                " from stdin."
+            ),
             metavar="FILE",
         )
         parser.add_option(
@@ -317,13 +328,17 @@ def run(
         if options.json_schema is not None:
             if action is not None:
                 raise _ExitException(
-                    64, "--{} and --json-schema cannot be used together".format(action)
+                    64,
+                    "--{} and --json-schema cannot be used together".format(
+                        action
+                    ),
                 )
             action = "json-schema"
         if options.schema is not None:
             if action is not None:
                 raise _ExitException(
-                    64, "--{} and --schema cannot be used together".format(action)
+                    64,
+                    "--{} and --schema cannot be used together".format(action),
                 )
             action = "schema"
         if options.atp is not None:
@@ -335,7 +350,8 @@ def run(
         if action is None:
             raise _ExitException(
                 64,
-                "At least one of --file, --json-schema, or --schema must be specified",
+                "At least one of --file, --json-schema, or --schema must be"
+                " specified",
             )
 
         if action == "file" or action == "json-schema":
@@ -355,7 +371,10 @@ def run(
             return _execute_file(step_id, s, options, stdin, stdout, stderr)
         elif action == "atp":
             from arcaflow_plugin_sdk import atp
-            atp_server = atp.ATPServer(stdin.buffer, stdout.buffer, stdout.buffer)
+
+            atp_server = atp.ATPServer(
+                stdin.buffer, stdout.buffer, stdout.buffer
+            )
             return atp_server.run_plugin(s)
         elif action == "json-schema":
             return _print_json_schema(step_id, s, options, stdout)
@@ -370,8 +389,8 @@ def run(
 
 
 def build_schema(*args: schema.StepType) -> schema.SchemaType:
-    """
-    This function takes functions annotated with ``@plugin.step`` and creates a schema from them.
+    """This function takes functions annotated with ``@plugin.step`` and
+    creates a schema from them.
 
     :param args: the steps to be added to the schema
     :return: a callable schema
@@ -414,12 +433,13 @@ def build_schema(*args: schema.StepType) -> schema.SchemaType:
 
     >>> plugin_schema("hello-world", {"name": "Arca Lot"})
     ('success', {'message': 'Hello, Arca Lot!'})
-    """
+    """  # noqa: E501
     steps_by_id: Dict[str, schema.StepType] = {}
     for step in args:
         if step.id in steps_by_id:
             raise BadArgumentException("Duplicate step ID %s" % step.id)
-        step.inspect_methods()  # Allows it to retrieve the signal schemas from their method names
+        # Allows it to retrieve the signal schemas from their method names
+        step.inspect_methods()
         steps_by_id[step.id] = step
     return schema.SchemaType(steps_by_id)
 
@@ -458,9 +478,8 @@ def _execute_file(
         return 0
     except InvalidInputException as e:
         stderr.write(
-            "Invalid input encountered while executing step '{}' from file '{}':\n  {}\n\n".format(
-                step_id, filename, e.__str__()
-            )
+            "Invalid input encountered while executing step '{}' from file"
+            " '{}':\n  {}\n\n".format(step_id, filename, e.__str__())
         )
         if options.debug:
             traceback.print_exc(chain=True)
@@ -469,9 +488,8 @@ def _execute_file(
         return 65
     except InvalidOutputException as e:
         stderr.write(
-            "Bug: invalid output encountered while executing step '{}' from file '{}':\n  {}\n\n".format(
-                step_id, filename, e.__str__()
-            )
+            "Bug: invalid output encountered while executing step '{}' from"
+            " file '{}':\n  {}\n\n".format(step_id, filename, e.__str__())
         )
         if options.debug:
             traceback.print_exc(chain=True)
@@ -487,14 +505,18 @@ def _print_json_schema(step_id, s, options, stdout):
     if step_id not in s.steps:
         raise _ExitException(
             64,
-            'Unknown step "{}". Steps: {}'.format(step_id, str(list(s.steps.keys()))),
+            'Unknown step "{}". Steps: {}'.format(
+                step_id, str(list(s.steps.keys()))
+            ),
         )
     if options.json_schema == "input":
         data = jsonschema.step_input(s.steps[step_id])
     elif options.json_schema == "output":
         data = jsonschema.step_outputs(s.steps[step_id])
     else:
-        raise _ExitException(64, "--json-schema must be one of 'input' or 'output'")
+        raise _ExitException(
+            64, "--json-schema must be one of 'input' or 'output'"
+        )
     stdout.write(json.dumps(data, indent="  "))
     return 0
 

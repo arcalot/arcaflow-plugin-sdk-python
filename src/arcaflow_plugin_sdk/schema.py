@@ -1,5 +1,5 @@
-"""
-This module provides the tools to build a schema, either by hand, or automatically from type hints and annotations.
+"""This module provides the tools to build a schema, either by hand, or
+automatically from type hints and annotations.
 
 Using
 =====
@@ -62,7 +62,7 @@ Schema schemas
 This region holds two variables, ``SCOPE_SCHEMA`` and ``SCHEMA_SCHEMA``. You can use these variables to work with
 schemas themselves. For example, you can create a client that calls Arcaflow plugins and use these classes to
 unserialize schemas that the plugins send.
-"""
+"""  # noqa: E501
 import collections
 import dataclasses
 import enum
@@ -90,10 +90,12 @@ _issue_url = "https://github.com/arcalot/arcaflow-plugin-sdk-python/issues"
 
 @dataclass
 class ConstraintException(Exception):
-    """
-    ``ConstraintException`` indicates that the passed data violated one or more constraints defined in the schema.
-    The message holds the exact path of the problematic field, as well as a message explaining the error.
-    If this error is not easily understood, please open an issue on the Arcaflow plugin SDK.
+    """``ConstraintException`` indicates that the passed data violated one or
+    more constraints defined in the schema.
+
+    The message holds the exact path of the problematic field, as well as a
+    message explaining the error. If this error is not easily understood,
+    please open an issue on the Arcaflow plugin SDK.
     """
 
     path: typing.Tuple[str] = tuple([])
@@ -102,14 +104,15 @@ class ConstraintException(Exception):
     def __str__(self):
         if len(self.path) == 0:
             return "Validation failed: {}".format(self.msg)
-        return "Validation failed for '{}': {}".format(" -> ".join(self.path), self.msg)
+        return "Validation failed for '{}': {}".format(
+            " -> ".join(self.path), self.msg
+        )
 
 
 @dataclass
 class NoSuchStepException(Exception):
-    """
-    ``NoSuchStepException`` indicates that the given step is not supported by the plugin.
-    """
+    """``NoSuchStepException`` indicates that the given step is not supported
+    by the plugin."""
 
     step: str
 
@@ -119,9 +122,8 @@ class NoSuchStepException(Exception):
 
 @dataclass
 class NoSuchSignalException(Exception):
-    """
-    ``NoSuchSignalException`` indicates that the given signal is not supported by the plugin's step.
-    """
+    """``NoSuchSignalException`` indicates that the given signal is not
+    supported by the plugin's step."""
 
     step: str
     signal: str
@@ -132,10 +134,11 @@ class NoSuchSignalException(Exception):
 
 @dataclass
 class BadArgumentException(Exception):
-    """
-    BadArgumentException indicates that an invalid configuration was passed to a schema component. The message will
-    explain what exactly the problem is, but may not be able to locate the exact error as the schema may be manually
-    built.
+    """BadArgumentException indicates that an invalid configuration was passed
+    to a schema component.
+
+    The message will explain what exactly the problem is, but may not be able
+    to locate the exact error as the schema may be manually built.
     """
 
     msg: str
@@ -146,9 +149,8 @@ class BadArgumentException(Exception):
 
 @dataclass
 class InvalidAnnotationException(Exception):
-    """
-    ``InvalidAnnotationException`` indicates that an annotation was used on a type it does not support.
-    """
+    """``InvalidAnnotationException`` indicates that an annotation was used on
+    a type it does not support."""
 
     annotation: str
     msg: str
@@ -158,10 +160,12 @@ class InvalidAnnotationException(Exception):
 
 
 class SchemaBuildException(Exception):
-    """
-    SchemaBuildException indicates an error while building the schema using type inspection. This exception holds the
-    path to the parameter that caused the problem. The message should be easily understood, if you are having trouble
-    with an error message, please open a ticket on the Arcaflow plugin SDK.
+    """SchemaBuildException indicates an error while building the schema using
+    type inspection.
+
+    This exception holds the path to the parameter that caused the problem. The
+    message should be easily understood, if you are having trouble with an
+    error message, please open a ticket on the Arcaflow plugin SDK.
     """
 
     def __init__(self, path: typing.Tuple[str], msg: str):
@@ -178,8 +182,10 @@ class SchemaBuildException(Exception):
 
 
 class InvalidInputException(Exception):
-    """
-    This exception indicates that the input data for a given step didn't match the schema. The embedded
+    """This exception indicates that the input data for a given step didn't
+    match the schema.
+
+    The embedded
     ``ConstraintException`` holds the details of this failure.
     """
 
@@ -193,9 +199,10 @@ class InvalidInputException(Exception):
 
 
 class InvalidOutputException(Exception):
-    """
-    This exception indicates that the output of a schema was invalid. This is always a bug in the plugin and should
-    be reported to the plugin author.
+    """This exception indicates that the output of a schema was invalid.
+
+    This is always a bug in the plugin and should be reported to the plugin
+    author.
     """
 
     constraint: ConstraintException
@@ -208,9 +215,7 @@ class InvalidOutputException(Exception):
 
 
 class UnitParseException(Exception):
-    """
-    This exception indicates that it failed to parse a unit string.
-    """
+    """This exception indicates that it failed to parse a unit string."""
 
     msg: str
 
@@ -227,9 +232,9 @@ class UnitParseException(Exception):
 
 
 def id(id: str):
-    """
-    The id annotation can be used to change the serialized name of an object field. This is useful when a field
-    must be serialized to a name that is not a valid Python field.
+    """The id annotation can be used to change the serialized name of an object
+    field. This is useful when a field must be serialized to a name that is not
+    a valid Python field.
 
     **Example:**
 
@@ -272,9 +277,9 @@ _id = id
 
 
 def name(name: str):
-    """
-    The name annotation can be applied on any dataclass field, or on Union types to add a human-readable name to the
-    field. It is used as a form field or as part of a dropdown box in a form.
+    """The name annotation can be applied on any dataclass field, or on Union
+    types to add a human-readable name to the field. It is used as a form field
+    or as part of a dropdown box in a form.
 
     **Example:**
 
@@ -313,9 +318,9 @@ _name = name
 
 
 def description(description: str):
-    """
-    The description annotation can be applied on any dataclass field, or on Union types to add a human-readable
-    description to the field. It can contain line breaks and links for formatting. It is used as a form field
+    """The description annotation can be applied on any dataclass field, or on
+    Union types to add a human-readable description to the field. It can
+    contain line breaks and links for formatting. It is used as a form field
     description text or as part of a dropdown box in a form.
 
     **Example:**
@@ -342,7 +347,7 @@ def description(description: str):
 
     :param description: The description to apply
     :return: Callable
-    """
+    """  # noqa: E501
 
     def call(t):
         t.__description = description
@@ -355,9 +360,10 @@ _description = description
 
 
 def icon(icon: str):
-    """
-    The icon annotation can be applied to any dataclass field, or on Union types to add a 64x64 pixel SVG icon to the
-    item on display. However, the SVG must not contain any external sources or namespaces in order to work correctly.
+    """The icon annotation can be applied to any dataclass field, or on Union
+    types to add a 64x64 pixel SVG icon to the item on display. However, the
+    SVG must not contain any external sources or namespaces in order to work
+    correctly.
 
     **Example:**
 
@@ -393,9 +399,9 @@ _icon = icon
 
 
 def units(units: typing.ForwardRef("Units")):
-    """
-    This annotation lets you add unit definitions to int and float fields. This helps with determining how to treat that
-    number, but also contains scaling information for creating a nicely formatted string, such as 5m30s.
+    """This annotation lets you add unit definitions to int and float fields.
+    This helps with determining how to treat that number, but also contains
+    scaling information for creating a nicely formatted string, such as 5m30s.
 
     **Example:**
 
@@ -421,8 +427,8 @@ def units(units: typing.ForwardRef("Units")):
     """
 
     def call(t):
-        """
-        :param typing.Union[IntSchema, FloatSchema] t:
+        """:param typing.Union[IntSchema, FloatSchema] t:
+
         :return typing.Union[IntSchema, FloatSchema]:
         """
         effective_t = t
@@ -433,7 +439,9 @@ def units(units: typing.ForwardRef("Units")):
         ):
             raise InvalidAnnotationException(
                 "units",
-                "expected int or float schema, found {}".format(type(t).__name__),
+                "expected int or float schema, found {}".format(
+                    type(t).__name__
+                ),
             )
         effective_t.units = units
         return t
@@ -449,9 +457,9 @@ def example(
 ) -> typing.Callable[
     [typing.ForwardRef("PropertySchema")], typing.ForwardRef("PropertySchema")
 ]:
-    """
-    This annotation provides the option to add an example to a type.
-    :param example: the example as raw type, serializable by json.dumps. Do not use dataclasses
+    """This annotation provides the option to add an example to a type. :param
+    example: the example as raw type, serializable by json.dumps. Do not use
+    dataclasses.
 
     **Example:**
 
@@ -483,7 +491,8 @@ def example(
         marshalled_example = json.dumps(example)
     except Exception as e:
         raise InvalidAnnotationException(
-            "example", "expected a JSON-serializable type, {}".format(e.__str__())
+            "example",
+            "expected a JSON-serializable type, {}".format(e.__str__()),
         ) from e
 
     def call(t):
@@ -505,26 +514,28 @@ _example = example
 discriminatorT = typing.TypeVar(
     "discriminatorT",
     bound=typing.Union[
-        typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
+        typing.ForwardRef("OneOfStringSchema"),
+        typing.ForwardRef("OneOfIntSchema"),
     ],
 )
 discriminatorFunc = typing.Callable[
     [
         typing.Union[
-            typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
+            typing.ForwardRef("OneOfStringSchema"),
+            typing.ForwardRef("OneOfIntSchema"),
         ]
     ],
     typing.Union[
-        typing.ForwardRef("OneOfStringSchema"), typing.ForwardRef("OneOfIntSchema")
+        typing.ForwardRef("OneOfStringSchema"),
+        typing.ForwardRef("OneOfIntSchema"),
     ],
 ]
 
 
 def discriminator(discriminator_field_name: str) -> discriminatorFunc:
-    """
-    This annotation is used to manually set the discriminator field on a Union type.
-    :param discriminator_field_name: the name of the discriminator field.
-    :return: the callable decorator
+    """This annotation is used to manually set the discriminator field on a
+    Union type. :param discriminator_field_name: the name of the discriminator
+    field. :return: the callable decorator.
 
     **Example:**
 
@@ -558,17 +569,20 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
     >>> unserialized_data = s.unserialize({"some_field": {"foo": "A", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
-    """
+    """  # noqa: E501
 
     def call(t):
-        """
-        :param typing.Union[OneOfStringSchema, OneOfIntSchema] t:
+        """:param typing.Union[OneOfStringSchema, OneOfIntSchema] t:
+
         :return typing.Union[OneOfStringSchema, OneOfIntSchema]:
         """
-        if not isinstance(t, OneOfStringSchema) and not isinstance(t, OneOfIntSchema):
+        if not isinstance(t, OneOfStringSchema) and not isinstance(
+            t, OneOfIntSchema
+        ):
             raise InvalidAnnotationException(
                 "discriminator",
-                "expected a property or object type with union member, found {}".format(
+                "expected a property or object type with union member,"
+                " found {}".format(
                     type(t).__name__,
                 ),
             )
@@ -608,10 +622,12 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
 _discriminator = discriminator
 
 
-def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
-    """
-    This annotation adds a custom value for an instance of a discriminator. The value must match the discriminator field
-     This annotation works only when used in conjunction with discriminator().
+def discriminator_value(
+    discriminator_value: typing.Union[str, int, enum.Enum]
+):
+    """This annotation adds a custom value for an instance of a discriminator.
+    The value must match the discriminator field This annotation works only
+    when used in conjunction with discriminator().
 
     :param discriminator_value: The value for the discriminator field.
     :return: The callable decorator
@@ -648,7 +664,7 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
     >>> unserialized_data = s.unserialize({"some_field": {"_type": "Foo", "a": "Hello world!"}})
     >>> unserialized_data.some_field.a
     'Hello world!'
-    """
+    """  # noqa: E501
 
     def call(t):
         if (
@@ -659,9 +675,8 @@ def discriminator_value(discriminator_value: typing.Union[str, int, enum.Enum]):
         ):
             raise InvalidAnnotationException(
                 "discriminator_value",
-                "discriminator_value is only valid for object types, not {}".format(
-                    type(t).__name__
-                ),
+                "discriminator_value is only valid for object types, not {}"
+                .format(type(t).__name__),
             )
         t.__discriminator_value = discriminator_value
         return t
@@ -687,9 +702,8 @@ Validator = Callable[[ValidatorT], ValidatorT]
 
 
 def min(param: typing.Union[int, float]) -> Validator:
-    """
-    This decorator creates a minimum length (strings), minimum number (int, float), or minimum element count (lists and
-    maps) validation.
+    """This decorator creates a minimum length (strings), minimum number (int,
+    float), or minimum element count (lists and maps) validation.
 
     :param: The minimum number
     :return: the validator
@@ -724,7 +738,7 @@ def min(param: typing.Union[int, float]) -> Validator:
     >>> unserialized_data = s.unserialize({"some_field": 42})
     >>> unserialized_data.some_field
     42
-    """
+    """  # noqa: E501
 
     def call(t):
         effective_t = t
@@ -734,9 +748,8 @@ def min(param: typing.Union[int, float]) -> Validator:
             effective_t.min = param
         else:
             raise BadArgumentException(
-                "min is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(
-                    t.__name__
-                )
+                "min is valid only for STRING, INT, FLOAT, LIST, and MAP"
+                " types, not for {} types.".format(t.__name__)
             )
         if isinstance(t, PropertySchema):
             t.type = effective_t
@@ -749,9 +762,8 @@ _min = min
 
 
 def max(param: int) -> Validator:
-    """
-    This decorator creates a maximum length (strings), maximum number (int, float), or maximum element count (lists and
-    maps) validation.
+    """This decorator creates a maximum length (strings), maximum number (int,
+    float), or maximum element count (lists and maps) validation.
 
     :param param: The maximum number
     :return: the validator
@@ -787,12 +799,14 @@ most 5
     >>> unserialized_data = s.unserialize({"some_field": 4})
     >>> unserialized_data.some_field
     4
-    """
+    """  # noqa: E501
 
     def call(t):
-        """
-        :param typing.Union[IntSchema, FloatSchema, StringSchema, ListSchema, MapSchema, PropertySchema] t:
-        :return typing.Union[IntSchema, FloatSchema, StringSchema, ListSchema, MapSchema, PropertySchema]:
+        """:param typing.Union[IntSchema, FloatSchema, StringSchema,
+        ListSchema, MapSchema, PropertySchema] t:
+
+        :return typing.Union[IntSchema, FloatSchema, StringSchema, ListSchema,
+        MapSchema, PropertySchema]:
         """
         effective_t = t
         if isinstance(t, PropertySchema):
@@ -801,9 +815,8 @@ most 5
             effective_t.max = param
         else:
             raise BadArgumentException(
-                "max is valid only for STRING, INT, FLOAT, LIST, and MAP types, not for {} types.".format(
-                    t.__name__
-                )
+                "max is valid only for STRING, INT, FLOAT, LIST, and MAP"
+                " types, not for {} types.".format(t.__name__)
             )
         if isinstance(t, PropertySchema):
             t.type = effective_t
@@ -816,8 +829,8 @@ _max = max
 
 
 def pattern(pattern: Pattern) -> Validator:
-    """
-    This decorator creates a regular expression pattern validation for strings.
+    """This decorator creates a regular expression pattern validation for
+    strings.
 
     :param pattern: The regular expression.
     :return: the validator
@@ -853,11 +866,11 @@ match the pattern ^[a-z]+$
     >>> unserialized_data = s.unserialize({"some_field": "asdf"})
     >>> unserialized_data.some_field
     'asdf'
-    """
+    """  # noqa: E501
 
     def call(t):
-        """
-        :param typing.Union[StringSchema,PropertySchema] t:
+        """:param typing.Union[StringSchema,PropertySchema] t:
+
         :return typing.Union[StringSchema,PropertySchema]:
         """
         effective_t = t
@@ -867,9 +880,8 @@ match the pattern ^[a-z]+$
             effective_t.pattern = pattern
         else:
             raise BadArgumentException(
-                "pattern is valid only for STRING types, not for {} types.".format(
-                    t.__name__
-                )
+                "pattern is valid only for STRING types, not for {} types."
+                .format(t.__name__)
             )
         if isinstance(t, PropertySchema):
             t.type = effective_t
@@ -882,8 +894,8 @@ _pattern = pattern
 
 
 def required_if(required_if: str) -> Validator:
-    """
-    This decorator creates a that marks the current field as required if the specified field is set.
+    """This decorator creates a that marks the current field as required if the
+    specified field is set.
 
     :param required_if: The other field to use.
     :return: the validator
@@ -931,7 +943,7 @@ required because 'some_other_field' is set
     'bar'
     >>> unserialized_data.some_other_field
     'foo'
-    """
+    """  # noqa: E501
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
@@ -953,10 +965,10 @@ _required_if = required_if
 
 
 def required_if_not(required_if_not: str) -> Validator:
-    """
-    This decorator creates a validation that marks the current field as required if the specified field is not set. If
-    there are multiple of these validators, the current field is only marked as required if none of the specified fields
-    are provided.
+    """This decorator creates a validation that marks the current field as
+    required if the specified field is not set. If there are multiple of these
+    validators, the current field is only marked as required if none of the
+    specified fields are provided.
 
     :param required_if_not: The other field to use.
     :return: the validator
@@ -1010,7 +1022,7 @@ required because 'some_other_field' is not set
     'foo'
     >>> unserialized_data.some_field
     'bar'
-    """
+    """  # noqa: E501
 
     def call(t: PropertySchema) -> PropertySchema:
         if not isinstance(t, PropertySchema):
@@ -1032,9 +1044,8 @@ _required_if_not = required_if_not
 
 
 def conflicts(conflicts: str) -> Validator:
-    """
-    This decorator creates a validation that triggers if the current field on an object is set in parallel with the
-    specified field.
+    """This decorator creates a validation that triggers if the current field
+    on an object is set in parallel with the specified field.
 
     :param conflicts: The field to conflict with.
     :return: the validator
@@ -1083,7 +1094,7 @@ conflicts 'some_other_field', set one of the two, not both
     >>> unserialized_data = s.unserialize({"some_field": "bar"})
     >>> unserialized_data.some_field
     'bar'
-    """
+    """  # noqa: E501
 
     def call(t):
         """
@@ -1153,13 +1164,19 @@ VALUE_TYPE = typing.Annotated[
             name("Float"),
         ],
         typing.Annotated[
-            typing.ForwardRef("BoolSchema"), discriminator_value("bool"), name("Bool")
+            typing.ForwardRef("BoolSchema"),
+            discriminator_value("bool"),
+            name("Bool"),
         ],
         typing.Annotated[
-            typing.ForwardRef("ListSchema"), discriminator_value("list"), name("List")
+            typing.ForwardRef("ListSchema"),
+            discriminator_value("list"),
+            name("List"),
         ],
         typing.Annotated[
-            typing.ForwardRef("MapSchema"), discriminator_value("map"), name("Map")
+            typing.ForwardRef("MapSchema"),
+            discriminator_value("map"),
+            name("Map"),
         ],
         typing.Annotated[
             typing.ForwardRef("ScopeSchema"),
@@ -1187,7 +1204,9 @@ VALUE_TYPE = typing.Annotated[
             name("Object reference"),
         ],
         typing.Annotated[
-            typing.ForwardRef("AnySchema"), discriminator_value("any"), name("Any")
+            typing.ForwardRef("AnySchema"),
+            discriminator_value("any"),
+            name("Any"),
         ],
     ],
     discriminator("type_id"),
@@ -1229,8 +1248,8 @@ DEFAULT_TYPE = typing.Annotated[
     Optional[str],
     _name("Default"),
     _description(
-        "Default value for this property in JSON encoding. The value must be unserializable by the type specified "
-        "in the type field. "
+        "Default value for this property in JSON encoding. The value must be"
+        " unserializable by the type specified in the type field. "
     ),
 ]
 EXAMPLES_TYPE = typing.Annotated[
@@ -1239,17 +1258,22 @@ EXAMPLES_TYPE = typing.Annotated[
     _description("Example values for this property, encoded as JSON."),
 ]
 _OBJECT_LIKE = typing.Union[
-    typing.Annotated[typing.ForwardRef("RefSchema"), discriminator_value("ref")],
-    typing.Annotated[typing.ForwardRef("ScopeSchema"), discriminator_value("scope")],
-    typing.Annotated[typing.ForwardRef("ObjectSchema"), discriminator_value("object")],
+    typing.Annotated[
+        typing.ForwardRef("RefSchema"), discriminator_value("ref")
+    ],
+    typing.Annotated[
+        typing.ForwardRef("ScopeSchema"), discriminator_value("scope")
+    ],
+    typing.Annotated[
+        typing.ForwardRef("ObjectSchema"), discriminator_value("object")
+    ],
 ]
 
 _id_type_inverse_re = re.compile("[^$@a-zA-Z0-9-_]")
 
 
 def _id_typeize(input: str) -> str:
-    """
-    This function creates an ID-safe representation of a string.
+    """This function creates an ID-safe representation of a string.
 
     **Example:**
 
@@ -1258,8 +1282,9 @@ def _id_typeize(input: str) -> str:
     'Hello_world_'
     >>> _id_typeize('Hello\\nworld')
     'Hello_world'
-    """
+    """  # noqa: E501
     return re.sub(_id_type_inverse_re, "_", input)
+
 
 # endregion
 
@@ -1275,9 +1300,7 @@ class _OpenAPIComponents:
 
 
 class _OpenAPIGenerator(ABC):
-    """
-    This class describes a method to generate OpenAPI 3.0 documents.
-    """
+    """This class describes a method to generate OpenAPI 3.0 documents."""
 
     @abstractmethod
     def _to_openapi_fragment(
@@ -1295,16 +1318,15 @@ class _JSONSchemaDefs:
 
 
 class _JSONSchemaGenerator(ABC):
-    """
-    This class prescribes a method to generate JSON schema documents.
-    """
+    """This class prescribes a method to generate JSON schema documents."""
 
     @abstractmethod
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        """
-        This method creates a JSON schema version 2020-12 representation of this schema object.
+        """This method creates a JSON schema version 2020-12 representation of
+        this schema object.
+
         :return:
         """
         pass
@@ -1312,9 +1334,9 @@ class _JSONSchemaGenerator(ABC):
 
 @dataclass
 class Unit:
-    """
-    A unit is a description of a single scale of measurement, such as a "second". If there are multiple scales, such as
-    "minute", "second", etc. then multiple of these unit classes can be composed into units.
+    """A unit is a description of a single scale of measurement, such as a
+    "second". If there are multiple scales, such as "minute", "second", etc.
+    then multiple of these unit classes can be composed into units.
 
     **Example:**
 
@@ -1325,13 +1347,14 @@ class Unit:
     ...     "nanosecond",
     ...     "nanoseconds"
     ... )
-    """
+    """  # noqa: E501
 
     name_short_singular: typing.Annotated[
         str,
         name("Short name (singular)"),
         description(
-            "Short name that can be printed in a few characters, singular form."
+            "Short name that can be printed in a few characters, singular"
+            " form."
         ),
         example("B"),
         example("char"),
@@ -1339,7 +1362,9 @@ class Unit:
     name_short_plural: typing.Annotated[
         str,
         name("Short name (plural)"),
-        description("Short name that can be printed in a few characters, plural form."),
+        description(
+            "Short name that can be printed in a few characters, plural form."
+        ),
         example("B"),
         example("chars"),
     ]
@@ -1361,8 +1386,7 @@ class Unit:
     def format_short(
         self, amount: typing.Union[int, float], display_zero: bool = True
     ) -> str:
-        """
-        This function formats an amount according to this unit.
+        """This function formats an amount according to this unit.
 
         **Example:**
 
@@ -1388,8 +1412,7 @@ class Unit:
     def format_long(
         self, amount: typing.Union[int, float], display_zero: bool = True
     ) -> str:
-        """
-        This function formats an amount according to this unit.
+        """This function formats an amount according to this unit.
 
         **Example:**
 
@@ -1419,8 +1442,8 @@ class Unit:
 
 @dataclass
 class Units:
-    """
-    Units holds several scales of magnitude of the same unit, for example 5m30s.
+    """Units holds several scales of magnitude of the same unit, for example
+    5m30s.
 
     **Example:**
 
@@ -1469,14 +1492,14 @@ class Units:
 
     >>> t.format_short(305000000)
     '5m5s'
-
     """
 
     base_unit: typing.Annotated[
         Unit,
         _name("Base unit"),
         _description(
-            "The base unit is the smallest unit of scale for this set of units."
+            "The base unit is the smallest unit of scale for this set of"
+            " units."
         ),
         _example(
             {
@@ -1490,7 +1513,9 @@ class Units:
     multipliers: typing.Annotated[
         Optional[Dict[int, Unit]],
         _name("Multipliers"),
-        _description("A set of multiplies that describe multiple units of scale."),
+        _description(
+            "A set of multiplies that describe multiple units of scale."
+        ),
         _example(
             {
                 1024: {
@@ -1509,14 +1534,16 @@ class Units:
         ),
     ] = None
 
-    def __init__(self, base_unit: Unit, multipliers: Optional[Dict[int, Unit]] = None):
+    def __init__(
+        self, base_unit: Unit, multipliers: Optional[Dict[int, Unit]] = None
+    ):
         self.base_unit = base_unit
         self.multipliers = multipliers
         self.__unit_re_cache = None
 
     def parse(self, data: str) -> typing.Union[int, float]:
-        """
-        This function parses a string of units into the base number representation.
+        """This function parses a string of units into the base number
+        representation.
 
         :raises UnitParseException: if the data string fails to parse.
 
@@ -1543,7 +1570,8 @@ class Units:
         """
         if data.strip() == "":
             raise UnitParseException(
-                "Empty string cannot be parsed as " + self.base_unit.name_long_plural
+                "Empty string cannot be parsed as "
+                + self.base_unit.name_long_plural
             )
         if self.__unit_re_cache is None:
             parts = []
@@ -1583,10 +1611,13 @@ class Units:
                     valid_units.append(multiplier.name_short_plural)
                     valid_units.append(multiplier.name_short_singular)
             raise UnitParseException(
-                "Cannot parse '{}' as '{}': invalid format, valid unit types are: '{}'".format(
+                "Cannot parse '{}' as '{}': invalid format, valid unit types"
+                " are: '{}'".format(
                     data,
                     self.base_unit.name_long_plural,
-                    "', '".join(collections.OrderedDict.fromkeys(valid_units).keys()),
+                    "', '".join(
+                        collections.OrderedDict.fromkeys(valid_units).keys()
+                    ),
                 )
             )
         number = 0
@@ -1604,9 +1635,8 @@ class Units:
         return number
 
     def format_short(self, data: typing.Union[int, float]) -> str:
-        """
-        This function takes an integer and formats it so that it is the most readable based on the current set of
-        units.
+        """This function takes an integer and formats it so that it is the most
+        readable based on the current set of units.
 
         **Example:**
 
@@ -1637,9 +1667,8 @@ class Units:
         return output
 
     def format_long(self, data: typing.Union[int, float]) -> str:
-        """
-        This function takes an integer and formats it so that it is the most readable based on the current set of
-        units.
+        """This function takes an integer and formats it so that it is the most
+        readable based on the current set of units.
 
         **Example:**
 
@@ -1700,8 +1729,8 @@ UNIT_PERCENT = Units(Unit("%", "%", "percent", "percent"))
 
 @dataclass
 class DisplayValue:
-    """
-    This class holds the fields related to displaying an item in a user interface.
+    """This class holds the fields related to displaying an item in a user
+    interface.
 
     **Example:**
 
@@ -1730,8 +1759,9 @@ class DisplayValue:
         Optional[str],
         _name("Icon"),
         _description(
-            "SVG icon for this item. Must have the declared size of 64x64, must not include "
-            "additional namespaces, and must not reference external resources."
+            "SVG icon for this item. Must have the declared size of 64x64,"
+            " must not include additional namespaces, and must not reference"
+            " external resources."
         ),
         _example("<svg ...></svg>"),
         _min(1),
@@ -1740,9 +1770,8 @@ class DisplayValue:
 
 @dataclass
 class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class specifically holds an enum that has string values. The values field maps the underlying values to
-    display values for easy presentation.
+    """This class specifically holds an enum that has string values. The values
+    field maps the underlying values to display values for easy presentation.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use StringEnumType.
@@ -1757,15 +1786,15 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... })
     >>> s.valid_values()
     ['apple', 'banana', 'orange']
-    """
+    """  # noqa: E501
 
     values: typing.Annotated[
         Dict[str, DisplayValue],
         _min(1),
         _name("Values"),
         _description(
-            "Mapping where the left side of the map holds the possible value and the right side holds the display "
-            "value for forms, etc."
+            "Mapping where the left side of the map holds the possible value"
+            " and the right side holds the display value for forms, etc."
         ),
         _example({"apple": {"name": "Apple"}, "orange": {"name": "Orange"}}),
     ]
@@ -1776,26 +1805,26 @@ class StringEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        """
-        This method generates an JSON schema fragment for enumerated strings.
+        """This method generates an JSON schema fragment for enumerated
+        strings.
+
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
-        """
+        """  # noqa: E501
         return {"type": "string", "enum": list(self.values.keys())}
 
     def _to_openapi_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
     ) -> any:
-        """
-        This method generates an OpenAPI fragment for string enums.
+        """This method generates an OpenAPI fragment for string enums.
+
         See: https://spec.openapis.org/oas/v3.1.0#data-types
-        """
+        """  # noqa: E501
         return {"type": "string", "enum": list(self.values.keys())}
 
 
 @dataclass
 class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class specifically holds an enum that has integer values.
+    """This class specifically holds an enum that has integer values.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`IntEnumType`.
@@ -1810,7 +1839,7 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ... })
     >>> s.valid_values()
     [1, 2, 3]
-    """
+    """  # noqa: E501
 
     values: typing.Annotated[
         Dict[int, DisplayValue],
@@ -1827,27 +1856,32 @@ class IntEnumSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        """
-        This method generates an JSON schema fragment for enumerated integers.
+        """This method generates an JSON schema fragment for enumerated
+        integers.
+
         See: https://json-schema.org/understanding-json-schema/reference/generic.html#enumerated-values
-        """
+        """  # noqa: E501
         return {"type": "integer", "enum": list(self.values.keys())}
 
     def _to_openapi_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
     ) -> any:
-        """
-        This method generates an OpenAPI fragment for string enums.
+        """This method generates an OpenAPI fragment for string enums.
+
         See: https://spec.openapis.org/oas/v3.1.0#data-types
-        """
-        return {"type": "integer", "format": "int64", "enum": list(self.values.keys())}
+        """  # noqa: E501
+        return {
+            "type": "integer",
+            "format": "int64",
+            "enum": list(self.values.keys()),
+        }
 
 
 @dataclass
 class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds schema information for strings. This dataclass only has the ability to hold the configuration but
-    cannot serialize, unserialize or validate. For that functionality please use :class:`StringType`.
+    """This class holds schema information for strings. This dataclass only has
+    the ability to hold the configuration but cannot serialize, unserialize or
+    validate. For that functionality please use :class:`StringType`.
 
     **Example:**
 
@@ -1858,7 +1892,7 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=5,
     ...     pattern=re.compile("^[a-z]+$")
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[int],
@@ -1886,10 +1920,10 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        """
-        This method generates an JSON schema fragment for strings.
+        """This method generates an JSON schema fragment for strings.
+
         See: https://json-schema.org/understanding-json-schema/reference/string.html
-        """
+        """  # noqa: E501
         result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
@@ -1902,10 +1936,10 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _to_openapi_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
     ) -> any:
-        """
-        This method generates an OpenAPI fragment for strings.
+        """This method generates an OpenAPI fragment for strings.
+
         See: https://swagger.io/docs/specification/data-models/data-types/#string
-        """
+        """  # noqa: E501
         result = {"type": "string"}
         if self.min is not None:
             result["minLength"] = self.min
@@ -1918,16 +1952,16 @@ class StringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class PatternSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema information for regular expression patterns. This dataclass only has the ability to
-    hold the configuration but cannot serialize, unserialize or validate. For that functionality please use
+    """This class holds the schema information for regular expression patterns.
+    This dataclass only has the ability to hold the configuration but cannot
+    serialize, unserialize or validate. For that functionality please use
     :class:`PatternType`.
 
     **Example:**
 
     >>> from arcaflow_plugin_sdk import schema
     >>> s = schema.PatternSchema()
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -1942,9 +1976,10 @@ class PatternSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema information for 64-bit integers. This dataclass only has the ability to hold the
-    configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`IntType`.
+    """This class holds the schema information for 64-bit integers. This
+    dataclass only has the ability to hold the configuration but cannot
+    serialize, unserialize or validate. For that functionality please use
+    :class:`IntType`.
 
     **Example:**
 
@@ -1954,7 +1989,7 @@ class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=5,
     ...     units=schema.UNIT_BYTE
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[int],
@@ -2007,10 +2042,10 @@ class IntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema information for 64-bit floating point numbers. This dataclass only has the ability to
-    hold the configuration but cannot serialize, unserialize or validate. For that functionality please use
-    :class:`FloatType`.
+    """This class holds the schema information for 64-bit floating point
+    numbers. This dataclass only has the ability to hold the configuration but
+    cannot serialize, unserialize or validate. For that functionality please
+    use :class:`FloatType`.
 
     **Example:**
 
@@ -2020,7 +2055,7 @@ class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=100,
     ...     units=schema.UNIT_PERCENT
     ... )
-    """
+    """  # noqa: E501
 
     min: typing.Annotated[
         Optional[float],
@@ -2073,9 +2108,10 @@ class FloatSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema information for boolean types. This dataclass only has the ability to hold the
-    configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`BoolType`.
+    """This class holds the schema information for boolean types. This
+    dataclass only has the ability to hold the configuration but cannot
+    serialize, unserialize or validate. For that functionality please use
+    :class:`BoolType`.
 
     **Example:**
 
@@ -2085,7 +2121,7 @@ class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     max=100,
     ...     units=schema.UNIT_PERCENT
     ... )
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2160,9 +2196,9 @@ class BoolSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema definition for lists. This dataclass only has the ability to hold the configuration but
-    cannot serialize, unserialize or validate. For that functionality please use :class:`ListType`.
+    """This class holds the schema definition for lists. This dataclass only
+    has the ability to hold the configuration but cannot serialize, unserialize
+    or validate. For that functionality please use :class:`ListType`.
 
     **Example:**
 
@@ -2172,7 +2208,7 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     min=2,
     ...     max=3,
     ... )
-    """
+    """  # noqa: E501
 
     items: typing.Annotated[
         VALUE_TYPE,
@@ -2225,9 +2261,10 @@ class ListSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema definition for key-value associations. This dataclass only has the ability to hold the
-    configuration but cannot serialize, unserialize or validate. For that functionality please use :class:`MapType`.
+    """This class holds the schema definition for key-value associations. This
+    dataclass only has the ability to hold the configuration but cannot
+    serialize, unserialize or validate. For that functionality please use
+    :class:`MapType`.
 
     **Example:**
 
@@ -2272,7 +2309,9 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         result = {
             "type": "object",
             "propertyNames": self.keys._to_jsonschema_fragment(scope, defs),
-            "additionalProperties": self.values._to_jsonschema_fragment(scope, defs),
+            "additionalProperties": self.values._to_jsonschema_fragment(
+                scope, defs
+            ),
         }
 
         # Sadly, these properties are not supported by JSON schema
@@ -2299,7 +2338,9 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         result = {
             "type": "object",
             "propertyNames": self.keys._to_openapi_fragment(scope, defs),
-            "additionalProperties": self.values._to_openapi_fragment(scope, defs),
+            "additionalProperties": self.values._to_openapi_fragment(
+                scope, defs
+            ),
         }
 
         # Sadly, these properties are not supported by JSON schema
@@ -2322,10 +2363,10 @@ class MapSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the schema definition for a single object property. It is usable in conjunction with ``ObjectSchema``.
-    This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
-    that functionality please use :class:`PropertyType`.
+    """This class holds the schema definition for a single object property. It
+    is usable in conjunction with ``ObjectSchema``. This dataclass only has the
+    ability to hold the configuration but cannot serialize, unserialize or
+    validate. For that functionality please use :class:`PropertyType`.
 
     **Example:**
 
@@ -2352,7 +2393,9 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """
 
     type: typing.Annotated[
-        VALUE_TYPE, _name("Type"), _description("Type definition for this field.")
+        VALUE_TYPE,
+        _name("Type"),
+        _description("Type definition for this field."),
     ]
     display: DISPLAY_TYPE = None
     default: DEFAULT_TYPE = None
@@ -2361,28 +2404,32 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         bool,
         _name("Required"),
         _description(
-            "When set to true, the value for this field must be provided under all circumstances."
+            "When set to true, the value for this field must be provided under"
+            " all circumstances."
         ),
     ] = True
     required_if: typing.Annotated[
         Optional[List[str]],
         _name("Required if"),
         _description(
-            "Sets the current property to required if any of the properties in this list are set."
+            "Sets the current property to required if any of the properties in"
+            " this list are set."
         ),
     ] = None
     required_if_not: typing.Annotated[
         Optional[List[str]],
         _name("Required if not"),
         _description(
-            "Sets the current property to be required if none of the properties in this list are set."
+            "Sets the current property to be required if none of the"
+            " properties in this list are set."
         ),
     ] = None
     conflicts: typing.Annotated[
         Optional[List[str]],
         _name("Conflicts"),
         _description(
-            "The current property cannot be set if any of the listed properties are set."
+            "The current property cannot be set if any of the listed"
+            " properties are set."
         ),
     ] = None
 
@@ -2426,9 +2473,9 @@ class PropertySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the definition for objects comprised of defined fields. This dataclass only has the ability to hold
-    the configuration but cannot serialize, unserialize or validate. For that functionality please use
+    """This class holds the definition for objects comprised of defined fields.
+    This dataclass only has the ability to hold the configuration but cannot
+    serialize, unserialize or validate. For that functionality please use
     :class:`PropertyType`.
 
     **Example:**
@@ -2458,7 +2505,9 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     id: typing.Annotated[
         ID_TYPE,
         _name("ID"),
-        _description("Unique identifier for this object within the current scope."),
+        _description(
+            "Unique identifier for this object within the current scope."
+        ),
     ]
     properties: typing.Annotated[
         Dict[str, PropertySchema],
@@ -2472,7 +2521,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         if self.id in defs.defs:
             return {"$ref": "#/$defs/" + self.id}
 
-        # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
+        # Add the object in the beginning to avoid an endless loop. Properties
+        # will be filled up below
         defs.defs[self.id] = {
             "type": "object",
             "properties": {},
@@ -2501,7 +2551,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         if self.id in defs.components:
             return {"$ref": "#/components/schemas/" + self.id}
 
-        # Add the object in the beginning to avoid an endless loop. Properties will be filled up below
+        # Add the object in the beginning to avoid an endless loop. Properties
+        # will be filled up below
         defs.components[self.id] = {
             "type": "object",
             "properties": {},
@@ -2521,10 +2572,11 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the definition of variable types with a string discriminator. This type acts as a split for a case
-    where multiple possible object types can be present in a field. This type requires that there be a common field
-    (the discriminator) which tells a parsing party which type it is. The field type in this case is a string.
+    """This class holds the definition of variable types with a string
+    discriminator. This type acts as a split for a case where multiple possible
+    object types can be present in a field. This type requires that there be a
+    common field (the discriminator) which tells a parsing party which type it
+    is. The field type in this case is a string.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`OneOfStringType`.
@@ -2586,15 +2638,16 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         )
     ...     }
     ... )
-    """
+    """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
-            "Name of the field used to discriminate between possible values. If this field is"
-            "present on any of the component objects it must also be a string."
+            "Name of the field used to discriminate between possible values."
+            " If this field ispresent on any of the component objects it must"
+            " also be a string."
         ),
     ] = "_type"
 
@@ -2608,11 +2661,15 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             discriminated_object = defs.defs[v.id]
 
-            discriminated_object["properties"][self.discriminator_field_name] = {
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
                 "type": "string",
                 "const": k,
             }
-            discriminated_object["required"].insert(0, self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2636,10 +2693,14 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             discriminated_object = defs.components[v.id]
 
-            discriminated_object["properties"][self.discriminator_field_name] = {
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
                 "type": "string",
             }
-            discriminated_object["required"].insert(0, self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2659,10 +2720,11 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the definition of variable types with an integer discriminator. This type acts as a split for a
-    case where multiple possible object types can be present in a field. This type requires that there be a common field
-    (the discriminator) which tells a parsing party which type it is. The field type in this case is a string.
+    """This class holds the definition of variable types with an integer
+    discriminator. This type acts as a split for a case where multiple possible
+    object types can be present in a field. This type requires that there be a
+    common field (the discriminator) which tells a parsing party which type it
+    is. The field type in this case is a string.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`OneOfIntType`.
@@ -2708,15 +2770,16 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-    """
+    """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
-            "Name of the field used to discriminate between possible values. If this field is"
-            "present on any of the component objects it must also be an int."
+            "Name of the field used to discriminate between possible values."
+            " If this field ispresent on any of the component objects it must"
+            " also be an int."
         ),
     ] = "_type"
 
@@ -2730,11 +2793,15 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             discriminated_object = defs.defs[v.id]
 
-            discriminated_object["properties"][self.discriminator_field_name] = {
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
                 "type": "string",
                 "const": str(k),
             }
-            discriminated_object["required"].insert(0, self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2758,10 +2825,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             discriminated_object = defs.components[v.id]
 
-            discriminated_object["properties"][self.discriminator_field_name] = {
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
                 "type": "string",
             }
-            discriminated_object["required"].insert(0, self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2781,10 +2852,10 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the definition of a reference to a scope-wide object. The ref must always be inside a scope,
-    either directly or indirectly. If several scopes are embedded within each other, the Ref references the object
-    in the current scope.
+    """This class holds the definition of a reference to a scope-wide object.
+    The ref must always be inside a scope, either directly or indirectly. If
+    several scopes are embedded within each other, the Ref references the
+    object in the current scope.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`RefType`.
@@ -2816,7 +2887,7 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...        "a": schema.PropertySchema(ref)
     ...    }
     ... )
-    """
+    """  # noqa: E501
 
     id: typing.Annotated[
         ID_TYPE,
@@ -2838,9 +2909,8 @@ class RefSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class stores the details of the "any" type, which allows all lists, dicts, integers, floats, strings, and bools
-    in a value.
+    """This class stores the details of the "any" type, which allows all lists,
+    dicts, integers, floats, strings, and bools in a value.
 
     **Example:**
 
@@ -2851,7 +2921,7 @@ class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     Create an any schema:
 
     >>> ref = schema.AnySchema()
-    """
+    """  # noqa: E501
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2866,11 +2936,11 @@ class AnySchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    A scope is a container for holding objects that can be referenced. It also optionally holds a reference to the
-    root object of the current scope. References within the scope must always reference IDs in a scope. Scopes can be
-    embedded into other objects, and scopes can have subscopes. Each RefSchema will reference objects in its current
-    scope.
+    """A scope is a container for holding objects that can be referenced. It
+    also optionally holds a reference to the root object of the current scope.
+    References within the scope must always reference IDs in a scope. Scopes
+    can be embedded into other objects, and scopes can have subscopes. Each
+    RefSchema will reference objects in its current scope.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`ScopeType`.
@@ -2902,13 +2972,14 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...        "a": schema.PropertySchema(ref)
     ...    }
     ... )
-    """
+    """  # noqa: E501
 
     objects: typing.Annotated[
         Dict[ID_TYPE, ObjectSchema],
         _name("Objects"),
         _description(
-            "A set of referenceable objects. These objects may contain references themselves."
+            "A set of referenceable objects. These objects may contain"
+            " references themselves."
         ),
     ]
     root: typing.Annotated[
@@ -2961,8 +3032,8 @@ class ScopeSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    """
-    This class holds the possible outputs of a step and the metadata information related to these outputs.
+    """This class holds the possible outputs of a step and the metadata
+    information related to these outputs.
 
     This dataclass only has the ability to hold the configuration but cannot serialize, unserialize or validate. For
     that functionality please use :class:`StepOutputType`.
@@ -2992,7 +3063,7 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     schema.DisplayValue("Test output"),
     ...     error=False,
     ... )
-    """
+    """  # noqa: E501
 
     schema: typing.Annotated[
         ScopeSchema,
@@ -3003,13 +3074,15 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     error: typing.Annotated[
         bool,
         _name("Error"),
-        _description("If set to true, this output will be treated as an error output."),
+        _description(
+            "If set to true, this output will be treated as an error output."
+        ),
     ] = False
 
     def to_jsonschema(self):
-        """
-        Creates a JSON schema fragment for this output. This is useful when combining the output with other outputs into
-        a comprehensive JSON schema output.
+        """Creates a JSON schema fragment for this output. This is useful when
+        combining the output with other outputs into a comprehensive JSON
+        schema output.
 
         **Example:**
 
@@ -3046,13 +3119,13 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         'object'
         >>> json_schema["properties"]["foo"]["type"]
         'string'
-        """
+        """  # noqa: E501
         return self._to_jsonschema_fragment(self.schema, _JSONSchemaDefs())
 
     def to_openapi(self):
-        """
-        Creates a OpenAPI fragment for this output. This is useful when combining the output with other outputs into
-        a comprehensive OpenAPI document.
+        """Creates a OpenAPI fragment for this output. This is useful when
+        combining the output with other outputs into a comprehensive OpenAPI
+        document.
 
         **Example:**
 
@@ -3089,10 +3162,12 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         '#/components/schemas/a'
         >>> openapi["components"]["schemas"]["a"]["properties"]["foo"]["type"]
         'string'
-        """
+        """  # noqa: E501
         return self._to_openapi_fragment(self.schema, _OpenAPIComponents())
 
-    def _to_jsonschema_fragment(self, scope: ScopeSchema, defs: _JSONSchemaDefs) -> any:
+    def _to_jsonschema_fragment(
+        self, scope: ScopeSchema, defs: _JSONSchemaDefs
+    ) -> any:
         # noinspection PyProtectedMember
         return self.schema._to_jsonschema_fragment(scope, defs)
 
@@ -3105,29 +3180,25 @@ class StepOutputSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 @dataclass
 class SignalSchema:
-    """
-    Holds the definition for a single signal. This can be used for input or output signals.
+    """Holds the definition for a single signal. This can be used for input or
+    output signals.
 
     To create, set the ID, and create a scope for the data input or output.
-
     """
+
     id: typing.Annotated[
-        ID_TYPE,
-        _name("ID"),
-        _description("Machine identifier for this step.")
+        ID_TYPE, _name("ID"), _description("Machine identifier for this step.")
     ]
     data_schema: typing.Annotated[
-        ScopeSchema,
-        _name("Data"),
-        _description("Input or output data schema")
+        ScopeSchema, _name("Data"), _description("Input or output data schema")
     ]
     display: DISPLAY_TYPE = None
 
 
 @dataclass
 class StepSchema:
-    """
-    This class holds the definition for a single step, it's input and output definitions.
+    """This class holds the definition for a single step, it's input and output
+    definitions.
 
     **Example:**
 
@@ -3196,7 +3267,6 @@ class StepSchema:
         Dict[ID_TYPE, SignalSchema],
         _name("Signal handlers"),
         _description("Signals that are input by the step."),
-
     ] = None
     signal_emitters: typing.Annotated[
         Dict[ID_TYPE, SignalSchema],
@@ -3208,9 +3278,7 @@ class StepSchema:
 
 @dataclass
 class Schema:
-    """
-    This is a collection of steps supported by a plugin.
-    """
+    """This is a collection of steps supported by a plugin."""
 
     steps: typing.Annotated[
         Dict[ID_TYPE, StepSchema],
@@ -3228,43 +3296,47 @@ TypeT = TypeVar("TypeT")
 
 
 class AbstractType(Generic[TypeT]):
-    """
-    This class is an abstract class describing the methods needed to implement a type.
-    """
+    """This class is an abstract class describing the methods needed to
+    implement a type."""
 
     @abstractmethod
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
-        """
-        This function takes the underlying raw data and decodes it into the underlying advanced data type (e.g.
-        dataclass) for usage.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> TypeT:
+        """This function takes the underlying raw data and decodes it into the
+        underlying advanced data type (e.g. dataclass) for usage.
 
         :param data: the raw data.
-        :param path: the list of structural elements that lead to this point for error messages.
-        :return: the advanced datatype.
-        :raise ConstraintException: if the passed data was not valid.
+        :param path: the list of structural elements that lead to this point
+            for error messages.
+        :return: the advanced datatype. :raise ConstraintException: if the
+            passed data was not valid.
         """
         pass
 
     @abstractmethod
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates an already unserialized data type and raises an exception if it does not match
-        the type definition.
+        """This function validates an already unserialized data type and raises
+        an exception if it does not match the type definition.
 
         :param data: the unserialized data.
-        :param path: the path that lead to this validation call, in order to produce a nice error message
-        :raise ConstraintException: if the passed data was not valid.
+        :param path: the path that lead to this validation call, in order to
+            produce a nice error message :raise ConstraintException: if the
+            passed data was not valid.
         """
 
     @abstractmethod
-    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function serializes the passed data into it's raw form for transport, e.g. string, int, dicts, list.
+    def serialize(
+        self, data: TypeT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
+        """This function serializes the passed data into it's raw form for
+        transport, e.g. string, int, dicts, list.
 
         :param data: the underlying data type to be serialized.
-        :param path: the list of structural elements that lead to this point for error messages.
-        :return: the raw datatype.
-        :raise ConstraintException: if the passed data was not valid.
+        :param path: the list of structural elements that lead to this point
+            for error messages.
+        :return: the raw datatype. :raise ConstraintException: if the passed
+            data was not valid.
         """
         pass
 
@@ -3273,13 +3345,13 @@ EnumT = TypeVar("EnumT", bound=Enum)
 
 
 class _EnumType(AbstractType, Generic[EnumT]):
-    """
-    StringEnumType is an implementation of StringEnumSchema.
-    """
+    """StringEnumType is an implementation of StringEnumSchema."""
 
     _type: Type[EnumT]
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> EnumT:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> EnumT:
         if isinstance(data, Enum):
             if data not in self._type:
                 raise ConstraintException(
@@ -3295,7 +3367,9 @@ class _EnumType(AbstractType, Generic[EnumT]):
                     return v
             raise ConstraintException(
                 path,
-                "'{}' is not a valid value for '{}'".format(data, self._type.__name__),
+                "'{}' is not a valid value for '{}'".format(
+                    data, self._type.__name__
+                ),
             )
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
@@ -3313,10 +3387,14 @@ class _EnumType(AbstractType, Generic[EnumT]):
                     return
             raise ConstraintException(
                 path,
-                "'{}' is not a valid value for '{}'".format(data, self._type.__name__),
+                "'{}' is not a valid value for '{}'".format(
+                    data, self._type.__name__
+                ),
             )
 
-    def serialize(self, data: EnumT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: EnumT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         if data not in self._type:
             raise ConstraintException(
                 path,
@@ -3328,8 +3406,7 @@ class _EnumType(AbstractType, Generic[EnumT]):
 
 
 class StringEnumType(_EnumType, StringEnumSchema):
-    """
-    This class represents an enum type that is a string.
+    """This class represents an enum type that is a string.
 
     **Example:**
 
@@ -3364,7 +3441,7 @@ class StringEnumType(_EnumType, StringEnumSchema):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: 'plum' is not a valid value for 'Fruits'
-    """
+    """  # noqa: E501
 
     def __init__(self, t: Type[EnumT]):
         self._type = t
@@ -3386,8 +3463,7 @@ class StringEnumType(_EnumType, StringEnumSchema):
 
 
 class IntEnumType(_EnumType, IntEnumSchema):
-    """
-    This class represents an enum type that is an integer.
+    """This class represents an enum type that is an integer.
 
     **Example:**
 
@@ -3423,7 +3499,7 @@ class IntEnumType(_EnumType, IntEnumSchema):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: '4' is not a valid value for 'PrimeNumbers'
-    """
+    """  # noqa: E501
 
     def __init__(self, t: Type[EnumT]):
         self._type = t
@@ -3445,8 +3521,8 @@ class IntEnumType(_EnumType, IntEnumSchema):
 
 
 class BoolType(BoolSchema, AbstractType):
-    """
-    This type represents a boolean value with a multitude of unserialization options.
+    """This type represents a boolean value with a multitude of unserialization
+    options.
 
     **Example:**
 
@@ -3459,11 +3535,12 @@ class BoolType(BoolSchema, AbstractType):
     >>> bool_type = schema.BoolType()
 
     Now you can use the type to unseralize, validate, or serialize values.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
-        """
-        This function unserializes a bool value from a variety of types.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> TypeT:
+        """This function unserializes a bool value from a variety of types.
 
         **Example:**
 
@@ -3516,7 +3593,7 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, string found ()
-        """
+        """  # noqa: E501
         if isinstance(data, bool):
             return data
         if isinstance(data, int):
@@ -3558,8 +3635,7 @@ class BoolType(BoolSchema, AbstractType):
         )
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates a bool value.
+        """This function validates a bool value.
 
         **Example:**
 
@@ -3582,15 +3658,16 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, <class 'int'> found
-        """
+        """  # noqa: E501
         if not isinstance(data, bool):
             raise ConstraintException(
                 path, "Boolean value expected, {} found".format(type(data))
             )
 
-    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function serializes a bool value.
+    def serialize(
+        self, data: TypeT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
+        """This function serializes a bool value.
 
         **Example:**
 
@@ -3615,7 +3692,7 @@ class BoolType(BoolSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Boolean value expected, <class 'int'> found
-        """
+        """  # noqa: E501
         if isinstance(data, bool):
             return data
         raise ConstraintException(
@@ -3625,8 +3702,7 @@ class BoolType(BoolSchema, AbstractType):
 
 @dataclass
 class StringType(StringSchema, AbstractType):
-    """
-    StringType represents a string of characters for human consumption.
+    """StringType represents a string of characters for human consumption.
 
     **Example:**
 
@@ -3639,11 +3715,12 @@ class StringType(StringSchema, AbstractType):
     ... )
 
     You can now unserialize, validate, or serialize the data.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> str:
-        """
-        Unserializes the current string from an integer or string.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> str:
+        """Unserializes the current string from an integer or string.
 
         **Example:**
 
@@ -3656,15 +3733,15 @@ class StringType(StringSchema, AbstractType):
         ... )
         >>> s.unserialize(123)
         '123'
-        """
+        """  # noqa: E501
         if isinstance(data, int):
             data = str(data)
         self.validate(data, path)
         return data
 
     def validate(self, data: str, path: typing.Tuple[str] = tuple([])):
-        """
-        Validates the given string for conformance with the rules set up in this object.
+        """Validates the given string for conformance with the rules set up in
+        this object.
 
         **Example:**
 
@@ -3691,7 +3768,7 @@ class StringType(StringSchema, AbstractType):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: String must be at most 5 characters, 6 given
-        """
+        """  # noqa: E501
         if not isinstance(data, str):
             raise ConstraintException(
                 path, "Must be a string, {} given".format(type(data))
@@ -3713,20 +3790,21 @@ class StringType(StringSchema, AbstractType):
             )
         if self.pattern is not None and not self.pattern.match(string):
             raise ConstraintException(
-                path, "String must match the pattern {}".format(self.pattern.pattern)
+                path,
+                "String must match the pattern {}".format(
+                    self.pattern.pattern
+                ),
             )
 
     def serialize(self, data: str, path: typing.Tuple[str] = tuple([])) -> any:
-        """
-        This function returns the string as-is after validating its contents.
-        """
+        """This function returns the string as-is after validating its
+        contents."""
         self.validate(data, path)
         return data
 
 
 class PatternType(PatternSchema, AbstractType):
-    """
-    PatternType represents a regular expression.
+    """PatternType represents a regular expression.
 
     **Example:**
 
@@ -3736,9 +3814,10 @@ class PatternType(PatternSchema, AbstractType):
     You can now unserialize, validate, or serialize the data.
     """
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> re.Pattern:
-        """
-        This function unserializes a regular expression from a string.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> re.Pattern:
+        """This function unserializes a regular expression from a string.
 
         **Example:**
 
@@ -3760,7 +3839,7 @@ class PatternType(PatternSchema, AbstractType):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Invalid regular expression (unterminated \
 character set at position 0)
-        """
+        """  # noqa: E501
         if not isinstance(data, str):
             raise ConstraintException(path, "Must be a string")
         try:
@@ -3779,8 +3858,7 @@ character set at position 0)
             )
 
     def validate(self, data: re.Pattern, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates a regular expression as such.
+        """This function validates a regular expression as such.
 
         **Example:**
 
@@ -3800,19 +3878,21 @@ character set at position 0)
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Not a regular expression
-        """
+        """  # noqa: E501
         if not isinstance(data, re.Pattern):
             raise ConstraintException(path, "Not a regular expression")
 
-    def serialize(self, data: re.Pattern, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: re.Pattern, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         if not isinstance(data, re.Pattern):
             raise ConstraintException(path, "Must be a re.Pattern")
         return data.pattern
 
 
 class IntType(IntSchema, AbstractType):
-    """
-    ``IntType`` represents an integer type, both positive or negative. It is designed to take a 64 bit value.
+    """``IntType`` represents an integer type, both positive or negative. It is
+    designed to take a 64 bit value.
 
     **Example:**
 
@@ -3829,12 +3909,14 @@ class IntType(IntSchema, AbstractType):
     ... )
 
     Now you can use this type to unserialize, validate, or serialize.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> int:
-        """
-        This function can unserialize a number for a integers or strings. If the passed data is a string, it can take
-        the unit of the current type into account.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> int:
+        """This function can unserialize a number for a integers or strings. If
+        the passed data is a string, it can take the unit of the current type
+        into account.
 
         **Example:**
 
@@ -3877,7 +3959,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         if isinstance(data, str):
             if self.units is not None:
                 try:
@@ -3888,14 +3970,16 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
                 try:
                     data = int(data)
                 except ValueError as e:
-                    raise ConstraintException(path, "Must be an integer") from e
+                    raise ConstraintException(
+                        path, "Must be an integer"
+                    ) from e
 
         self.validate(data, path)
         return data
 
     def validate(self, data: int, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates the passed number for conformity with the schema.
+        """This function validates the passed number for conformity with the
+        schema.
 
         **Example:**
 
@@ -3929,10 +4013,11 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         if not isinstance(data, int):
             raise ConstraintException(
-                path, "Must be an integer, {} given".format(type(data).__name__)
+                path,
+                "Must be an integer, {} given".format(type(data).__name__),
             )
         integer = int(data)
         if self.min is not None and integer < self.min:
@@ -3957,8 +4042,8 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
             raise ConstraintException(path, "Must be at most {}".format(num))
 
     def serialize(self, data: int, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function will return an integer for the base unit of this value.
+        """This function will return an integer for the base unit of this
+        value.
 
         **Example:**
 
@@ -3993,15 +4078,14 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000ns)
-        """
+        """  # noqa: E501
         self.validate(data, path)
         return data
 
 
 @dataclass
 class FloatType(FloatSchema, AbstractType):
-    """
-    This type represents a 64-bit floating point / real number.
+    """This type represents a 64-bit floating point / real number.
 
     **Example:**
 
@@ -4018,12 +4102,14 @@ class FloatType(FloatSchema, AbstractType):
     ... )
 
     Now you can use this type to unserialize, validate, or serialize.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> float:
-        """
-        This function can unserialize a number for a integers or strings. If the passed data is a string, it can take
-        the unit of the current type into account.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> float:
+        """This function can unserialize a number for a integers or strings. If
+        the passed data is a string, it can take the unit of the current type
+        into account.
 
         **Example:**
 
@@ -4070,7 +4156,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         if isinstance(data, str):
             if self.units is not None:
                 try:
@@ -4088,8 +4174,8 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         return data
 
     def validate(self, data: float, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates the passed number for conformity with the schema.
+        """This function validates the passed number for conformity with the
+        schema.
 
         **Example:**
 
@@ -4127,7 +4213,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         if not isinstance(data, float):
             raise ConstraintException(
                 path, "Must be an float, {} given".format(type(data).__name__)
@@ -4154,9 +4240,10 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
                 )
             raise ConstraintException(path, "Must be at most {}".format(num))
 
-    def serialize(self, data: float, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function will return a float for the base unit of this value.
+    def serialize(
+        self, data: float, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
+        """This function will return a float for the base unit of this value.
 
         **Example:**
 
@@ -4191,7 +4278,7 @@ format, valid unit types are: 'nanoseconds', 'nanosecond', 'ns', 'microseconds',
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must be at least 1s (1000000.0ns)
-        """
+        """  # noqa: E501
         self.validate(data, path)
         return data
 
@@ -4201,9 +4288,8 @@ ListT = TypeVar("ListT", bound=List)
 
 @dataclass
 class ListType(ListSchema, AbstractType, Generic[ListT]):
-    """
-    ``ListType`` is a strongly typed list that can have elements of only one type. The typical Python equivalent would be
-    ``typing.List[sometype]``.
+    """``ListType`` is a strongly typed list that can have elements of only one
+    type. The typical Python equivalent would be ``typing.List[sometype]``.
 
     **Example:**
 
@@ -4220,11 +4306,13 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
     ... )
 
     Now you can use the list type to unserialize, validate, and serialize.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> ListT:
-        """
-        This function unserializes the list itself, and also unserializes the underlying type.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> ListT:
+        """This function unserializes the list itself, and also unserializes
+        the underlying type.
 
         **Example:**
 
@@ -4263,7 +4351,7 @@ class ListType(ListSchema, AbstractType, Generic[ListT]):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'item 0': String must be at least 1 \
 characters, 0 given
-        """
+        """  # noqa: E501
         if not isinstance(data, list):
             raise ConstraintException(
                 path, "Must be a list, {} given".format(type(data).__name__)
@@ -4276,8 +4364,8 @@ characters, 0 given
         return data
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates the data type. It also validates the underlying data type.
+        """This function validates the data type. It also validates the
+        underlying data type.
 
         **Example:**
 
@@ -4315,16 +4403,18 @@ characters, 0 given
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'item 0': String must be at least 1 \
 characters, 0 given
-        """
+        """  # noqa: E501
         self._validate(data, path)
         for i in range(len(data)):
             new_path = list(path)
             new_path.append("item " + str(i))
             self.items.validate(data[i], tuple(new_path))
 
-    def serialize(self, data: ListT, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function serializes the list elements into a list for transport.
+    def serialize(
+        self, data: ListT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
+        """This function serializes the list elements into a list for
+        transport.
 
         **Example:**
 
@@ -4345,7 +4435,7 @@ characters, 0 given
 
         >>> list_type.serialize(["a"])
         ['a']
-        """
+        """  # noqa: E501
         self._validate(data, path)
         result = []
         for i in range(len(data)):
@@ -4362,11 +4452,16 @@ characters, 0 given
         if self.min is not None and len(data) < self.min:
             raise ConstraintException(
                 path,
-                "Must have at least {} items, {} given".format(self.min, len(data)),
+                "Must have at least {} items, {} given".format(
+                    self.min, len(data)
+                ),
             )
         if self.max is not None and len(data) > self.max:
             raise ConstraintException(
-                path, "Must have at most {} items, {} given".format(self.max, len(data))
+                path,
+                "Must have at most {} items, {} given".format(
+                    self.max, len(data)
+                ),
             )
 
 
@@ -4375,8 +4470,7 @@ MapT = TypeVar("MapT", bound=Dict)
 
 @dataclass
 class MapType(MapSchema, AbstractType, Generic[MapT]):
-    """
-    MapType is a key-value dict with fixed types for both.
+    """MapType is a key-value dict with fixed types for both.
 
     **Example:**
 
@@ -4394,11 +4488,12 @@ class MapType(MapSchema, AbstractType, Generic[MapT]):
     ... )
 
     Now you can use the map type to unserialize, validate, or serialize data.
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> MapT:
-        """
-        Unserialize a map (dict) type as defined with the underlying types.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> MapT:
+        """Unserialize a map (dict) type as defined with the underlying types.
 
         **Example:**
 
@@ -4438,7 +4533,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         entries = self._validate(data, path)
         result: MapT = {}
         for key in entries.keys():
@@ -4454,12 +4549,13 @@ characters, 1 given
                 )
             value_path = list(tuple(new_path))
             value_path.append("value")
-            result[unserialized_key] = self.values.unserialize(value, tuple(value_path))
+            result[unserialized_key] = self.values.unserialize(
+                value, tuple(value_path)
+            )
         return result
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
-        """
-        This function validates the map and its underlying types.
+        """This function validates the map and its underlying types.
 
         **Example:**
 
@@ -4498,7 +4594,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         self._validate(data, path)
         for key in data.keys():
             value = data[key]
@@ -4511,9 +4607,10 @@ characters, 1 given
             value_path.append("value")
             self.values.validate(value, tuple(value_path))
 
-    def serialize(self, data: MapT, path: typing.Tuple[str] = tuple([])) -> Any:
-        """
-        This function serializes the data into the transportable system.
+    def serialize(
+        self, data: MapT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
+        """This function serializes the data into the transportable system.
 
         **Example:**
 
@@ -4553,7 +4650,7 @@ characters, 1 given
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Must have at least 1 elements, 0 given.
-        """
+        """  # noqa: E501
         entries = self._validate(data, path)
         result = {}
         for key in entries.keys():
@@ -4596,8 +4693,8 @@ PropertyT = TypeVar("PropertyT")
 
 
 class PropertyType(PropertySchema, Generic[PropertyT]):
-    """
-    This class holds the schema definition for a single object property . It is usable in conjunction with ``ObjectType``.
+    """This class holds the schema definition for a single object property . It
+    is usable in conjunction with ``ObjectType``.
 
     **Example:**
 
@@ -4634,7 +4731,7 @@ class PropertyType(PropertySchema, Generic[PropertyT]):
 
     >>> object_type.properties["a"].type
     StringType(min=None, max=None, pattern=None)
-    """
+    """  # noqa: E501
 
     field_override: str = ""
 
@@ -4670,9 +4767,9 @@ ObjectT = TypeVar("ObjectT", bound=object)
 
 @dataclass
 class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
-    """
-    ``ObjectType`` represents an object with predefined fields. The property declaration must match the fields in the class.
-    The type currently does not validate if the properties match the provided class.
+    """``ObjectType`` represents an object with predefined fields. The property
+    declaration must match the fields in the class. The type currently does not
+    validate if the properties match the provided class.
 
     **Example:**
 
@@ -4711,12 +4808,14 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     StringType(min=None, max=None, pattern=None)
 
     You can now use the object_type to unserialize, validate, and serialize properties.
-    """
+    """  # noqa: E501
 
     _cls: Type[ObjectT]
     properties: Dict[str, PropertyType]
 
-    def __init__(self, cls: Type[ObjectT], properties: Dict[str, PropertyType]):
+    def __init__(
+        self, cls: Type[ObjectT], properties: Dict[str, PropertyType]
+    ):
         super().__init__(cls.__name__, properties)
         self._cls = cls
         self._validate_config(cls, properties)
@@ -4726,27 +4825,26 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         return self._cls
 
     @staticmethod
-    def _validate_config(cls_type: Type[ObjectT], properties: Dict[str, PropertyType]):
+    def _validate_config(
+        cls_type: Type[ObjectT], properties: Dict[str, PropertyType]
+    ):
         if not isinstance(cls_type, type):
             raise BadArgumentException(
-                "The passed class argument '{}' is not a type. Please pass a type.".format(
-                    type(cls_type).__name__
-                )
+                "The passed class argument '{}' is not a type. Please pass a"
+                " type.".format(type(cls_type).__name__)
             )
         if not isinstance(properties, dict):
             raise BadArgumentException(
-                "The properties parameter to 'ObjectType' must be a 'dict', '{}' given".format(
-                    type(properties).__name__
-                )
+                "The properties parameter to 'ObjectType' must be a 'dict',"
+                " '{}' given".format(type(properties).__name__)
             )
         try:
             # noinspection PyDataclass
             dataclasses.fields(cls_type)
         except Exception as e:
             raise BadArgumentException(
-                "The passed class '{}' is not a dataclass. Please use a dataclass.".format(
-                    cls_type.__name__
-                )
+                "The passed class '{}' is not a dataclass. Please use a"
+                " dataclass.".format(cls_type.__name__)
             ) from e
 
         class_type_hints = typing.get_type_hints(cls_type)
@@ -4759,10 +4857,12 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
             del init_type_hints["return"]
         if len(properties) != len(init_type_hints):
             raise BadArgumentException(
-                "The '{}' class has an invalid number of parameters in the '__init__' function. Expected: {} got: {}\n"
-                "The declared '__init__' parameters are the following: '{}'\n"
-                "The '__init__' parameters must match your declared parameters exactly so the Arcaflow plugin SDK can "
-                "inject the data values.".format(
+                "The '{}' class has an invalid number of parameters in the"
+                " '__init__' function. Expected: {} got: {}\nThe declared"
+                " '__init__' parameters are the following: '{}'\nThe"
+                " '__init__' parameters must match your declared parameters"
+                " exactly so the Arcaflow plugin SDK can inject the data"
+                " values.".format(
                     cls_type.__name__,
                     len(init_type_hints),
                     len(properties),
@@ -4772,8 +4872,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
 
         if len(properties) > 0:
             for property_id, property in properties.items():
-                # Determine what the field is called we are supposed to access. (This may be different from the
-                # serialized representation.)
+                # Determine what the field is called we are supposed to
+                # access. (This may be different from the serialized
+                # representation.)
                 field_id = property_id
                 if property.field_override != "":
                     field_id = property.field_override
@@ -4781,43 +4882,53 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 # Check if the property can be properly set:
                 if field_id not in init_type_hints:
                     raise BadArgumentException(
-                        "The '__init__' function for the class '{}' does not contain a parameter called '{}' as "
-                        "required by the property '{}'. Please make sure all declared properties are settable from the"
-                        "'__init__' function so the Arcaflow SDK can fill your dataclass with the unserialized data.\n"
-                        "Init parameters: '{}'".format(
+                        "The '__init__' function for the class '{}' does not"
+                        " contain a parameter called '{}' as required by the"
+                        " property '{}'. Please make sure all declared"
+                        " properties are settable from the'__init__' function"
+                        " so the Arcaflow SDK can fill your dataclass with the"
+                        " unserialized data.\nInit parameters: '{}'".format(
                             cls_type.__name__,
                             field_id,
                             property_id,
                             "', '".join(init_type_hints.keys()),
                         )
                     )
-                # TODO in the future we should check if the data types of the constructor match with the property.
-                # This can be a source of bugs when the code assumes the data is of one type, but the actual data
-                # type is different. This is not a problem if the schema is auto-generated, but hand-written schemas
-                # can accidentally introduce this issue.
+                # TODO in the future we should check if the data types
+                # of the constructor match with the property. This can
+                # be a source of bugs when the code assumes the data is
+                # of one type, but the actual data type is different.
+                # This is not a problem if the schema is auto-generated,
+                # but hand-written schemas can accidentally introduce
+                # this issue.
                 #
-                # See: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
+                # See:
+                # https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
 
                 # Check if the property can be read:
                 if field_id not in class_type_hints:
                     raise BadArgumentException(
-                        "The '{}' class does not contain a property called '{}' as "
-                        "required by the declared property '{}'. Please make sure all declared properties are "
-                        "gettable from the class so the Arcaflow SDK can fill your dataclass with the unserialized "
-                        "data.\n"
-                        "Class properties: '{}'".format(
+                        "The '{}' class does not contain a property called"
+                        " '{}' as required by the declared property '{}'."
+                        " Please make sure all declared properties are"
+                        " gettable from the class so the Arcaflow SDK can fill"
+                        " your dataclass with the unserialized data.\nClass"
+                        " properties: '{}'".format(
                             cls_type.__name__,
                             field_id,
                             property_id,
                             "', '".join(class_type_hints.keys()),
                         )
                     )
-                # TODO in the future we should check if the data types of the properties match with the property.
-                # This can be a source of bugs when the code assumes the data is of one type, but the actual data
-                # type is different. This is not a problem if the schema is auto-generated, but hand-written schemas
-                # can accidentally introduce this issue.
+                # TODO in the future we should check if the data types of the
+                # properties match with the property. This can be a source of
+                # bugs when the code assumes the data is of one type, but the
+                # actual data type is different. This is not a problem if the
+                # schema is auto-generated, but hand-written schemas can
+                # accidentally introduce this issue.
                 #
-                # See: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
+                # See:
+                # https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/46
 
     @classmethod
     def _resolve_class_type_hints(
@@ -4845,9 +4956,10 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                 "Too many parent classes of {}".format(cls_type.__name__)
             )
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> ObjectT:
-        """
-        This function unserializes a dict into a dataclass.
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> ObjectT:
+        """This function unserializes a dict into a dataclass.
 
         **Example:**
 
@@ -4877,7 +4989,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         Traceback (most recent call last):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'TestData': Must be a dict, got str
-        """
+        """  # noqa: E501
         if not isinstance(data, dict):
             raise ConstraintException(
                 path, "Must be a dict, got {}".format(type(data).__name__)
@@ -4913,17 +5025,16 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                         if conflict in data:
                             raise ConstraintException(
                                 tuple(new_path),
-                                "Field conflicts '{}', set one of the two, not both".format(
-                                    conflict
-                                ),
+                                "Field conflicts '{}', set one of the two, not"
+                                " both".format(conflict),
                             )
             else:
                 self._validate_not_set(data, object_property, tuple(new_path))
         return self._cls(**kwargs)
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
-        """
-        This function will validate the dataclass and all underlying types as well.
+        """This function will validate the dataclass and all underlying types
+        as well.
 
         **Example:**
 
@@ -4953,7 +5064,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         ...
         arcaflow_plugin_sdk.schema.ConstraintException: Validation failed for 'TestData -> a': String must be at least \
 1 characters, 0 given
-        """
+        """  # noqa: E501
         if not isinstance(data, self._cls):
             raise ConstraintException(
                 path,
@@ -4967,7 +5078,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
             field_id = property_id
             if property_field.field_override != "":
                 field_id = property_field.field_override
-            new_path, value = self._validate_property(data, path, field_id, property_id)
+            new_path, value = self._validate_property(
+                data, path, field_id, property_id
+            )
             if value is not None:
                 property_field.type.validate(value, tuple(new_path))
                 values[property_id] = value
@@ -5000,7 +5113,8 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                     if not found:
                         raise ConstraintException(
                             tuple(new_path),
-                            "Field is required because none of '{}' are set".format(
+                            "Field is required because none of '{}' are set"
+                            .format(
                                 "', '".join(property_field.required_if_not)
                             ),
                         )
@@ -5010,12 +5124,15 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
                         if required_if in values.keys():
                             raise ConstraintException(
                                 tuple(new_path),
-                                "Field is required because none of '{}' are set".format(
+                                "Field is required because none of '{}'"
+                                " are set".format(
                                     "', '".join(property_field.required_if_not)
                                 ),
                             )
 
-    def serialize(self, data: ObjectT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: ObjectT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         if not isinstance(data, self._cls):
             raise ConstraintException(
                 path,
@@ -5029,7 +5146,9 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
             property_field: PropertyType = self.properties[property_id]
             if property_field.field_override != "":
                 field_id = property_field.field_override
-            new_path, value = self._validate_property(data, path, field_id, property_id)
+            new_path, value = self._validate_property(
+                data, path, field_id, property_id
+            )
             if value is not None:
                 result[property_id] = property_field.type.serialize(
                     getattr(data, field_id), tuple(new_path)
@@ -5037,7 +5156,11 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         return result
 
     def _validate_property(
-        self, data: TypeT, path: typing.Tuple[str], field_id: str, property_id: str
+        self,
+        data: TypeT,
+        path: typing.Tuple[str],
+        field_id: str,
+        property_id: str,
     ):
         new_path = list(path)
         new_path.append(property_id)
@@ -5048,10 +5171,12 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         return new_path, value
 
     @staticmethod
-    def _validate_not_set(data, object_property: PropertyType, path: typing.Tuple[str]):
-        """
-        Validate required_if and required_if_not constraints on a property in the given
-        data object. If a constraint has been broken, then raise a ConstraintException.
+    def _validate_not_set(
+        data, object_property: PropertyType, path: typing.Tuple[str]
+    ):
+        """Validate required_if and required_if_not constraints on a property
+        in the given data object. If a constraint has been broken, then raise a
+        ConstraintException.
 
         For a description of the required_if constraint visit
         [https://arcalot.io/arcaflow/plugins/python/schema/?h=required_if#objecttype].
@@ -5062,13 +5187,18 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         :param data: a dictionary representation of an ObjectType
         :param object_property: a property of an ObjectType
         :param path: a traversal from data to object_property
-        """
+        """  # noqa: E501
         if object_property.required:
             raise ConstraintException(path, "This field is required")
         if object_property.required_if is not None:
             for required_if in object_property.required_if:
-                if (isinstance(data, dict) and required_if in data and data[required_if] is not None) or (
-                    hasattr(data, required_if) and getattr(data, required_if) is not None
+                if (
+                    isinstance(data, dict)
+                    and required_if in data
+                    and data[required_if] is not None
+                ) or (
+                    hasattr(data, required_if)
+                    and getattr(data, required_if) is not None
                 ):
                     # (here, required_if refers to its value)
                     # if data is a dict, has this required_if as a key, and the
@@ -5088,31 +5218,32 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         ):
             none_set = True
             for required_if_not in object_property.required_if_not:
-                if (isinstance(data, dict) and required_if_not in data and data[required_if_not] is not None) or (
+                if (
+                    isinstance(data, dict)
+                    and required_if_not in data
+                    and data[required_if_not] is not None
+                ) or (
                     hasattr(data, required_if_not)
                     and getattr(data, required_if_not) is not None
                 ):
                     # (here, required_if_not refers to its value)
-                    # if data is a dict, has this required_if_not as a key, and the
-                    # dict value paired with this required_if_not key is not None
-                    # or
-                    # if data is an object with attribute required_if_not, and
-                    # data.required_if_not is not None
+                    # if data is a dict, has this required_if_not as a key,
+                    # and the dict value paired with this required_if_not
+                    # key is not None or if data is an object with attribute
+                    # required_if_not, and data.required_if_not is not None
                     none_set = False
                     break
             if none_set:
                 if len(object_property.required_if_not) == 1:
                     raise ConstraintException(
                         path,
-                        "This field is required because '{}' is not set".format(
-                            object_property.required_if_not[0]
-                        ),
+                        "This field is required because '{}' is not set"
+                        .format(object_property.required_if_not[0]),
                     )
                 raise ConstraintException(
                     path,
-                    "This field is required because none of '{}' are set".format(
-                        "', '".join(object_property.required_if_not)
-                    ),
+                    "This field is required because none of '{}' are set"
+                    .format("', '".join(object_property.required_if_not)),
                 )
 
 
@@ -5135,15 +5266,13 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
-                "The 'scope' parameter for OneOf*Type must be a ScopeType, {} given".format(
-                    type(scope).__name__
-                )
+                "The 'scope' parameter for OneOf*Type must be a ScopeType, {}"
+                " given".format(type(scope).__name__)
             )
         if not isinstance(types, dict):
             raise BadArgumentException(
-                "The 'scope' parameter for OneOf*Type must be a ScopeType, {} given".format(
-                    type(scope).__name__
-                )
+                "The 'scope' parameter for OneOf*Type must be a ScopeType, {}"
+                " given".format(type(scope).__name__)
             )
         for k, v in types.items():
             if (
@@ -5152,14 +5281,17 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 and not isinstance(v, ScopeType)
             ):
                 raise BadArgumentException(
-                    "The 'types' parameter of OneOf*Type must contain RefTypes, ObjectTypes, or ScopeTypes, "
-                    "{} found for key {}".format(type(v).__name__, v)
+                    "The 'types' parameter of OneOf*Type must contain"
+                    " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
+                    " key {}".format(type(v).__name__, v)
                 )
         self._t = t
         self._scope = scope
         self.discriminator_field_name = discriminator_field_name
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> OneOfT:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> OneOfT:
         if not isinstance(data, dict):
             raise ConstraintException(
                 path, "Must be a dict, got {}".format(type(data).__name__)
@@ -5170,12 +5302,15 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
             raise ConstraintException(
                 tuple(new_path), "Required discriminator field not found"
             )
-        unserialized_discriminator_field: str = data[self.discriminator_field_name]
+        unserialized_discriminator_field: str = data[
+            self.discriminator_field_name
+        ]
         if not isinstance(unserialized_discriminator_field, self._t):
             raise ConstraintException(
                 tuple(new_path),
                 "{} required, {} found".format(
-                    self._t.__name__, type(unserialized_discriminator_field).__name__
+                    self._t.__name__,
+                    type(unserialized_discriminator_field).__name__,
                 ),
             )
         if unserialized_discriminator_field not in self.types:
@@ -5201,12 +5336,16 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
             if isinstance(data, object_schema.cls):
                 item_schema.validate(data)
                 if self.discriminator_field_name in object_schema.properties:
-                    if getattr(data, self.discriminator_field_name) != discriminator:
+                    if (
+                        getattr(data, self.discriminator_field_name)
+                        != discriminator
+                    ):
                         new_path = list(path)
                         new_path.append(self.discriminator_field_name)
                         raise ConstraintException(
                             tuple(new_path),
-                            "Invalid value for '{}' on '{}', should be: '{}'".format(
+                            "Invalid value for '{}' on '{}', should be: '{}'"
+                            .format(
                                 self.discriminator_field_name,
                                 object_schema.cls.__name__,
                                 discriminator,
@@ -5220,7 +5359,9 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
             ),
         )
 
-    def serialize(self, data: OneOfT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: OneOfT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         types = []
         for discriminator, item_schema in self.types.items():
             item_schema: RefType
@@ -5229,19 +5370,25 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
             if isinstance(data, object_schema.cls):
                 serialized_data = item_schema.serialize(data)
                 if self.discriminator_field_name in object_schema.properties:
-                    if getattr(data, self.discriminator_field_name) != discriminator:
+                    if (
+                        getattr(data, self.discriminator_field_name)
+                        != discriminator
+                    ):
                         new_path = list(path)
                         new_path.append(self.discriminator_field_name)
                         raise ConstraintException(
                             tuple(new_path),
-                            "Invalid value for '{}' on '{}', should be: '{}'".format(
+                            "Invalid value for '{}' on '{}', should be: '{}'"
+                            .format(
                                 self.discriminator_field_name,
                                 object_schema.cls.__name__,
                                 discriminator,
                             ),
                         )
                 else:
-                    serialized_data[self.discriminator_field_name] = discriminator
+                    serialized_data[
+                        self.discriminator_field_name
+                    ] = discriminator
                 return serialized_data
         raise ConstraintException(
             tuple(path),
@@ -5251,10 +5398,14 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         )
 
 
-class OneOfStringType(OneOfStringSchema, _OneOfType[OneOfT, str], Generic[OneOfT]):
+class OneOfStringType(
+    OneOfStringSchema, _OneOfType[OneOfT, str], Generic[OneOfT]
+):
     def __init__(
         self,
-        types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
+        types: Dict[
+            str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+        ],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str = "_type",
     ):
@@ -5304,10 +5455,12 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
 
 
 class ScopeType(ScopeSchema, AbstractType):
-    """
-    A scope is a container object for an object structure. Its main purpose is to hold objects that can be referenced,
-    even in cases where circular references are desired. It mimics the ObjectType and provides several properties that
-    proxy through to the underlying root object if set.
+    """A scope is a container object for an object structure.
+
+    Its main purpose is to hold objects that can be referenced, even in cases
+    where circular references are desired. It mimics the ObjectType and
+    provides several properties that proxy through to the underlying root
+    object if set.
     """
 
     objects: Dict[ID_TYPE, ObjectType]
@@ -5355,7 +5508,9 @@ class ScopeType(ScopeSchema, AbstractType):
             )
         return self.objects[self.root].id
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> TypeT:
         if self.root is None:
             raise ConstraintException(
                 path, "Cannot unserialize, root object is not set on scope."
@@ -5375,7 +5530,9 @@ class ScopeType(ScopeSchema, AbstractType):
         new_path.append(root_object.cls.__name__)
         return root_object.validate(data, tuple(new_path))
 
-    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: TypeT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         if self.root is None:
             raise ConstraintException(
                 path, "Cannot serialize, root object is not set on scope."
@@ -5387,9 +5544,7 @@ class ScopeType(ScopeSchema, AbstractType):
 
 
 class RefType(RefSchema, AbstractType):
-    """
-    A ref is a reference to an object in a Scope.
-    """
+    """A ref is a reference to an object in a Scope."""
 
     _scope: ScopeType
 
@@ -5401,19 +5556,22 @@ class RefType(RefSchema, AbstractType):
     def properties(self):
         return self._scope[self.id].properties
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> TypeT:
         return self._scope.objects[self.id].unserialize(data, path)
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
         return self._scope.objects[self.id].validate(data, path)
 
-    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: TypeT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         return self._scope.objects[self.id].serialize(data, path)
 
 
 class AnyType(AnySchema, AbstractType):
-    """
-    This type is a serializable version of the "any" type.
+    """This type is a serializable version of the "any" type.
 
     **Examples:**
 
@@ -5469,9 +5627,11 @@ class AnyType(AnySchema, AbstractType):
     Traceback (most recent call last):
     ...
     arcaflow_plugin_sdk.schema.ConstraintException: Validation failed: Unsupported data type for 'any' type: TestClass
-    """
+    """  # noqa: E501
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> Any:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         self._check(data, path)
         return data
 
@@ -5487,10 +5647,11 @@ class AnyType(AnySchema, AbstractType):
             if len(data) != 0:
                 list_type_base = type(data[0])
                 for item in data:
-                    if type(item) is not list_type_base:
+                    if not isinstance(item, list_type_base):
                         raise ConstraintException(
                             tuple(path),
-                            "non-uniform type found in list: '{}' is not of list type '{}'".format(
+                            "non-uniform type found in list: '{}' is not of"
+                            " list type '{}'".format(
                                 type(item), list_type_base
                             ),
                         )
@@ -5530,21 +5691,24 @@ class AnyType(AnySchema, AbstractType):
 
 
 class StepOutputType(StepOutputSchema, AbstractType):
-    """
-    This class holds the possible outputs of a step and the metadata information related to these outputs.
-    """
+    """This class holds the possible outputs of a step and the metadata
+    information related to these outputs."""
 
     schema: ScopeType
     display: Optional[DisplayValue] = None
     error: bool = False
 
-    def unserialize(self, data: Any, path: typing.Tuple[str] = tuple([])) -> TypeT:
+    def unserialize(
+        self, data: Any, path: typing.Tuple[str] = tuple([])
+    ) -> TypeT:
         return self.schema.unserialize(data, path)
 
     def validate(self, data: TypeT, path: typing.Tuple[str] = tuple([])):
         return self.schema.validate(data, path)
 
-    def serialize(self, data: TypeT, path: typing.Tuple[str] = tuple([])) -> Any:
+    def serialize(
+        self, data: TypeT, path: typing.Tuple[str] = tuple([])
+    ) -> Any:
         return self.schema.serialize(data, path)
 
 
@@ -5556,9 +5720,8 @@ StepObjectT = TypeVar("StepObjectT", bound=object)
 
 
 class SignalHandlerType(SignalSchema):
-    """
-    SignalHandlerType describes a callable signal type.
-    """
+    """SignalHandlerType describes a callable signal type."""
+
     _handler: Callable[[StepObjectT, SignalDataT], type(None)]
 
     def __init__(
@@ -5577,7 +5740,8 @@ class SignalHandlerType(SignalSchema):
         signal_input: SignalDataT,
     ):
         """
-        :param step_data: The instantiated object that stores step run-specific data.
+        :param step_data: The instantiated object that stores step
+            run-specific data.
         :param params: Input data parameter for the signal handler.
         """
         input: ScopeType = self.data_schema
@@ -5589,11 +5753,10 @@ step_object_constructor_param = Callable[[], StepObjectT]
 
 
 class _StepLocalData:
-    """
-    Data associated with a single step, including the constructed object,
-    and the data needed to synchronize and notify steps of the step
-    being ready.
-    """
+    """Data associated with a single step, including the constructed object,
+    and the data needed to synchronize and notify steps of the step being
+    ready."""
+
     initialized_object: StepObjectT
     step_running: bool = False  # So signals to wait if sent before the step.
     step_running_condition: threading.Condition = threading.Condition()
@@ -5603,12 +5766,15 @@ class _StepLocalData:
 
 
 class StepType(StepSchema):
-    """
-    StepSchema describes the schema for a single step. The input is always one ObjectType, while there are multiple
-    possible outputs identified by a string.
+    """StepSchema describes the schema for a single step.
+
+    The input is always one ObjectType, while there are multiple possible
+    outputs identified by a string.
     """
 
-    _handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]]
+    _handler: Callable[
+        [StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]
+    ]
     _step_object_constructor: step_object_constructor_param
     input: ScopeType
     outputs: Dict[ID_TYPE, StepOutputType]
@@ -5621,7 +5787,9 @@ class StepType(StepSchema):
     def __init__(
         self,
         id: str,
-        handler: Callable[[StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]],
+        handler: Callable[
+            [StepObjectT, StepInputT], typing.Tuple[str, StepOutputT]
+        ],
         step_object_constructor: step_object_constructor_param or None,
         input: ScopeType,
         outputs: Dict[ID_TYPE, StepOutputType],
@@ -5629,7 +5797,14 @@ class StepType(StepSchema):
         signal_emitters: Optional[Dict[ID_TYPE, SignalSchema]] = None,
         display: Optional[DisplayValue] = None,
     ):
-        super().__init__(id, input, outputs, signal_handlers=None, signal_emitters=signal_emitters, display=display)
+        super().__init__(
+            id,
+            input,
+            outputs,
+            signal_handlers=None,
+            signal_emitters=signal_emitters,
+            display=display,
+        )
         self._handler = handler
         self._step_object_constructor = step_object_constructor
         self.signal_handler_method_names = signal_handler_method_names
@@ -5658,14 +5833,17 @@ class StepType(StepSchema):
     ) -> typing.Tuple[str, StepOutputT]:
         """
         :param params: Input parameter for the step.
-        :param skip_input_validation: Do not perform input data type validation. Use at your own risk.
-        :param skip_output_validation: Do not validate returned output data. Use at your own risk.
+        :param skip_input_validation: Do not perform input data type
+            validation. Use at your own risk.
+        :param skip_output_validation: Do not validate returned output data.
+            Use at your own risk.
         :return: The ID for the output datatype, and the output itself.
         """
         # Initialize the step object
         step_local_data: _StepLocalData = self.setup_run_data(run_id)
         # Notify potentially waiting signals that the step is running
-        # Ideally, this would be done after, but just before is the only realistic option without more threads or sleep
+        # Ideally, this would be done after, but just before is the only
+        # realistic option without more threads or sleep
         step_local_data.step_running = True
         with step_local_data.step_running_condition:
             step_local_data.step_running_condition.notify_all()
@@ -5677,15 +5855,14 @@ class StepType(StepSchema):
         result = self._handler(step_local_data.initialized_object, params)
         if len(result) != 2:
             raise BadArgumentException(
-                "The step returned {} results instead of 2. Did your step return the correct results?".format(
-                    len(result)
-                )
+                "The step returned {} results instead of 2. Did your step"
+                " return the correct results?".format(len(result))
             )
         output_id, output_data = result
         if output_id not in self.outputs:
             raise BadArgumentException(
-                "The step returned an undeclared output ID: %s, please return one of: '%s'"
-                % (output_id, "', '".join(self.outputs.keys()))
+                "The step returned an undeclared output ID: %s, please return"
+                " one of: '%s'" % (output_id, "', '".join(self.outputs.keys()))
             )
         output: StepOutputType = self.outputs[output_id]
         if not skip_output_validation:
@@ -5693,13 +5870,16 @@ class StepType(StepSchema):
         return output_id, output_data
 
     def inspect_methods(self):
-        """
-        Retrieves the schemas from the method names given in the constructor.
-        """
+        """Retrieves the schemas from the method names given in the
+        constructor."""
         # Abort if required components are not set.
-        if self._step_object_constructor is None or self.signal_handler_method_names is None:
+        if (
+            self._step_object_constructor is None
+            or self.signal_handler_method_names is None
+        ):
             return
-        # Constructs an instance of the class in order to retrieve attributes from it
+        # Constructs an instance of the class in order to retrieve attributes
+        # from it
         object_instance = self._step_object_constructor()
         # Create a map to populate
         signal_handlers_map = {}
@@ -5711,8 +5891,9 @@ class StepType(StepSchema):
 
 
 class SchemaType(Schema):
-    """
-    A schema is a definition of one or more steps that can be executed. The step has a defined input and output
+    """A schema is a definition of one or more steps that can be executed.
+
+    The step has a defined input and output
     """
 
     steps: Dict[str, StepType]
@@ -5729,16 +5910,21 @@ class SchemaType(Schema):
             raise NoSuchSignalException(step_id, signal_id)
         return step.signal_handlers[signal_id]
 
-    def unserialize_step_input(self, step_id: str, serialized_data: Any) -> Any:
-        """
-        This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
-        automatically called by ``__call__`` before running the step with the unserialized input.
+    def unserialize_step_input(
+        self, step_id: str, serialized_data: Any
+    ) -> Any:
+        """This function unserializes the input from a raw data to data
+        structures, such as dataclasses. This function is automatically called
+        by ``__call__`` before running the step with the unserialized input.
 
-        :param step_id: The step ID to use to look up the schema for unserialization.
+        :param step_id: The step ID to use to look up the schema for
+            unserialization.
         :param serialized_data: The raw data to unserialize.
         :return: The unserialized data in the structure the step expects it.
         """
-        return self._unserialize_step_input(self.get_step(step_id), serialized_data)
+        return self._unserialize_step_input(
+            self.get_step(step_id), serialized_data
+        )
 
     @staticmethod
     def _unserialize_step_input(step: StepType, serialized_data: Any) -> Any:
@@ -5747,56 +5933,78 @@ class SchemaType(Schema):
         except ConstraintException as e:
             raise InvalidInputException(e) from e
 
-    def unserialize_signal_handler_input(self, step_id: str, signal_id: str, serialized_data: Any) -> Any:
-        """
-        This function unserializes the input from a raw data to data structures, such as dataclasses. This function is
-        automatically called by ``__call__`` before running the step with the unserialized input.
+    def unserialize_signal_handler_input(
+        self, step_id: str, signal_id: str, serialized_data: Any
+    ) -> Any:
+        """This function unserializes the input from a raw data to data
+        structures, such as dataclasses. This function is automatically called
+        by ``__call__`` before running the step with the unserialized input.
 
-        :param step_id: The step ID to use to look up the schema for unserialization.
+        :param step_id: The step ID to use to look up the schema for
+            unserialization.
         :param serialized_data: The raw data to unserialize.
         :return: The unserialized data in the structure the step expects it.
         """
-        return self._unserialize_signal_handler_input(self.get_signal(step_id, signal_id), serialized_data)
+        return self._unserialize_signal_handler_input(
+            self.get_signal(step_id, signal_id), serialized_data
+        )
 
     @staticmethod
-    def _unserialize_signal_handler_input(signal: SignalHandlerType, data: Any) -> Any:
+    def _unserialize_signal_handler_input(
+        signal: SignalHandlerType, data: Any
+    ) -> Any:
         try:
             return signal.data_schema.unserialize(data)
         except ConstraintException as e:
             raise InvalidInputException(e) from e
 
-    def call_step(self, run_id: str, step_id: str, input_param: Any) -> typing.Tuple[str, Any]:
-        """
-        This function calls a specific step with the input parameter that has already been unserialized. It expects the
-        data to be already valid, use unserialize_step_input to produce a valid input. This function is automatically
-        called by ``__call__`` after unserializing the input.
+    def call_step(
+        self, run_id: str, step_id: str, input_param: Any
+    ) -> typing.Tuple[str, Any]:
+        """This function calls a specific step with the input parameter that
+        has already been unserialized. It expects the data to be already valid,
+        use unserialize_step_input to produce a valid input. This function is
+        automatically called by ``__call__`` after unserializing the input.
 
         :param run_id: A unique ID for the run.
         :param step_id: The ID of the input step to run.
         :param input_param: The unserialized data structure the step expects.
-        :return: The ID of the output, and the data structure returned from the step.
+        :return: The ID of the output, and the data structure returned from the
+            step.
         """
         return self._call_step(self.get_step(step_id), run_id, input_param)
 
-    def call_step_signal(self, run_id: str, step_id: str, signal_id: str, unserialized_input_param: Any):
-        """
-        This function calls a specific step's signal with the input parameter that has already been unserialized. It expects the
-        data to be already valid, use unserialize_signal_input to produce a valid input.
+    def call_step_signal(
+        self,
+        run_id: str,
+        step_id: str,
+        signal_id: str,
+        unserialized_input_param: Any,
+    ):
+        """This function calls a specific step's signal with the input
+        parameter that has already been unserialized. It expects the data to be
+        already valid, use unserialize_signal_input to produce a valid input.
 
-        :param run_id: A unique ID for the run, which must match signals associated with this step execution.
+        :param run_id: A unique ID for the run, which must match signals
+            associated with this step execution.
         :param step_id: The ID of the input step to run.
         :param signal_id: The signal ID as defined by the plugin.
-        :param unserialized_input_param: The unserialized data structure the step expects.
-        :return: The ID of the output, and the data structure returned from the step.
+        :param unserialized_input_param: The unserialized data structure the
+            step expects.
+        :return: The ID of the output, and the data structure returned from the
+            step.
         """
         step = self.get_step(step_id)
         signal = self.get_signal(step_id, signal_id)
         local_step_data: _StepLocalData = step.setup_run_data(run_id)
         with local_step_data.step_running_condition:
             if not local_step_data.step_running:
-                # wait to be notified of it being ready. Test this by adding a sleep before the step call.
+                # wait to be notified of it being ready. Test this by adding a
+                # sleep before the step call.
                 local_step_data.step_running_condition.wait()
-        return signal(local_step_data.initialized_object, unserialized_input_param)
+        return signal(
+            local_step_data.initialized_object, unserialized_input_param
+        )
 
     @staticmethod
     def _call_step(
@@ -5813,17 +6021,23 @@ class SchemaType(Schema):
             skip_output_validation=skip_output_validation,
         )
 
-    def serialize_output(self, step_id: str, output_id: str, output_data: Any) -> Any:
-        """
-        This function takes an output ID (e.g. "error") and structured output_data and serializes them into a format
-        suitable for wire transport. This function is automatically called by ``__call__`` after the step is run.
+    def serialize_output(
+        self, step_id: str, output_id: str, output_data: Any
+    ) -> Any:
+        """This function takes an output ID (e.g. "error") and structured
+        output_data and serializes them into a format suitable for wire
+        transport. This function is automatically called by ``__call__`` after
+        the step is run.
 
-        :param step_id: The step ID to use to look up the schema for serialization.
+        :param step_id: The step ID to use to look up the schema for
+            serialization.
         :param output_id: The string identifier for the output data structure.
         :param output_data: The data structure returned from the step.
         :return:
         """
-        return self._serialize_output(self.get_step(step_id), output_id, output_data)
+        return self._serialize_output(
+            self.get_step(step_id), output_id, output_data
+        )
 
     @staticmethod
     def _serialize_output(step, output_id: str, output_data: Any) -> Any:
@@ -5833,16 +6047,21 @@ class SchemaType(Schema):
             raise InvalidOutputException(e) from e
 
     def __call__(
-        self, run_id: str, step_id: str, data: Any, skip_serialization: bool = False
+        self,
+        run_id: str,
+        step_id: str,
+        data: Any,
+        skip_serialization: bool = False,
     ) -> typing.Tuple[str, Any]:
-        """
-        This function takes the input data, unserializes it for the specified step, calls the specified step, and,
-        unless skip_serialization is set, serializes the return data.
+        """This function takes the input data, unserializes it for the
+        specified step, calls the specified step, and, unless
+        skip_serialization is set, serializes the return data.
 
         :param step_id: the step to execute
         :param data: input data
         :param skip_serialization: skip result serialization to basic types
-        :return: the result ID, and the resulting data in the structure matching the result ID
+        :return: the result ID, and the resulting data in the structure
+            matching the result ID
         """
         step = self.get_step(step_id)
         input_param = self._unserialize_step_input(step, data)
@@ -5857,7 +6076,9 @@ class SchemaType(Schema):
         if skip_serialization:
             step.outputs[output_id].validate(output_data)
             return output_id, output_data
-        serialized_output_data = self._serialize_output(step, output_id, output_data)
+        serialized_output_data = self._serialize_output(
+            step, output_id, output_data
+        )
         return output_id, serialized_output_data
 
 
@@ -5889,19 +6110,26 @@ class _SchemaBuilder:
             new_path: List[str] = list(path)
             name = res.display.name
             if name is None:
-                raise SchemaBuildException(path, "BUG: resolved property with no name")
+                raise SchemaBuildException(
+                    path, "BUG: resolved property with no name"
+                )
             new_path.append(name)
             raise SchemaBuildException(
                 tuple(new_path),
-                "Unsupported attribute combination, you can only use typing.Optional, etc. in classes, but not in "
-                "lists, dicts, etc.",
+                "Unsupported attribute combination, you can only use"
+                " typing.Optional, etc. in classes, but not in lists, dicts,"
+                " etc.",
             )
         res: AbstractType = result
         return res
 
     @classmethod
     def _resolve_field(
-        cls, t: any, type_hints: type, path: typing.Tuple[str], scope: ScopeType
+        cls,
+        t: any,
+        type_hints: type,
+        path: typing.Tuple[str],
+        scope: ScopeType,
     ) -> PropertyType:
         result = cls._resolve(t, type_hints, path, scope)
         if not isinstance(result, PropertyType):
@@ -5944,7 +6172,8 @@ class _SchemaBuilder:
             return cls._resolve_annotated(t, type_hints, path, scope)
         else:
             raise SchemaBuildException(
-                path, "Unable to resolve underlying type: %s" % type(t).__name__
+                path,
+                "Unable to resolve underlying type: %s" % type(t).__name__,
             )
 
     @classmethod
@@ -6012,15 +6241,22 @@ class _SchemaBuilder:
             underlying_type.display.name = getattr(underlying_type, "__name")
         elif hasattr(base_type, "__name"):
             underlying_type.display.name = getattr(base_type, "__name")
-        if underlying_type.display.name == "" or underlying_type.display.name is None:
+        if (
+            underlying_type.display.name == ""
+            or underlying_type.display.name is None
+        ):
             meta_name = t.metadata.get("name")
             if meta_name != "" and meta_name is not None:
                 underlying_type.display.name = meta_name
 
         if hasattr(underlying_type, "__description"):
-            underlying_type.display.description = getattr(underlying_type, "__description")
+            underlying_type.display.description = getattr(
+                underlying_type, "__description"
+            )
         elif hasattr(base_type, "__description"):
-            underlying_type.display.description = getattr(base_type, "__description")
+            underlying_type.display.description = getattr(
+                base_type, "__description"
+            )
         if (
             underlying_type.display.description == ""
             or underlying_type.display.description is None
@@ -6033,7 +6269,10 @@ class _SchemaBuilder:
             underlying_type.display.icon = getattr(underlying_type, "__icon")
         elif hasattr(base_type, "__icon"):
             underlying_type.display.icon = getattr(base_type, "__icon")
-        if underlying_type.display.icon == "" or underlying_type.display.icon is None:
+        if (
+            underlying_type.display.icon == ""
+            or underlying_type.display.icon is None
+        ):
             meta_icon = t.metadata.get("icon")
             if meta_icon != "" and meta_icon is not None:
                 underlying_type.display.icon = meta_icon
@@ -6065,7 +6304,10 @@ class _SchemaBuilder:
         if meta_id is not None and meta_id != t.name:
             underlying_type.field_override = t.name
 
-        if t.default != dataclasses.MISSING or t.default_factory != dataclasses.MISSING:
+        if (
+            t.default != dataclasses.MISSING
+            or t.default_factory != dataclasses.MISSING
+        ):
             underlying_type.required = False
             if t.default != dataclasses.MISSING:
                 default = t.default
@@ -6079,13 +6321,15 @@ class _SchemaBuilder:
                 except ConstraintException as e:
                     raise SchemaBuildException(
                         path,
-                        "Failed to serialize default value: {}".format(e.__str__()),
+                        "Failed to serialize default value: {}".format(
+                            e.__str__()
+                        ),
                     )
         elif not underlying_type.required:
             raise SchemaBuildException(
                 path,
-                "Field is marked as optional, but does not have a default value set. "
-                "Please set a default value for this field.",
+                "Field is marked as optional, but does not have a default"
+                " value set. Please set a default value for this field.",
             )
         return meta_id, underlying_type
 
@@ -6116,19 +6360,26 @@ class _SchemaBuilder:
                 types.GenericAlias: "generic aliases",
                 types.ModuleType: "modules",
             }
-            for unsupported_type, unsupported_type_name in unsupported_types.items():
+            for (
+                unsupported_type,
+                unsupported_type_name,
+            ) in unsupported_types.items():
                 if isinstance(t, unsupported_type) or t == unsupported_type:
                     raise SchemaBuildException(
                         path,
-                        "{} are not supported by the Arcaflow typing system and cannot be used in input or output data"
-                        "types. Please use one of the supported types, or file an issue at {} with your use case to "
-                        "get them included.".format(unsupported_type_name, _issue_url),
+                        "{} are not supported by the Arcaflow typing system"
+                        " and cannot be used in input or output datatypes."
+                        " Please use one of the supported types, or file an"
+                        " issue at {} with your use case to get them included."
+                        .format(unsupported_type_name, _issue_url),
                     )
             raise SchemaBuildException(
                 path,
-                "{} is not a dataclass or a supported type. Please use the @dataclasses.dataclass decorator on your "
-                "class or use a supported native type. If this is a native Python type and you want to request support "
-                "for it in the Arcaflow SDK, please open an issue at {} to get it included.".format(
+                "{} is not a dataclass or a supported type. Please use the"
+                " @dataclasses.dataclass decorator on your class or use a"
+                " supported native type. If this is a native Python type and"
+                " you want to request support for it in the Arcaflow SDK,"
+                " please open an issue at {} to get it included.".format(
                     t.__name__, _issue_url
                 ),
             ) from e
@@ -6293,7 +6544,9 @@ class _SchemaBuilder:
             args_hints = (type_hints,)
         if len(args) < 2:
             raise SchemaBuildException(
-                path, "At least one validation parameter required for typing.Annotated"
+                path,
+                "At least one validation parameter required for"
+                " typing.Annotated",
             )
         new_path = list(path)
         new_path.append("typing.Annotated")
@@ -6311,7 +6564,9 @@ class _SchemaBuilder:
             except Exception as e:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Failed to execute Annotated argument: {}".format(e.__str__()),
+                    "Failed to execute Annotated argument: {}".format(
+                        e.__str__()
+                    ),
                 ) from e
         return underlying_t
 
@@ -6325,8 +6580,8 @@ class _SchemaBuilder:
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
-            "List type without item type definition encountered, please declare your lists like this: "
-            "typing.List[str]",
+            "List type without item type definition encountered, please"
+            " declare your lists like this: typing.List[str]",
         )
 
     @classmethod
@@ -6339,8 +6594,8 @@ class _SchemaBuilder:
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
-            "List type without item type definition encountered, please declare your lists like this: "
-            "typing.List[str]",
+            "List type without item type definition encountered, please"
+            " declare your lists like this: typing.List[str]",
         )
 
     @classmethod
@@ -6355,17 +6610,21 @@ class _SchemaBuilder:
         if len(args) != 1:
             raise SchemaBuildException(
                 path,
-                "List type without item type definition encountered, please declare your lists like this: "
-                "typing.List[str]",
+                "List type without item type definition encountered, please"
+                " declare your lists like this: typing.List[str]",
             )
         new_path = list(path)
         new_path.append("items")
         try:
             return ListType(
-                cls._resolve_abstract_type(args[0], type_hints, tuple(new_path), scope)
+                cls._resolve_abstract_type(
+                    args[0], type_hints, tuple(new_path), scope
+                )
             )
         except Exception as e:
-            raise SchemaBuildException(path, "Failed to create list type") from e
+            raise SchemaBuildException(
+                path, "Failed to create list type"
+            ) from e
 
     @classmethod
     def _resolve_dict(
@@ -6377,8 +6636,8 @@ class _SchemaBuilder:
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
-            "Dict type without item type definition encountered, please declare your dicts like this: "
-            "typing.Dict[str, int]",
+            "Dict type without item type definition encountered, please"
+            " declare your dicts like this: typing.Dict[str, int]",
         )
 
     @classmethod
@@ -6405,8 +6664,8 @@ class _SchemaBuilder:
     ) -> AbstractType:
         raise SchemaBuildException(
             path,
-            "Dict type without item type definition encountered, please declare your dicts like this: "
-            "typing.Dict[str, int]",
+            "Dict type without item type definition encountered, please"
+            " declare your dicts like this: typing.Dict[str, int]",
         )
 
     @classmethod
@@ -6424,8 +6683,8 @@ class _SchemaBuilder:
         if len(args) != 2:
             raise SchemaBuildException(
                 path,
-                "Dict type without item type definition encountered, please declare your dicts like this: "
-                "typing.Dict[str, int]",
+                "Dict type without item type definition encountered, please"
+                " declare your dicts like this: typing.Dict[str, int]",
             )
         keys_path = list(path)
         keys_path.append("keys")
@@ -6445,7 +6704,9 @@ class _SchemaBuilder:
                 value_schema,
             )
         except Exception as e:
-            raise SchemaBuildException(path, "Failed to create map type") from e
+            raise SchemaBuildException(
+                path, "Failed to create map type"
+            ) from e
 
     @classmethod
     def _resolve_union(
@@ -6460,7 +6721,9 @@ class _SchemaBuilder:
         try:
             # noinspection PyTypeHints
             if isinstance(None, args[0]):
-                raise SchemaBuildException(path, "None types are not supported.")
+                raise SchemaBuildException(
+                    path, "None types are not supported."
+                )
         except TypeError:
             pass
         try:
@@ -6468,7 +6731,9 @@ class _SchemaBuilder:
             if isinstance(None, args[1]):
                 new_path = list(path)
                 new_path.append("typing.Optional")
-                result = cls._resolve_field(args[0], arg_hints[0], tuple(path), scope)
+                result = cls._resolve_field(
+                    args[0], arg_hints[0], tuple(path), scope
+                )
                 result.required = False
                 return result
         except TypeError:
@@ -6479,25 +6744,31 @@ class _SchemaBuilder:
             new_path = list(path)
             new_path.append("typing.Union")
             new_path.append(str(i))
-            f = cls._resolve_field(args[i], arg_hints[i], tuple(new_path), scope)
+            f = cls._resolve_field(
+                args[i], arg_hints[i], tuple(new_path), scope
+            )
             if not f.required:
                 raise SchemaBuildException(
-                    tuple(new_path), "Union types cannot contain optional values."
+                    tuple(new_path),
+                    "Union types cannot contain optional values.",
                 )
             if f.required_if is not None and len(f.required_if) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain require_if fields",
+                    "Union types cannot simultaneously contain require_if"
+                    " fields",
                 )
             if f.required_if_not is not None and len(f.required_if_not) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain require_if_not fields",
+                    "Union types cannot simultaneously contain require_if_not"
+                    " fields",
                 )
             if f.conflicts is not None and len(f.conflicts) != 0:
                 raise SchemaBuildException(
                     tuple(new_path),
-                    "Union types cannot simultaneously contain conflicts fields",
+                    "Union types cannot simultaneously contain conflicts"
+                    " fields",
                 )
             if not isinstance(f.type, RefType):
                 raise SchemaBuildException(
@@ -6509,13 +6780,13 @@ class _SchemaBuilder:
             discriminator_value = f.type.id
             if hasattr(f.type, "__discriminator_value"):
                 discriminator_value = getattr(f.type, "__discriminator_value")
-            if (
-                discriminator_type is not None
-                and type(discriminator_value) is not discriminator_type
+            if discriminator_type is not None and not isinstance(
+                discriminator_value, discriminator_type
             ):
                 raise BadArgumentException(
-                    "Invalid discriminator value type: {}, the value type has been previously set to {}. Please make "
-                    "sure all your discriminator values have the same type.".format(
+                    "Invalid discriminator value type: {}, the value type has"
+                    " been previously set to {}. Please make sure all your"
+                    " discriminator values have the same type.".format(
                         type(discriminator_value), discriminator_type
                     )
                 )
@@ -6542,23 +6813,28 @@ class _SchemaBuilder:
         try:
             return PatternType()
         except Exception as e:
-            raise SchemaBuildException(path, "Failed to create pattern type") from e
+            raise SchemaBuildException(
+                path, "Failed to create pattern type"
+            ) from e
 
 
 def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
-    """
-    This function builds a schema for a single object. This is useful when serializing input parameters into a file
-    for underlying tools to use, or unserializing responses from underlying tools into output data types.
+    """This function builds a schema for a single object. This is useful when
+    serializing input parameters into a file for underlying tools to use, or
+    unserializing responses from underlying tools into output data types.
 
     :param t: the type to build a schema for.
-    :param _skip_validation: Skip schema validation. For internal use only when constructing ``SCOPE_SCHEMA``.
+    :param _skip_validation: Skip schema validation. For internal use only
+        when constructing ``SCOPE_SCHEMA``.
     :return: the built object schema
     """
     scope = ScopeType({}, t.__name__)
 
     r = _SchemaBuilder.resolve(t, scope)
     if not isinstance(r, RefType):
-        raise SchemaBuildException(tuple({}), "Response type is not an object.")
+        raise SchemaBuildException(
+            tuple({}), "Response type is not an object."
+        )
 
     if not _skip_validation:
         SCOPE_SCHEMA.validate(scope)
@@ -6571,15 +6847,19 @@ def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
 # region Schema schemas
 
 SCOPE_SCHEMA = build_object_schema(ScopeSchema, True)
-"""
-This variable holds a constructed, serializable/unserializable schema for a scope. You can use it to send schemas to
-the engine, or to build an engine replacement. (This is normally handled by the plugin module.)
+"""This variable holds a constructed, serializable/unserializable schema for a
+scope.
+
+You can use it to send schemas to the engine, or to build an engine
+replacement. (This is normally handled by the plugin module.)
 """
 
 SCHEMA_SCHEMA = build_object_schema(Schema)
-"""
-This variable holds a constructed, serializable/unserializable schema for an entire schema. You can use it to send
-schemas to the engine, or to build an engine replacement. (This is normally handled by the plugin module.)
+"""This variable holds a constructed, serializable/unserializable schema for an
+entire schema.
+
+You can use it to send schemas to the engine, or to build an engine
+replacement. (This is normally handled by the plugin module.)
 """
 
 
@@ -6588,13 +6868,13 @@ def test_object_serialization(
     fail: typing.Optional[Callable[[str], None]] = None,
     t: typing.Optional[ObjectType] = None,
 ):
-    """
-    This function aids serialization by first serializing, then unserializing the passed parameter according to the
-    passed schema. It then compares that the two objects are equal.
+    """This function aids serialization by first serializing, then
+    unserializing the passed parameter according to the passed schema. It then
+    compares that the two objects are equal.
 
     :param dc: the dataclass to use for tests.
-    :param t: the schema for the dataclass. If none is passed, the schema is built automatically using
-              ``schema.build_object_schema()``
+    :param t: the schema for the dataclass. If none is passed, the schema is
+        built automatically using ``schema.build_object_schema()``
     """
     try:
         if t is None:
@@ -6605,27 +6885,28 @@ def test_object_serialization(
         unserialized_data = t.unserialize(serialized_data, path)
         if unserialized_data != dc:
             raise Exception(
-                "After serializing and unserializing {}, the data mismatched. Serialized data was: {}".format(
-                    dc.__name__, serialized_data
-                )
+                "After serializing and unserializing {}, the data mismatched."
+                " Serialized data was: {}".format(dc.__name__, serialized_data)
             )
     except Exception as e:
         result = (
-            "Your object serialization test for {} failed.\n\n"
-            "This means that your object cannot be properly serialized by the SDK. There are three possible "
-            "reasons for this:\n\n"
-            "1. Your data class has a field type in it that the SDK doesn't support\n"
-            "2. Your sample data is invalid according to your own rules\n"
-            "3. There is a bug in the SDK (please report it)\n\n"
-            "Check the error message below for details.\n\n"
-            "---\n\n{}".format(type(dc).__name__, traceback.extract_stack())
+            "Your object serialization test for {} failed.\n\nThis means that"
+            " your object cannot be properly serialized by the SDK. There are"
+            " three possible reasons for this:\n\n1. Your data class has a"
+            " field type in it that the SDK doesn't support\n2. Your sample"
+            " data is invalid according to your own rules\n3. There is a bug"
+            " in the SDK (please report it)\n\nCheck the error message below"
+            " for details.\n\n---\n\n{}".format(
+                type(dc).__name__, traceback.extract_stack()
+            )
         )
         result += "Error message:\n" + e.__str__() + "\n\n"
         # noinspection PyDataclass
         result += "Input:\n" + pprint.pformat(dataclasses.asdict(dc)) + "\n\n"
         result += "---\n\n"
-        result += "Your object serialization test for {} failed. Please scroll up for details.\n\n".format(
-            type(dc).__name__
+        result += (
+            "Your object serialization test for {} failed. Please scroll up"
+            " for details.\n\n".format(type(dc).__name__)
         )
         if fail is None:
             print(result)
