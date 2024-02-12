@@ -9,18 +9,18 @@ repos:
   - id: check-added-large-files
   - id: check-toml
 - repo: https://github.com/python/black
-  rev: 23.11.0
+  rev: 24.2.0
   hooks:
   - id: black
     name: black (python3)
     language_version: python3
     args: ["--check"]
 - repo: https://github.com/PyCQA/flake8
-  rev: 6.1.0
+  rev: 7.0.0
   hooks:
   - id: flake8
 - repo: https://github.com/pycqa/isort
-  rev: 5.12.0
+  rev: 5.13.2
   hooks:
     - id: isort
       name: isort (python3)
@@ -36,6 +36,6 @@ repos:
   hooks:
   - id: shellcheck
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.37.0
+  rev: v0.39.0
   hooks:
   - id: markdownlint
