@@ -532,7 +532,7 @@ discriminatorFunc = typing.Callable[
 ]
 
 
-def discriminator(discriminator_field_name: str) -> discriminatorFunc:
+def discriminator(discriminator_field_name: str, discriminator_inlined: bool = False) -> discriminatorFunc:
     """This annotation is used to manually set the discriminator field on a
     Union type. :param discriminator_field_name: the name of the discriminator
     field. :return: the callable decorator.
@@ -613,6 +613,11 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
                     "The discriminator value has an invalid value: {}. "
                     "Please check your annotations.".format(e.__str__())
                 ) from e
+
+        # Now validate that the discriminator is inlined if it's supposed to be,
+        # and not present in the objects if it's not supposed to be inlined.
+        for key, item in oneof.types.items():
+
 
         return oneof
 
@@ -2650,6 +2655,14 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be a string."
         ),
     ] = "_type"
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ] = False
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2782,6 +2795,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be an int."
         ),
     ] = "_type"
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ] = False
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -5407,7 +5428,8 @@ class OneOfStringType(
             str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
         ],
         scope: typing.ForwardRef("ScopeType"),
-        discriminator_field_name: str = "_type",
+        discriminator_field_name: str = None,
+        discriminator_inlined: bool = False,
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(self, types, discriminator_field_name)
@@ -5442,6 +5464,7 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
         ],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str = "_type",
+        discriminator_inlined: bool = False,
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(self, types, discriminator_field_name)
