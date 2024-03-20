@@ -532,7 +532,7 @@ discriminatorFunc = typing.Callable[
 ]
 
 
-def discriminator(discriminator_field_name: str) -> discriminatorFunc:
+def discriminator(discriminator_field_name: str, discriminator_inlined: bool = False) -> discriminatorFunc:
     """This annotation is used to manually set the discriminator field on a
     Union type. :param discriminator_field_name: the name of the discriminator
     field. :return: the callable decorator.
@@ -2646,10 +2646,18 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _name("Discriminator field name"),
         _description(
             "Name of the field used to discriminate between possible values."
-            " If this field ispresent on any of the component objects it must"
+            " If this field is present on any of the component objects it must"
             " also be a string."
         ),
     ] = "_type"
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            "objects' schema."
+        )
+    ] = False
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -5253,6 +5261,7 @@ DiscriminatorT = TypeVar("DiscriminatorT")
 
 class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     discriminator_field_name: str
+    discriminator_inlined: bool
     types: Dict[DiscriminatorT, typing.ForwardRef("RefType")]
     _t: any
     _scope: typing.ForwardRef("ScopeType")
@@ -5263,6 +5272,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         t: Type[DiscriminatorT],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str,
+        discriminator_inlined: bool,
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
@@ -5288,6 +5298,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         self._t = t
         self._scope = scope
         self.discriminator_field_name = discriminator_field_name
+        self.discriminator_inlined = discriminator_inlined
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -5408,15 +5419,17 @@ class OneOfStringType(
         ],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str = "_type",
+        discriminator_inlined: bool = False,
     ):
         # noinspection PyArgumentList
-        OneOfStringSchema.__init__(self, types, discriminator_field_name)
+        OneOfStringSchema.__init__(self, types, discriminator_field_name, discriminator_inlined)
         _OneOfType.__init__(
             self,
             types,
             t=str,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=discriminator_inlined,
         )
 
 
