@@ -617,7 +617,13 @@ def discriminator(discriminator_field_name: str, discriminator_inlined: bool = F
         # Now validate that the discriminator is inlined if it's supposed to be,
         # and not present in the objects if it's not supposed to be inlined.
         for key, item in oneof.types.items():
-
+            try:
+                discriminator_field_schema.validate(key)
+            except ConstraintException as e:
+                raise BadArgumentException(
+                    "The discriminator value has an invalid value: {}. "
+                    "Please check your annotations.".format(e.__str__())
+                ) from e
 
         return oneof
 
@@ -2646,15 +2652,6 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-    discriminator_field_name: typing.Annotated[
-        str,
-        _name("Discriminator field name"),
-        _description(
-            "Name of the field used to discriminate between possible values."
-            " If this field ispresent on any of the component objects it must"
-            " also be a string."
-        ),
-    ] = "_type"
     discriminator_inlined: typing.Annotated[
         bool,
         _name("Discriminator field inlined"),
@@ -2662,7 +2659,17 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Whether or not the discriminator is inlined in the underlying"
             " objects' schema"
         ),
-    ] = False
+    ]
+    discriminator_field_name: typing.Annotated[
+        str,
+        _name("Discriminator field name"),
+        _description(
+            "Name of the field used to discriminate between possible values."
+            " If this field is present on any of the component objects it must"
+            " also be a string."
+        ),
+    ] = "_type"
+
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2786,6 +2793,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2795,14 +2810,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be an int."
         ),
     ] = "_type"
-    discriminator_inlined: typing.Annotated[
-        bool,
-        _name("Discriminator field inlined"),
-        _description(
-            "Whether or not the discriminator is inlined in the underlying"
-            " objects' schema"
-        ),
-    ] = False
+
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -5274,6 +5282,7 @@ DiscriminatorT = TypeVar("DiscriminatorT")
 
 class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     discriminator_field_name: str
+    discriminator_inlined: bool
     types: Dict[DiscriminatorT, typing.ForwardRef("RefType")]
     _t: any
     _scope: typing.ForwardRef("ScopeType")
@@ -5284,6 +5293,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         t: Type[DiscriminatorT],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str,
+        discriminator_inlined: bool
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
@@ -5309,6 +5319,8 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         self._t = t
         self._scope = scope
         self.discriminator_field_name = discriminator_field_name
+        self.discriminator_inlined = discriminator_inlined
+
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -5428,17 +5440,18 @@ class OneOfStringType(
             str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
         ],
         scope: typing.ForwardRef("ScopeType"),
+        discriminator_inlined: bool,
         discriminator_field_name: str = None,
-        discriminator_inlined: bool = False,
     ):
         # noinspection PyArgumentList
-        OneOfStringSchema.__init__(self, types, discriminator_field_name)
+        OneOfStringSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
             t=str,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=discriminator_inlined
         )
 
 
@@ -5463,17 +5476,18 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
             ],
         ],
         scope: typing.ForwardRef("ScopeType"),
+        discriminator_inlined: bool,
         discriminator_field_name: str = "_type",
-        discriminator_inlined: bool = False,
     ):
         # noinspection PyArgumentList
-        OneOfIntSchema.__init__(self, types, discriminator_field_name)
+        OneOfIntSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
             t=int,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=discriminator_inlined
         )
 
 
