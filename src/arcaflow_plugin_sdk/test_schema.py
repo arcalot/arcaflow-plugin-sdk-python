@@ -471,7 +471,8 @@ class OneOfTest(unittest.TestCase):
         s_type = schema.OneOfStringType(
             {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
-            "_type",
+            discriminator_inlined=False,
+            discriminator_field_name="_type",
         )
         s_type.discriminator_field_name = "foo"
         self.assertEqual("foo", s_type.discriminator_field_name)
@@ -479,7 +480,8 @@ class OneOfTest(unittest.TestCase):
         schema.OneOfIntType(
             {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
             scope,
-            "_type",
+            discriminator_inlined=False,
+            discriminator_field_name="_type",
         )
 
     def test_unserialize(self):
@@ -505,7 +507,8 @@ class OneOfTest(unittest.TestCase):
         s_type = schema.OneOfStringType(
             {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
-            "_type",
+            discriminator_inlined=False,
+            discriminator_field_name="_type",
         )
 
         # Incomplete values to unserialize
@@ -563,7 +566,8 @@ class OneOfTest(unittest.TestCase):
         s = schema.OneOfStringType(
             {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
-            "type",
+            discriminator_inlined=False,
+            discriminator_field_name="type",
         )
 
         unserialized_data: OneOfData1 = s.unserialize(
@@ -649,7 +653,8 @@ class OneOfTest(unittest.TestCase):
         s = schema.OneOfStringType(
             {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
-            "type",
+            discriminator_inlined=False,
+            discriminator_field_name="type",
         )
 
         self.assertEqual(
@@ -686,7 +691,8 @@ class OneOfTest(unittest.TestCase):
                 ),
             },
             scope,
-            "type",
+            discriminator_inlined=False,
+            discriminator_field_name="type",
         )
 
         unserialized_data = s.unserialize({"type": "b", "b": 42})
@@ -1508,7 +1514,8 @@ class JSONSchemaTest(unittest.TestCase):
                                 "b": schema.RefType("B", scope),
                             },
                             scope,
-                            "_type",
+                            discriminator_inlined=False,
+                            discriminator_field_name="_type",
                         )
                     )
                 },

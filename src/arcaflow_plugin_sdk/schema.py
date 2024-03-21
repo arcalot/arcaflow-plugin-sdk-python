@@ -5440,8 +5440,8 @@ class OneOfStringType(
             str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
         ],
         scope: typing.ForwardRef("ScopeType"),
-        discriminator_inlined: bool,
-        discriminator_field_name: str = None,
+        discriminator_inlined: bool = None,
+        discriminator_field_name: str = "_type",
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
@@ -5476,8 +5476,9 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
             ],
         ],
         scope: typing.ForwardRef("ScopeType"),
-        discriminator_inlined: bool,
-        discriminator_field_name: str = "_type",
+        discriminator_inlined: bool = None,
+        # discriminator_field_name: str = "_type",
+        discriminator_field_name: str = None,
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
@@ -6841,9 +6842,10 @@ class _SchemaBuilder:
             return OneOfStringType(
                 types,
                 scope,
+                discriminator_inlined=False,
             )
         else:
-            return OneOfIntType(types, scope)
+            return OneOfIntType(types, scope, discriminator_inlined=False)
 
     @classmethod
     def _resolve_pattern(cls, t, type_hints: type, path, scope: ScopeType):
