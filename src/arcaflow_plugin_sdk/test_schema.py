@@ -477,6 +477,16 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
+        self.scope_basic_int = schema.ScopeType(
+            {
+                "a": schema.ObjectType(
+                    OneOfTest.OneOfData1,
+                    {"a": PropertyType(schema.StringType())},
+                ),
+                "b": self.obj_b,
+            },
+            "a",
+        )
         self.scope_embedded = schema.ScopeType(
             {
                 "a": schema.ObjectType(
@@ -526,6 +536,20 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
+
+        s_type_int = schema.OneOfIntType(
+            {
+                1: schema.RefType("a", self.scope_basic_int),
+                2: schema.RefType("b", self.scope_basic_int),
+            },
+            scope=self.scope_basic_int,
+            discriminator_field_name="_type",
+        )
+        unserialized_data3: OneOfTest.OneOfData1 = s_type_int.unserialize(
+            {"_type": 1, "a": "Hello world!"}
+        )
+        self.assertIsInstance(unserialized_data3, OneOfTest.OneOfData1)
+        self.assertEqual(unserialized_data3.a, "Hello world!")
 
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
@@ -584,7 +608,7 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertEqual(
             s.serialize(OneOfTest.OneOfData2(42)),
-            {self.discriminator_field_name: "b", "b": 42}
+            {self.discriminator_field_name: "b", "b": 42},
         )
 
     def test_object(self):
@@ -608,7 +632,8 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=self.discriminator_field_name,
         )
         unserialized_data = s.unserialize(
-            {self.discriminator_field_name: "b", "b": 42})
+            {self.discriminator_field_name: "b", "b": 42}
+        )
         self.assertIsInstance(unserialized_data, OneOfTest.OneOfData2)
 
 
