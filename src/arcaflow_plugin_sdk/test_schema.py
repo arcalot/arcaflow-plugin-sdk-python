@@ -583,7 +583,8 @@ class OneOfTest(unittest.TestCase):
             {self.discriminator_field_name: "a", "a": "Hello world!"},
         )
         self.assertEqual(
-            s.serialize(OneOfTest.OneOfData2(42)), {self.discriminator_field_name: "b", "b": 42}
+            s.serialize(OneOfTest.OneOfData2(42)),
+            {self.discriminator_field_name: "b", "b": 42}
         )
 
     def test_object(self):
@@ -606,7 +607,8 @@ class OneOfTest(unittest.TestCase):
             scope=scope,
             discriminator_field_name=self.discriminator_field_name,
         )
-        unserialized_data = s.unserialize({self.discriminator_field_name: "b", "b": 42})
+        unserialized_data = s.unserialize(
+            {self.discriminator_field_name: "b", "b": 42})
         self.assertIsInstance(unserialized_data, OneOfTest.OneOfData2)
 
 
