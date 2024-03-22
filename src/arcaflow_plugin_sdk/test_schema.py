@@ -467,7 +467,7 @@ class OneOfTest(unittest.TestCase):
         self.obj_b: schema.ObjectType = schema.ObjectType(
             OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())}
         )
-        self.scope_basic: schema.ScopeType = schema.ScopeType(
+        self.scope_basic = schema.ScopeType(
             {
                 "a": schema.ObjectType(
                     OneOfTest.OneOfData1,
@@ -477,7 +477,7 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        self.scope_embedded: schema.ScopeType = schema.ScopeType(
+        self.scope_embedded = schema.ScopeType(
             {
                 "a": schema.ObjectType(
                     OneOfTest.OneOfDataEmbedded1,
