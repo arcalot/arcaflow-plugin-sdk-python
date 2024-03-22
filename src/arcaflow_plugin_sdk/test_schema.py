@@ -517,7 +517,7 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({"_type": 1, 1: "Hello world!"})
 
-        unserialized_data: OneOfData1 = s_type.unserialize(
+        unserialized_data: self.OneOfData1 = s_type.unserialize(
             {"_type": "a", "a": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data, self.OneOfData1)
