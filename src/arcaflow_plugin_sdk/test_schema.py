@@ -448,8 +448,82 @@ class ObjectTest(unittest.TestCase):
 
 
 class OneOfTest(unittest.TestCase):
-    def test_assignment(self):
+    @dataclasses.dataclass
+    class CommonDiscriminatorStr:
+        _type: str
 
+    @dataclasses.dataclass
+    class CommonDiscriminatorInt:
+        _type: int
+
+    @dataclasses.dataclass
+    class OneOfDataInlined1(CommonDiscriminatorStr):
+        a: str
+
+    @dataclasses.dataclass
+    class OneOfDataInlined2(CommonDiscriminatorInt):
+        b: int
+
+    def setUp(self):
+        self.scope_inlined: schema.ScopeType = schema.ScopeType(
+            {
+                "a": schema.ObjectType(
+                    self.OneOfDataInlined1,
+                    {
+                        "a": PropertyType(schema.StringType()),
+                        "_type": PropertyType(schema.StringType())}
+                ),
+                "b": schema.ObjectType(
+                    self.OneOfDataInlined2,
+                    {
+                        "b": PropertyType(schema.IntType()),
+                        "_type": PropertyType(schema.IntType())}
+                ),
+            },
+            "a",
+        )
+
+    def test_assignment_inlined(self):
+        s_type = schema.OneOfStringType(
+            {
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined)},
+            scope=self.scope_inlined,
+            discriminator_inlined=True,
+            discriminator_field_name="_type",
+        )
+        s_type.discriminator_field_name = "foo"
+        self.assertEqual("foo", s_type.discriminator_field_name)
+        schema.OneOfIntType(
+            {
+                1: schema.RefType(1, self.scope_inlined),
+                2: schema.RefType(2, self.scope_inlined)},
+            scope=self.scope_inlined,
+            discriminator_inlined=True,
+            discriminator_field_name="_type",
+        )
+
+    def test_inline_discriminator_missing(self):
+        # raise errors
+        #   1) "object id %q needs discriminator field %q; either add that field or set inline to false for %T[%T]",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, o, key
+        #   2) "object id %q has conflicting field %q; either remove that field or set inline to true for %T[%T]",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, o, key
+        #   3) "the type of object id %v's discriminator field %q does not match OneOfSchema discriminator type; "
+        #      "expected %v got %T",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, typeValueDiscriminatorValue.TypeID(), key
+
+        with self.assertRaises(Exception):
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_inlined),
+                    "b": schema.RefType("b", self.scope_inlined)},
+                scope=self.scope_inlined,
+                discriminator_inlined=False,
+                discriminator_field_name="_type",
+            )
+
+    def test_assignment(self):
         @dataclasses.dataclass
         class OneOfData1:
             a: str
@@ -482,54 +556,6 @@ class OneOfTest(unittest.TestCase):
             {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
             scope,
             discriminator_inlined=False,
-            discriminator_field_name="_type",
-        )
-
-        @dataclasses.dataclass
-        class CommonDiscriminatorStr:
-            _type: str
-
-        @dataclasses.dataclass
-        class CommonDiscriminatorInt:
-            _type: int
-
-        @dataclasses.dataclass
-        class OneOfDataInlined1(CommonDiscriminatorStr):
-            a: str
-
-        @dataclasses.dataclass
-        class OneOfDataInlined2(CommonDiscriminatorInt):
-            b: int
-
-        scope = schema.ScopeType(
-            {
-                "a": schema.ObjectType(
-                    OneOfDataInlined1,
-                    {
-                        "a": PropertyType(schema.StringType()),
-                        "_type": PropertyType(schema.StringType())}
-                ),
-                "b": schema.ObjectType(
-                    OneOfDataInlined2,
-                    {
-                        "b": PropertyType(schema.IntType()),
-                        "_type": PropertyType(schema.IntType())}
-                ),
-            },
-            "a",
-        )
-        s_type = schema.OneOfStringType(
-            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
-            scope,
-            discriminator_inlined=True,
-            discriminator_field_name="_type",
-        )
-        s_type.discriminator_field_name = "foo"
-        self.assertEqual("foo", s_type.discriminator_field_name)
-        schema.OneOfIntType(
-            {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
-            scope,
-            discriminator_inlined=True,
             discriminator_field_name="_type",
         )
 
