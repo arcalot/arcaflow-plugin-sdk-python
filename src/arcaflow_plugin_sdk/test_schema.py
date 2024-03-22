@@ -611,7 +611,8 @@ class OneOfTest(unittest.TestCase):
         s = schema.OneOfStringType[OneOfData1](
             {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
             scope,
-            "type",
+            discriminator_inlined=False,
+            discriminator_field_name="type",
         )
 
         with self.assertRaises(ConstraintException):

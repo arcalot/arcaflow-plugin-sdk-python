@@ -2615,7 +2615,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         "a": schema.RefSchema("A_ref"),
     ...         "b": schema.RefSchema("B_ref")
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False
     ... )
     >>> c = schema.ObjectSchema(
     ...     "C",
@@ -2647,7 +2648,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...                 )
     ...             }
     ...         )
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False,
     ... )
     """  # noqa: E501
 
@@ -2772,7 +2774,8 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         1: schema.RefSchema("A_ref"),
     ...         2: schema.RefSchema("B_ref")
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False
     ... )
     >>> c = schema.ObjectSchema(
     ...     "C",
@@ -5477,8 +5480,8 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
         ],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_inlined: bool = None,
-        # discriminator_field_name: str = "_type",
-        discriminator_field_name: str = None,
+        discriminator_field_name: str = "_type",
+        # discriminator_field_name: str = None,
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
