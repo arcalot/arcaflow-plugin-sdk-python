@@ -532,7 +532,8 @@ discriminatorFunc = typing.Callable[
 ]
 
 
-def discriminator(discriminator_field_name: str, discriminator_inlined: bool = False) -> discriminatorFunc:
+def discriminator(discriminator_field_name: str,
+                  discriminator_inlined: bool = False) -> discriminatorFunc:
     """This annotation is used to manually set the discriminator field on a
     Union type. :param discriminator_field_name: the name of the discriminator
     field. :return: the callable decorator.
@@ -614,8 +615,9 @@ def discriminator(discriminator_field_name: str, discriminator_inlined: bool = F
                     "Please check your annotations.".format(e.__str__())
                 ) from e
 
-        # Now validate that the discriminator is inlined if it's supposed to be,
-        # and not present in the objects if it's not supposed to be inlined.
+        # Now validate that the discriminator is inlined if it's supposed
+        # to be, and not present in the objects if it's not supposed to
+        # be inlined.
         for key, item in oneof.types.items():
             try:
                 discriminator_field_schema.validate(key)
@@ -2672,7 +2674,6 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
@@ -2813,7 +2814,6 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be an int."
         ),
     ] = "_type"
-
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -5324,7 +5324,6 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         self.discriminator_field_name = discriminator_field_name
         self.discriminator_inlined = discriminator_inlined
 
-
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
     ) -> OneOfT:
@@ -5447,7 +5446,8 @@ class OneOfStringType(
         discriminator_field_name: str = "_type",
     ):
         # noinspection PyArgumentList
-        OneOfStringSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
+        OneOfStringSchema.__init__(
+            self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
@@ -5484,7 +5484,8 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
         # discriminator_field_name: str = None,
     ):
         # noinspection PyArgumentList
-        OneOfIntSchema.__init__(self, types, discriminator_inlined, discriminator_field_name)
+        OneOfIntSchema.__init__(
+            self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
