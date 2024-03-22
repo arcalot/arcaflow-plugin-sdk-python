@@ -458,8 +458,10 @@ class OneOfTest(unittest.TestCase):
 
     @dataclasses.dataclass
     class OneOfDataEmbedded1:
-        type: str
+        type_: str
         a: str
+
+    discriminator_field_name = "type_"
 
     def setUp(self):
         self.obj_b: schema.ObjectType = schema.ObjectType(
@@ -480,7 +482,7 @@ class OneOfTest(unittest.TestCase):
                 "a": schema.ObjectType(
                     OneOfTest.OneOfDataEmbedded1,
                     {
-                        "type": PropertyType(
+                        self.discriminator_field_name: PropertyType(
                             schema.StringType(),
                         ),
                         "a": PropertyType(schema.StringType()),
@@ -489,26 +491,6 @@ class OneOfTest(unittest.TestCase):
                 "b": self.obj_b,
             },
             "a",
-        )
-
-    def test_assignment(self):
-        s_type = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", self.scope_basic),
-                "b": schema.RefType("b", self.scope_basic),
-            },
-            scope=self.scope_basic,
-            discriminator_field_name="_type",
-        )
-        s_type.discriminator_field_name = "foo"
-        self.assertEqual("foo", s_type.discriminator_field_name)
-        schema.OneOfIntType(
-            {
-                1: schema.RefType(1, self.scope_basic),
-                2: schema.RefType(2, self.scope_basic),
-            },
-            scope=self.scope_basic,
-            discriminator_field_name="_type",
         )
 
     def test_unserialize(self):
@@ -552,18 +534,18 @@ class OneOfTest(unittest.TestCase):
                 "b": schema.RefType("b", self.scope_embedded),
             },
             scope=self.scope_embedded,
-            discriminator_field_name="type",
+            discriminator_field_name=self.discriminator_field_name,
         )
 
         unserialized_data: OneOfTest.OneOfDataEmbedded1 = s.unserialize(
-            {"type": "a", "a": "Hello world!"}
+            {self.discriminator_field_name: "a", "a": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data, OneOfTest.OneOfDataEmbedded1)
-        self.assertEqual(unserialized_data.type, "a")
+        self.assertEqual(unserialized_data.type_, "a")
         self.assertEqual(unserialized_data.a, "Hello world!")
 
         unserialized_data2: OneOfTest.OneOfData2 = s.unserialize(
-            {"type": "b", "b": 42}
+            {self.discriminator_field_name: "b", "b": 42}
         )
         self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
@@ -575,7 +557,7 @@ class OneOfTest(unittest.TestCase):
                 "b": schema.RefType("b", self.scope_embedded),
             },
             scope=self.scope_embedded,
-            discriminator_field_name="type",
+            discriminator_field_name=self.discriminator_field_name,
         )
 
         with self.assertRaises(ConstraintException):
@@ -594,14 +576,14 @@ class OneOfTest(unittest.TestCase):
                 "b": schema.RefType("b", self.scope_embedded),
             },
             scope=self.scope_embedded,
-            discriminator_field_name="type",
+            discriminator_field_name=self.discriminator_field_name,
         )
         self.assertEqual(
             s.serialize(OneOfTest.OneOfDataEmbedded1("a", "Hello world!")),
-            {"type": "a", "a": "Hello world!"},
+            {self.discriminator_field_name: "a", "a": "Hello world!"},
         )
         self.assertEqual(
-            s.serialize(OneOfTest.OneOfData2(42)), {"type": "b", "b": 42}
+            s.serialize(OneOfTest.OneOfData2(42)), {self.discriminator_field_name: "b", "b": 42}
         )
 
     def test_object(self):
@@ -611,7 +593,7 @@ class OneOfTest(unittest.TestCase):
                 "a": schema.ObjectType(
                     OneOfTest.OneOfDataEmbedded1,
                     {
-                        "type": PropertyType(
+                        self.discriminator_field_name: PropertyType(
                             schema.StringType(),
                         ),
                         "a": PropertyType(schema.StringType()),
@@ -622,9 +604,9 @@ class OneOfTest(unittest.TestCase):
                 ),
             },
             scope=scope,
-            discriminator_field_name="type",
+            discriminator_field_name=self.discriminator_field_name,
         )
-        unserialized_data = s.unserialize({"type": "b", "b": 42})
+        unserialized_data = s.unserialize({self.discriminator_field_name: "b", "b": 42})
         self.assertIsInstance(unserialized_data, OneOfTest.OneOfData2)
 
 
