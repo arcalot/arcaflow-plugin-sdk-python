@@ -463,11 +463,12 @@ class OneOfTest(unittest.TestCase):
 
     def setUp(self):
         self.obj_b: schema.ObjectType = schema.ObjectType(
-                    OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())})
+            OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())})
         self.scope_basic: schema.ScopeType = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    OneOfTest.OneOfData1, {"a": PropertyType(schema.StringType())}
+                    OneOfTest.OneOfData1,
+                    {"a": PropertyType(schema.StringType())}
                 ),
                 "b": self.obj_b,
             },
