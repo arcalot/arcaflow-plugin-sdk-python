@@ -449,6 +449,7 @@ class ObjectTest(unittest.TestCase):
 
 class OneOfTest(unittest.TestCase):
     def test_assignment(self):
+
         @dataclasses.dataclass
         class OneOfData1:
             a: str
@@ -481,6 +482,54 @@ class OneOfTest(unittest.TestCase):
             {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
             scope,
             discriminator_inlined=False,
+            discriminator_field_name="_type",
+        )
+
+        @dataclasses.dataclass
+        class CommonDiscriminatorStr:
+            _type: str
+
+        @dataclasses.dataclass
+        class CommonDiscriminatorInt:
+            _type: int
+
+        @dataclasses.dataclass
+        class OneOfDataInlined1(CommonDiscriminatorStr):
+            a: str
+
+        @dataclasses.dataclass
+        class OneOfDataInlined2(CommonDiscriminatorInt):
+            b: int
+
+        scope = schema.ScopeType(
+            {
+                "a": schema.ObjectType(
+                    OneOfDataInlined1,
+                    {
+                        "a": PropertyType(schema.StringType()),
+                        "_type": PropertyType(schema.StringType())}
+                ),
+                "b": schema.ObjectType(
+                    OneOfDataInlined2,
+                    {
+                        "b": PropertyType(schema.IntType()),
+                        "_type": PropertyType(schema.IntType())}
+                ),
+            },
+            "a",
+        )
+        s_type = schema.OneOfStringType(
+            {"a": schema.RefType("a", scope), "b": schema.RefType("b", scope)},
+            scope,
+            discriminator_inlined=True,
+            discriminator_field_name="_type",
+        )
+        s_type.discriminator_field_name = "foo"
+        self.assertEqual("foo", s_type.discriminator_field_name)
+        schema.OneOfIntType(
+            {1: schema.RefType(1, scope), 2: schema.RefType(2, scope)},
+            scope,
+            discriminator_inlined=True,
             discriminator_field_name="_type",
         )
 
