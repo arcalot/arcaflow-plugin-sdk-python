@@ -477,16 +477,6 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        self.scope_basic_int = schema.ScopeType(
-            {
-                "a": schema.ObjectType(
-                    OneOfTest.OneOfData1,
-                    {"a": PropertyType(schema.StringType())},
-                ),
-                "b": self.obj_b,
-            },
-            "a",
-        )
         self.scope_embedded = schema.ScopeType(
             {
                 "a": schema.ObjectType(
@@ -539,10 +529,10 @@ class OneOfTest(unittest.TestCase):
 
         s_type_int = schema.OneOfIntType(
             {
-                1: schema.RefType("a", self.scope_basic_int),
-                2: schema.RefType("b", self.scope_basic_int),
+                1: schema.RefType("a", self.scope_basic),
+                2: schema.RefType("b", self.scope_basic),
             },
-            scope=self.scope_basic_int,
+            scope=self.scope_basic,
             discriminator_field_name="_type",
         )
         unserialized_data3: OneOfTest.OneOfData1 = s_type_int.unserialize(
