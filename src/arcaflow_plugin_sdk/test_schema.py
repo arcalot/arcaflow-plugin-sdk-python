@@ -463,12 +463,13 @@ class OneOfTest(unittest.TestCase):
 
     def setUp(self):
         self.obj_b: schema.ObjectType = schema.ObjectType(
-            OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())})
+            OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())}
+        )
         self.scope_basic: schema.ScopeType = schema.ScopeType(
             {
                 "a": schema.ObjectType(
                     OneOfTest.OneOfData1,
-                    {"a": PropertyType(schema.StringType())}
+                    {"a": PropertyType(schema.StringType())},
                 ),
                 "b": self.obj_b,
             },
@@ -492,21 +493,30 @@ class OneOfTest(unittest.TestCase):
 
     def test_assignment(self):
         s_type = schema.OneOfStringType(
-            {"a": schema.RefType("a", self.scope_basic), "b": schema.RefType("b", self.scope_basic)},
+            {
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
+            },
             scope=self.scope_basic,
             discriminator_field_name="_type",
         )
         s_type.discriminator_field_name = "foo"
         self.assertEqual("foo", s_type.discriminator_field_name)
         schema.OneOfIntType(
-            {1: schema.RefType(1, self.scope_basic), 2: schema.RefType(2, self.scope_basic)},
+            {
+                1: schema.RefType(1, self.scope_basic),
+                2: schema.RefType(2, self.scope_basic),
+            },
             scope=self.scope_basic,
             discriminator_field_name="_type",
         )
 
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
-            {"a": schema.RefType("a", self.scope_basic), "b": schema.RefType("b", self.scope_basic)},
+            {
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
+            },
             scope=self.scope_basic,
             discriminator_field_name="_type",
         )
@@ -537,7 +547,10 @@ class OneOfTest(unittest.TestCase):
 
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
-            {"a": schema.RefType("a", self.scope_embedded), "b": schema.RefType("b", self.scope_embedded)},
+            {
+                "a": schema.RefType("a", self.scope_embedded),
+                "b": schema.RefType("b", self.scope_embedded),
+            },
             scope=self.scope_embedded,
             discriminator_field_name="type",
         )
@@ -549,13 +562,18 @@ class OneOfTest(unittest.TestCase):
         self.assertEqual(unserialized_data.type, "a")
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: OneOfTest.OneOfData2 = s.unserialize({"type": "b", "b": 42})
+        unserialized_data2: OneOfTest.OneOfData2 = s.unserialize(
+            {"type": "b", "b": 42}
+        )
         self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
 
     def test_validation(self):
         s = schema.OneOfStringType[OneOfTest.OneOfDataEmbedded1](
-            {"a": schema.RefType("a", self.scope_embedded), "b": schema.RefType("b", self.scope_embedded)},
+            {
+                "a": schema.RefType("a", self.scope_embedded),
+                "b": schema.RefType("b", self.scope_embedded),
+            },
             scope=self.scope_embedded,
             discriminator_field_name="type",
         )
@@ -571,7 +589,10 @@ class OneOfTest(unittest.TestCase):
 
     def test_serialize(self):
         s = schema.OneOfStringType(
-            {"a": schema.RefType("a", self.scope_embedded), "b": schema.RefType("b", self.scope_embedded)},
+            {
+                "a": schema.RefType("a", self.scope_embedded),
+                "b": schema.RefType("b", self.scope_embedded),
+            },
             scope=self.scope_embedded,
             discriminator_field_name="type",
         )
@@ -579,7 +600,9 @@ class OneOfTest(unittest.TestCase):
             s.serialize(OneOfTest.OneOfDataEmbedded1("a", "Hello world!")),
             {"type": "a", "a": "Hello world!"},
         )
-        self.assertEqual(s.serialize(OneOfTest.OneOfData2(42)), {"type": "b", "b": 42})
+        self.assertEqual(
+            s.serialize(OneOfTest.OneOfData2(42)), {"type": "b", "b": 42}
+        )
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
