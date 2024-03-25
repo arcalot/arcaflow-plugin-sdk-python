@@ -464,7 +464,7 @@ class OneOfTest(unittest.TestCase):
     discriminator_field_name = "type_"
 
     def setUp(self):
-        self.obj_b: schema.ObjectType = schema.ObjectType(
+        self.obj_b = schema.ObjectType(
             OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())}
         )
         self.scope_basic = schema.ScopeType(
