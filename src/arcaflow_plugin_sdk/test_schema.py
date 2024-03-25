@@ -542,7 +542,6 @@ class OneOfTest(unittest.TestCase):
             s_type.unserialize({
                 self.discriminator_default: 1, "b": "Hello world!"})
 
-
         unserialized_data: OneOfTest.OneOfData1 = s_type.unserialize(
             {self.discriminator_default: "a", "a": "Hello world!"}
         )
