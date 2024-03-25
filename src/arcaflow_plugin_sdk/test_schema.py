@@ -468,6 +468,7 @@ class OneOfTest(unittest.TestCase):
     # "type_" is the discriminator identifier that will be embedded in
     # OneOfDataEmbedded1.
     discriminator_field_name = "type_"
+    discriminator_default = "_type"
 
     def setUp(self):
         self.obj_b = schema.ObjectType(
@@ -506,7 +507,6 @@ class OneOfTest(unittest.TestCase):
                 "b": schema.RefType("b", self.scope_basic),
             },
             scope=self.scope_basic,
-            discriminator_field_name="_type",
         )
 
         # Incomplete values to unserialize
@@ -517,18 +517,20 @@ class OneOfTest(unittest.TestCase):
 
         # Mismatching key value
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({"_type": "a", 1: "Hello world!"})
+            s_type.unserialize({
+                self.discriminator_default: "a", 1: "Hello world!"})
         # Invalid key value
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({"_type": 1, 1: "Hello world!"})
+            s_type.unserialize({
+                self.discriminator_default: 1, 1: "Hello world!"})
 
         unserialized_data: OneOfTest.OneOfData1 = s_type.unserialize(
-            {"_type": "a", "a": "Hello world!"}
+            {self.discriminator_default: "a", "a": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data, OneOfTest.OneOfData1)
         self.assertEqual(unserialized_data.a, "Hello world!")
         unserialized_data2: OneOfTest.OneOfData2 = s_type.unserialize(
-            {"_type": "b", "b": 42}
+            {self.discriminator_default: "b", "b": 42}
         )
         self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
         self.assertEqual(unserialized_data2.b, 42)
@@ -539,10 +541,9 @@ class OneOfTest(unittest.TestCase):
                 2: schema.RefType("b", self.scope_basic),
             },
             scope=self.scope_basic,
-            discriminator_field_name="_type",
         )
         unserialized_data3: OneOfTest.OneOfData1 = s_type_int.unserialize(
-            {"_type": 1, "a": "Hello world!"}
+            {self.discriminator_default: 1, "a": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data3, OneOfTest.OneOfData1)
         self.assertEqual(unserialized_data3.a, "Hello world!")
