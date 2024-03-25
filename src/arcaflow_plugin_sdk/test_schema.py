@@ -499,6 +499,26 @@ class OneOfTest(unittest.TestCase):
             "a",
         )
 
+    def test_inline_discriminator_missing(self):
+        # raise errors
+        #   1) "object id %q needs discriminator field %q; either add that field or set inline to false for %T[%T]",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, o, key
+        #   2) "object id %q has conflicting field %q; either remove that field or set inline to true for %T[%T]",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, o, key
+        #   3) "the type of object id %v's discriminator field %q does not match OneOfSchema discriminator type; "
+        #      "expected %v got %T",
+        # 				typeValue.ID(), o.DiscriminatorFieldNameValue, typeValueDiscriminatorValue.TypeID(), key
+
+        with self.assertRaises(Exception):
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_embedded),
+                    "b": schema.RefType("b", self.scope_embedded)},
+                scope=self.scope_embedded,
+                discriminator_inlined=False,
+                discriminator_field_name="_type",
+            )
+
     def test_unserialize_error_discriminator_type(self):
         s_type = schema.OneOfStringType(
             {
