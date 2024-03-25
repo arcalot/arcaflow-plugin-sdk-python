@@ -461,6 +461,9 @@ class OneOfTest(unittest.TestCase):
         type_: str
         a: str
 
+    # default discriminator field name
+    discriminator_default = "_type"
+
     # When a discriminator is embedded with the data schema of the
     # OneOfType's constituent types (the types in the union set),
     # then the constituent type's attribute's identifier must match
@@ -468,7 +471,6 @@ class OneOfTest(unittest.TestCase):
     # "type_" is the discriminator identifier that will be embedded in
     # OneOfDataEmbedded1.
     discriminator_field_name = "type_"
-    discriminator_default = "_type"
 
     def setUp(self):
         self.obj_b = schema.ObjectType(
