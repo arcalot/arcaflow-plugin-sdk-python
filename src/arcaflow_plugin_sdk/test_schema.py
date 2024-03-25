@@ -499,6 +499,18 @@ class OneOfTest(unittest.TestCase):
             "a",
         )
 
+    def test_unserialize_error_discriminator_type(self):
+        s_type = schema.OneOfStringType(
+            {
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
+            },
+            scope=self.scope_basic,
+        )
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize({
+                self.discriminator_default: "1", 1: "Hello world!"})
+
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
             {
@@ -514,14 +526,22 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({"b": 42})
 
+        # invalid type for 'data' argument
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize([])
         # Mismatching key value
         with self.assertRaises(ConstraintException):
             s_type.unserialize({
-                self.discriminator_default: "a", 1: "Hello world!"})
+                self.discriminator_default: "a", "b": "Hello world!"})
         # Invalid key value
         with self.assertRaises(ConstraintException):
             s_type.unserialize({
-                self.discriminator_default: 1, 1: "Hello world!"})
+                self.discriminator_default: 1, "a": "Hello world!"})
+        # Invalid discriminator
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize({
+                self.discriminator_default: 1, "b": "Hello world!"})
+
 
         unserialized_data: OneOfTest.OneOfData1 = s_type.unserialize(
             {self.discriminator_default: "a", "a": "Hello world!"}
@@ -588,6 +608,10 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s.validate(OneOfTest.OneOfDataEmbedded1("b", "Hello world!"))
 
+        with self.assertRaises(ConstraintException):
+            # noinspection PyTypeChecker
+            s.validate(OneOfTest.OneOfData1("Hello world!"))
+
         s.validate(OneOfTest.OneOfDataEmbedded1("a", "Hello world!"))
 
     def test_serialize(self):
@@ -607,6 +631,12 @@ class OneOfTest(unittest.TestCase):
             s.serialize(OneOfTest.OneOfData2(42)),
             {self.discriminator_field_name: "b", "b": 42},
         )
+        with self.assertRaises(ConstraintException):
+            # noinspection PyTypeChecker
+            s.serialize(OneOfTest.OneOfData1("Hello world!"))
+
+        with self.assertRaises(ConstraintException):
+            s.serialize(OneOfTest.OneOfDataEmbedded1("b", "Hello world!"))
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
