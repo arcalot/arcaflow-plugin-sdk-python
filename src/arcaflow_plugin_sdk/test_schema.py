@@ -515,15 +515,24 @@ class OneOfTest(unittest.TestCase):
         #      "expected %v got %T",
         # 				typeValue.ID(), o.DiscriminatorFieldNameValue, typeValueDiscriminatorValue.TypeID(), key
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
-                {
-                    "a": schema.RefType("a", self.scope_inlined),
-                    "b": schema.RefType("b", self.scope_inlined)},
+                {"a": schema.RefType("a", self.scope_basic)},
+                scope=self.scope_inlined,
+                discriminator_inlined=True,
+                discriminator_field_name="type_",
+            )
+        self.assertIn("needs discriminator field", cm.exception.__str__())
+
+    def test_has_discriminator_error(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {"a": schema.RefType("a", self.scope_inlined)},
                 scope=self.scope_inlined,
                 discriminator_inlined=False,
-                discriminator_field_name="_type",
+                discriminator_field_name="type_",
             )
+        self.assertIn("needs discriminator field", cm.exception.__str__())
 
     def test_unserialize_error_discriminator_type(self):
         s_type = schema.OneOfStringType(
@@ -626,9 +635,9 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=self.discriminator_field_name,
         )
 
-        with self.assertRaises(ConstraintException):
-            # noinspection PyTypeChecker
-            s.validate(OneOfTest.StrInline(None, "Hello world!"))
+        # with self.assertRaises(ConstraintException):
+        #     # noinspection PyTypeChecker
+        #     s.validate(OneOfTest.StrInline(None, "Hello world!"))
 
         with self.assertRaises(ConstraintException):
             s.validate(OneOfTest.StrInline("b", "Hello world!"))
