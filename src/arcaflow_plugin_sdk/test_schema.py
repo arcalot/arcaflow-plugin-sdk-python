@@ -546,6 +546,19 @@ class OneOfTest(unittest.TestCase):
             s_type.unserialize({
                 self.discriminator_default: "1", 1: "Hello world!"})
 
+    def test_discriminator_type_mismatch(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            # noinspection PyTypeChecker
+            schema.OneOfIntType(
+                {"a": schema.RefType("a", self.scope_inlined)},
+                scope=self.scope_inlined,
+                discriminator_inlined=True,
+                discriminator_field_name="type_",
+            )
+        self.assertIn(
+            "does not match OneOfSchema discriminator type",
+            cm.exception.__str__())
+
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
             {
