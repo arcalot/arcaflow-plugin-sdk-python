@@ -449,17 +449,22 @@ class ObjectTest(unittest.TestCase):
 
 class OneOfTest(unittest.TestCase):
     @dataclasses.dataclass
-    class OneOfData1:
+    class StrBasic:
         a: str
 
     @dataclasses.dataclass
-    class OneOfData2:
+    class IntBasic:
         b: int
 
     @dataclasses.dataclass
-    class OneOfDataEmbedded1:
+    class StrInline:
         type_: str
         a: str
+
+    @dataclasses.dataclass
+    class IntInline:
+        type_: str
+        b: int
 
     # default discriminator field name
     discriminator_default = "_type"
@@ -470,23 +475,22 @@ class OneOfTest(unittest.TestCase):
     discriminator_field_name = "type_"
 
     def setUp(self):
-        self.obj_b = schema.ObjectType(
-            OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())}
-        )
         self.scope_basic = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    OneOfTest.OneOfData1,
+                    OneOfTest.StrBasic,
                     {"a": PropertyType(schema.StringType())},
                 ),
-                "b": self.obj_b,
+                "b": schema.ObjectType(
+                    OneOfTest.IntBasic, {"b": PropertyType(schema.IntType())}
+                ),
             },
             "a",
         )
-        self.scope_embedded = schema.ScopeType(
+        self.scope_inlined = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    OneOfTest.OneOfDataEmbedded1,
+                    OneOfTest.StrInline,
                     {
                         self.discriminator_field_name: PropertyType(
                             schema.StringType(),
@@ -494,7 +498,9 @@ class OneOfTest(unittest.TestCase):
                         "a": PropertyType(schema.StringType()),
                     },
                 ),
-                "b": self.obj_b,
+                "b": schema.ObjectType(
+                    OneOfTest.IntBasic, {"b": PropertyType(schema.IntType())}
+                ),
             },
             "a",
         )
@@ -512,9 +518,9 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(Exception):
             schema.OneOfStringType(
                 {
-                    "a": schema.RefType("a", self.scope_embedded),
-                    "b": schema.RefType("b", self.scope_embedded)},
-                scope=self.scope_embedded,
+                    "a": schema.RefType("a", self.scope_inlined),
+                    "b": schema.RefType("b", self.scope_inlined)},
+                scope=self.scope_inlined,
                 discriminator_inlined=False,
                 discriminator_field_name="_type",
             )
@@ -562,15 +568,15 @@ class OneOfTest(unittest.TestCase):
             s_type.unserialize({
                 self.discriminator_default: 1, "b": "Hello world!"})
 
-        unserialized_data: OneOfTest.OneOfData1 = s_type.unserialize(
+        unserialized_data: OneOfTest.StrBasic = s_type.unserialize(
             {self.discriminator_default: "a", "a": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data, OneOfTest.OneOfData1)
+        self.assertIsInstance(unserialized_data, OneOfTest.StrBasic)
         self.assertEqual(unserialized_data.a, "Hello world!")
-        unserialized_data2: OneOfTest.OneOfData2 = s_type.unserialize(
+        unserialized_data2: OneOfTest.IntBasic = s_type.unserialize(
             {self.discriminator_default: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
+        self.assertIsInstance(unserialized_data2, OneOfTest.IntBasic)
         self.assertEqual(unserialized_data2.b, 42)
 
         s_type_int = schema.OneOfIntType(
@@ -580,89 +586,89 @@ class OneOfTest(unittest.TestCase):
             },
             scope=self.scope_basic,
         )
-        unserialized_data3: OneOfTest.OneOfData1 = s_type_int.unserialize(
+        unserialized_data3: OneOfTest.StrBasic = s_type_int.unserialize(
             {self.discriminator_default: 1, "a": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data3, OneOfTest.OneOfData1)
+        self.assertIsInstance(unserialized_data3, OneOfTest.StrBasic)
         self.assertEqual(unserialized_data3.a, "Hello world!")
 
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_embedded),
-                "b": schema.RefType("b", self.scope_embedded),
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
             },
-            scope=self.scope_embedded,
+            scope=self.scope_inlined,
             discriminator_field_name=self.discriminator_field_name,
         )
 
-        unserialized_data: OneOfTest.OneOfDataEmbedded1 = s.unserialize(
+        unserialized_data: OneOfTest.StrInline = s.unserialize(
             {self.discriminator_field_name: "a", "a": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data, OneOfTest.OneOfDataEmbedded1)
+        self.assertIsInstance(unserialized_data, OneOfTest.StrInline)
         self.assertEqual(
             getattr(unserialized_data, self.discriminator_field_name), "a")
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: OneOfTest.OneOfData2 = s.unserialize(
+        unserialized_data2: OneOfTest.IntBasic = s.unserialize(
             {self.discriminator_field_name: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data2, OneOfTest.OneOfData2)
+        self.assertIsInstance(unserialized_data2, OneOfTest.IntBasic)
         self.assertEqual(unserialized_data2.b, 42)
 
     def test_validation(self):
-        s = schema.OneOfStringType[OneOfTest.OneOfDataEmbedded1](
+        s = schema.OneOfStringType[OneOfTest.StrInline](
             {
-                "a": schema.RefType("a", self.scope_embedded),
-                "b": schema.RefType("b", self.scope_embedded),
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
             },
-            scope=self.scope_embedded,
+            scope=self.scope_inlined,
             discriminator_field_name=self.discriminator_field_name,
         )
 
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.validate(OneOfTest.OneOfDataEmbedded1(None, "Hello world!"))
+            s.validate(OneOfTest.StrInline(None, "Hello world!"))
 
         with self.assertRaises(ConstraintException):
-            s.validate(OneOfTest.OneOfDataEmbedded1("b", "Hello world!"))
+            s.validate(OneOfTest.StrInline("b", "Hello world!"))
 
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.validate(OneOfTest.OneOfData1("Hello world!"))
+            s.validate(OneOfTest.StrBasic("Hello world!"))
 
-        s.validate(OneOfTest.OneOfDataEmbedded1("a", "Hello world!"))
+        s.validate(OneOfTest.StrInline("a", "Hello world!"))
 
     def test_serialize(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_embedded),
-                "b": schema.RefType("b", self.scope_embedded),
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
             },
-            scope=self.scope_embedded,
+            scope=self.scope_inlined,
             discriminator_field_name=self.discriminator_field_name,
         )
         self.assertEqual(
-            s.serialize(OneOfTest.OneOfDataEmbedded1("a", "Hello world!")),
+            s.serialize(OneOfTest.StrInline("a", "Hello world!")),
             {self.discriminator_field_name: "a", "a": "Hello world!"},
         )
         self.assertEqual(
-            s.serialize(OneOfTest.OneOfData2(42)),
+            s.serialize(OneOfTest.IntBasic(42)),
             {self.discriminator_field_name: "b", "b": 42},
         )
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.serialize(OneOfTest.OneOfData1("Hello world!"))
+            s.serialize(OneOfTest.StrBasic("Hello world!"))
 
         with self.assertRaises(ConstraintException):
-            s.serialize(OneOfTest.OneOfDataEmbedded1("b", "Hello world!"))
+            s.serialize(OneOfTest.StrInline("b", "Hello world!"))
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
         s = schema.OneOfStringType(
             {
                 "a": schema.ObjectType(
-                    OneOfTest.OneOfDataEmbedded1,
+                    OneOfTest.StrInline,
                     {
                         self.discriminator_field_name: PropertyType(
                             schema.StringType(),
@@ -671,7 +677,7 @@ class OneOfTest(unittest.TestCase):
                     },
                 ),
                 "b": schema.ObjectType(
-                    OneOfTest.OneOfData2, {"b": PropertyType(schema.IntType())}
+                    OneOfTest.IntBasic, {"b": PropertyType(schema.IntType())}
                 ),
             },
             scope=scope,
@@ -680,7 +686,7 @@ class OneOfTest(unittest.TestCase):
         unserialized_data = s.unserialize(
             {self.discriminator_field_name: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data, OneOfTest.OneOfData2)
+        self.assertIsInstance(unserialized_data, OneOfTest.IntBasic)
 
 
 class SerializationTest(unittest.TestCase):
