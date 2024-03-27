@@ -605,6 +605,7 @@ def discriminator(discriminator_field_name: str,
                 one_of[key] = item
 
         oneof.discriminator_field_name = discriminator_field_name
+        oneof.discriminator_inlined = discriminator_inlined
 
         for key, item in oneof.types.items():
             try:
@@ -618,14 +619,14 @@ def discriminator(discriminator_field_name: str,
         # Now validate that the discriminator is inlined if it's supposed
         # to be, and not present in the objects if it's not supposed to
         # be inlined.
-        for key, item in oneof.types.items():
-            try:
-                discriminator_field_schema.validate(key)
-            except ConstraintException as e:
-                raise BadArgumentException(
-                    "The discriminator value has an invalid value: {}. "
-                    "Please check your annotations.".format(e.__str__())
-                ) from e
+        # for key, item in oneof.types.items():
+        #     try:
+        #         discriminator_field_schema.validate(key)
+        #     except ConstraintException as e:
+        #         raise BadArgumentException(
+        #             "The discriminator value has an invalid value: {}. "
+        #             "Please check your annotations.".format(e.__str__())
+        #         ) from e
 
         return oneof
 
@@ -5319,13 +5320,13 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                     " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
                     " key {}".format(type(v).__name__, v)
                 )
-            # if not discriminator_inlined and discriminator_field_name in v.properties:
-            #     raise BadArgumentException(
-            #         f"object id \"{v.id}\" has conflicting field "
-            #         f"\"{discriminator_field_name}\"; either remove that "
-            #         f"field or set inline to true for "
-            #         f"{type(self).__name__}[{type(v).__name__}]"
-            #     )
+            if not discriminator_inlined and discriminator_field_name in v.properties:
+                raise BadArgumentException(
+                    f"object id \"{v.id}\" has conflicting field "
+                    f"\"{discriminator_field_name}\"; either remove that "
+                    f"field or set inline to true for "
+                    f"{type(self).__name__}[{type(v).__name__}]"
+                )
             if (
                 discriminator_inlined
                 and discriminator_field_name not in v.properties
