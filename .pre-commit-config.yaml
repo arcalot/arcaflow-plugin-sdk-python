@@ -9,7 +9,7 @@ repos:
   - id: check-added-large-files
   - id: check-toml
 - repo: https://github.com/python/black
-  rev: 24.2.0
+  rev: 24.3.0
   hooks:
   - id: black
     name: black (python3)
