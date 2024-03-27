@@ -1551,7 +1551,7 @@ class JSONSchemaTest(unittest.TestCase):
 
         @dataclasses.dataclass
         class TestData:
-            a: typing.Union[A, B]
+            ab: typing.Union[A, B]
 
         scope = schema.ScopeType(
             {},
@@ -1561,11 +1561,18 @@ class JSONSchemaTest(unittest.TestCase):
             "TestData": schema.ObjectType(
                 TestData,
                 {
-                    "a": schema.PropertyType(
+                    "ab": schema.PropertyType(
                         schema.OneOfStringType(
                             {
-                                "a": schema.RefType("A", scope),
-                                "b": schema.RefType("B", scope),
+                                # cannot reference these objects at this point
+                                # "a": schema.RefType("A", scope),
+                                # "b": schema.RefType("B", scope),
+                                "A": schema.ObjectType(
+                                    A, {"a": schema.PropertyType(schema.StringType())}
+                                ),
+                                "B": schema.ObjectType(
+                                    B, {"b": schema.PropertyType(schema.StringType())}
+                                ),
                             },
                             scope,
                             discriminator_inlined=False,
@@ -1589,7 +1596,7 @@ class JSONSchemaTest(unittest.TestCase):
                     "TestData": {
                         "type": "object",
                         "properties": {
-                            "a": {
+                            "ab": {
                                 "oneOf": [
                                     {
                                         "$ref": (
@@ -1604,7 +1611,7 @@ class JSONSchemaTest(unittest.TestCase):
                                 ]
                             }
                         },
-                        "required": ["a"],
+                        "required": ["ab"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1612,9 +1619,10 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "a": {"type": "string"},
-                            "_type": {"type": "string", "const": "a"},
+                            # "_type": {"type": "string", "const": "a"},
                         },
-                        "required": ["_type", "a"],
+                        # "required": ["_type", "a"],
+                        "required": ["a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1622,9 +1630,10 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "a": {"type": "string"},
-                            "_type": {"type": "string", "const": "a"},
+                            # "_type": {"type": "string", "const": "a"},
                         },
-                        "required": ["_type", "a"],
+                        # "required": ["_type", "a"],
+                        "required": ["a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1632,9 +1641,10 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "b": {"type": "string"},
-                            "_type": {"type": "string", "const": "b"},
+                            # "_type": {"type": "string", "const": "b"},
                         },
-                        "required": ["_type", "b"],
+                        # "required": ["_type", "b"],
+                        "required": ["b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1642,23 +1652,24 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "b": {"type": "string"},
-                            "_type": {"type": "string", "const": "b"},
+                            # "_type": {"type": "string", "const": "b"},
                         },
-                        "required": ["_type", "b"],
+                        # "required": ["_type", "b"],
+                        "required": ["b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
                 },
                 "type": "object",
                 "properties": {
-                    "a": {
+                    "ab": {
                         "oneOf": [
                             {"$ref": "#/$defs/A_discriminated_string_a"},
                             {"$ref": "#/$defs/B_discriminated_string_b"},
                         ]
                     }
                 },
-                "required": ["a"],
+                "required": ["ab"],
                 "additionalProperties": False,
                 "dependentRequired": {},
             },
