@@ -599,6 +599,7 @@ def discriminator(discriminator_field_name: str,
                 "Unsupported discriminator type: {}".format(type(t))
             )
         for key, item in oneof.types.items():
+            # if discriminator_inlined and hasattr(item, "__discriminator_value"):
             if hasattr(item, "__discriminator_value"):
                 one_of[item.__discriminator_value] = item
             else:
@@ -2684,16 +2685,16 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
             discriminated_object = defs.defs[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": k,
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                    "const": k,
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2716,15 +2717,15 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminator_mapping[k] = "#/components/schemas/" + name
 
             discriminated_object = defs.components[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2825,16 +2826,16 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
             discriminated_object = defs.defs[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": str(k),
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                    "const": str(k),
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2857,15 +2858,15 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminator_mapping[k] = "#/components/schemas/" + name
 
             discriminated_object = defs.components[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -4851,6 +4852,10 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     ):
         super().__init__(cls.__name__, properties)
         self._cls = cls
+        if "type_id" in properties:
+            print(cls.__name__)
+            print(properties)
+            print("-----------------------------------")
         self._validate_config(cls, properties)
 
     @property
@@ -5320,15 +5325,20 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                     " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
                     " key {}".format(type(v).__name__, v)
                 )
-            # if not discriminator_inlined and discriminator_field_name in v.properties:
-            #     raise BadArgumentException(
-            #         f"object id \"{v.id}\" has conflicting field "
-            #         f"\"{discriminator_field_name}\"; either remove that "
-            #         f"field or set inline to true for "
-            #         f"{type(self).__name__}[{type(v).__name__}]"
-            #     )
+            if (
+                not discriminator_inlined
+                and hasattr(v, "properties")
+                and discriminator_field_name in v.properties
+            ):
+                raise BadArgumentException(
+                    f"object id \"{v.id}\" has conflicting field "
+                    f"\"{discriminator_field_name}\"; either remove that "
+                    f"field or set inline to true for "
+                    f"{type(self).__name__}[{type(v).__name__}]"
+                )
             if (
                 discriminator_inlined
+                and hasattr(v, "properties")
                 and discriminator_field_name not in v.properties
             ):
                 raise BadArgumentException(
@@ -5339,6 +5349,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 )
             elif (
                 discriminator_inlined
+                and hasattr(v, "properties")
                 and discriminator_field_name in v.properties
                 and not isinstance(k, t)
             ):
@@ -6873,6 +6884,15 @@ class _SchemaBuilder:
                     f.type.display = DisplayValue()
                 f.type.display.description = getattr(f.type, "__description")
             types[discriminator_value] = f.type
+        # for _, v in types.items():
+        #     # if "type_id" in v.properties:
+        #     if not hasattr(v, "properties"):
+        #         print(v)
+        #         print("--------------------------------------------------------------")
+        #     elif hasattr(v, "properties") and "type_id" in v.properties:
+        #         print("~~~~~~~~~ has discriminator!!! ~~~~~~~~~~~~")
+        #         print(v)
+        #         print("--------------------------------------------------------------")
         if discriminator_type is str:
             return OneOfStringType(
                 types,
@@ -6916,11 +6936,16 @@ def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
     return scope
 
 
+
+
 # endregion
 
 # region Schema schemas
+from pprint import pprint
 
 SCOPE_SCHEMA = build_object_schema(ScopeSchema, True)
+# pprint(SCOPE_SCHEMA)
+# pprint(SCOPE_SCHEMA.to_jsonschema())
 """This variable holds a constructed, serializable/unserializable schema for a
 scope.
 

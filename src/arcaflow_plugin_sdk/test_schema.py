@@ -517,9 +517,11 @@ class OneOfTest(unittest.TestCase):
         self.assertIn("needs discriminator field", cm.exception.__str__())
 
     def test_has_discriminator_error(self):
-        # pprint(schema.SCOPE_SCHEMA.to_jsonschema())
-        print("----------------------------------")
         pprint(schema.SCOPE_SCHEMA.to_jsonschema())
+        print("======================================================")
+        # pprint(schema.SCOPE_SCHEMA.to_jsonschema())
+        # pprint(schema.SCOPE_SCHEMA)
+        # pprint(schema.SCHEMA_SCHEMA.to_jsonschema())
         with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
                 {"a": schema.RefType("a", self.scope_inlined)},
