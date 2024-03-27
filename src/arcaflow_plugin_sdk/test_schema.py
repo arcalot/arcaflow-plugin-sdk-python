@@ -6,6 +6,7 @@ import typing
 import unittest
 from dataclasses import dataclass
 from re import Pattern
+from pprint import pprint
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -516,6 +517,9 @@ class OneOfTest(unittest.TestCase):
         self.assertIn("needs discriminator field", cm.exception.__str__())
 
     def test_has_discriminator_error(self):
+        # pprint(schema.SCOPE_SCHEMA.to_jsonschema())
+        print("----------------------------------")
+        pprint(schema.SCOPE_SCHEMA.to_jsonschema())
         with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
                 {"a": schema.RefType("a", self.scope_inlined)},
@@ -523,7 +527,8 @@ class OneOfTest(unittest.TestCase):
                 discriminator_inlined=False,
                 discriminator_field_name="type_",
             )
-        self.assertIn("needs discriminator field", cm.exception.__str__())
+            # print(self.scope_inlined.to_jsonschema())
+        self.assertIn("has conflicting field", cm.exception.__str__())
 
     def test_unserialize_error_discriminator_type(self):
         s_type = schema.OneOfStringType(

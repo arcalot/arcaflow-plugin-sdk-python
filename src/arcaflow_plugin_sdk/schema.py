@@ -5320,13 +5320,13 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                     " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
                     " key {}".format(type(v).__name__, v)
                 )
-            if not discriminator_inlined and discriminator_field_name in v.properties:
-                raise BadArgumentException(
-                    f"object id \"{v.id}\" has conflicting field "
-                    f"\"{discriminator_field_name}\"; either remove that "
-                    f"field or set inline to true for "
-                    f"{type(self).__name__}[{type(v).__name__}]"
-                )
+            # if not discriminator_inlined and discriminator_field_name in v.properties:
+            #     raise BadArgumentException(
+            #         f"object id \"{v.id}\" has conflicting field "
+            #         f"\"{discriminator_field_name}\"; either remove that "
+            #         f"field or set inline to true for "
+            #         f"{type(self).__name__}[{type(v).__name__}]"
+            #     )
             if (
                 discriminator_inlined
                 and discriminator_field_name not in v.properties
