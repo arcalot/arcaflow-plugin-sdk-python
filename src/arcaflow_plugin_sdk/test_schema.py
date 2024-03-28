@@ -519,24 +519,31 @@ class OneOfTest(unittest.TestCase):
                 {"a": schema.RefType("a", self.scope_basic)},
                 scope=self.scope_inlined,
                 discriminator_inlined=True,
-                discriminator_field_name="type_",
-            )
+                discriminator_field_name=self.discriminator_field_name,
+            ).validate({})
         self.assertIn("needs discriminator field", cm.exception.__str__())
 
+    def test_inline_discriminator_type_mismatch(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            # noinspection PyTypeChecker
+            schema.OneOfIntType(
+                {"a": schema.RefType("a", self.scope_inlined)},
+                scope=self.scope_inlined,
+                discriminator_inlined=True,
+                discriminator_field_name=self.discriminator_field_name,
+            ).validate({})
+        self.assertIn(
+            "does not match OneOfSchema discriminator type",
+            cm.exception.__str__())
+
     def test_has_discriminator_error(self):
-        pprint(schema.SCOPE_SCHEMA.to_jsonschema())
-        print("======================================================")
-        # pprint(schema.SCOPE_SCHEMA.to_jsonschema())
-        # pprint(schema.SCOPE_SCHEMA)
-        # pprint(schema.SCHEMA_SCHEMA.to_jsonschema())
         with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
                 {"a": schema.RefType("a", self.scope_inlined)},
                 scope=self.scope_inlined,
                 discriminator_inlined=False,
-                discriminator_field_name="type_",
-            )
-            # print(self.scope_inlined.to_jsonschema())
+                discriminator_field_name=self.discriminator_field_name,
+            ).validate({})
         self.assertIn("has conflicting field", cm.exception.__str__())
 
     def test_unserialize_error_discriminator_type(self):
@@ -550,19 +557,6 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({
                 self.discriminator_default: "1", 1: "Hello world!"})
-
-    def test_discriminator_type_mismatch(self):
-        with self.assertRaises(BadArgumentException) as cm:
-            # noinspection PyTypeChecker
-            schema.OneOfIntType(
-                {"a": schema.RefType("a", self.scope_inlined)},
-                scope=self.scope_inlined,
-                discriminator_inlined=True,
-                discriminator_field_name="type_",
-            )
-        self.assertIn(
-            "does not match OneOfSchema discriminator type",
-            cm.exception.__str__())
 
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
@@ -1564,15 +1558,8 @@ class JSONSchemaTest(unittest.TestCase):
                     "ab": schema.PropertyType(
                         schema.OneOfStringType(
                             {
-                                # cannot reference these objects at this point
                                 "a": schema.RefType("A", scope),
                                 "b": schema.RefType("B", scope),
-                                # "A": schema.ObjectType(
-                                #     A, {"a": schema.PropertyType(schema.StringType())}
-                                # ),
-                                # "B": schema.ObjectType(
-                                #     B, {"b": schema.PropertyType(schema.StringType())}
-                                # ),
                             },
                             scope,
                             discriminator_inlined=False,

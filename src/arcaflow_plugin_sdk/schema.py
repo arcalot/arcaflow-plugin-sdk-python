@@ -5325,46 +5325,51 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                     " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
                     " key {}".format(type(v).__name__, v)
                 )
-            if (
-                not discriminator_inlined
-                and hasattr(v, "properties")
-                and discriminator_field_name in v.properties
-            ):
-                raise BadArgumentException(
-                    f"object id \"{v.id}\" has conflicting field "
-                    f"\"{discriminator_field_name}\"; either remove that "
-                    f"field or set inline to true for "
-                    f"{type(self).__name__}[{type(v).__name__}]"
-                )
-            if (
-                discriminator_inlined
-                and hasattr(v, "properties")
-                and discriminator_field_name not in v.properties
-            ):
-                raise BadArgumentException(
-                    f"object id \"{v.id}\" needs discriminator field "
-                    f"\"{discriminator_field_name}\"; either add that "
-                    f"field or set inline to false for "
-                    f"{type(self).__name__}[{type(v).__name__}]"
-                )
-            elif (
-                discriminator_inlined
-                and hasattr(v, "properties")
-                and discriminator_field_name in v.properties
-                and not isinstance(k, t)
-            ):
-                raise BadArgumentException(
-                    f"the type of object id {v.id}'s discriminator field "
-                    f"\"{discriminator_field_name}\" does not match "
-                    f"OneOfSchema discriminator type; expected "
-                    f"{t.__name__} got "
-                    f"{type(discriminator_field_name).__name__}"
-                )
-
         self._t = t
         self._scope = scope
         self.discriminator_field_name = discriminator_field_name
         self.discriminator_inlined = discriminator_inlined
+
+    def _validate_compatibility(self):
+        # You can only validate a schema's compatibility after your
+        # scope has been constructed and populated with all referenced
+        # schemas.
+        for discriminator_value, set_member in self.types.items():
+            if (
+                not self.discriminator_inlined
+                and hasattr(set_member, "properties")
+                and self.discriminator_field_name in set_member.properties
+            ):
+                raise BadArgumentException(
+                    f"object id \"{set_member.id}\" has conflicting field "
+                    f"\"{self.discriminator_field_name}\"; either remove that "
+                    f"field or set inline to true for "
+                    f"{type(self).__name__}[{type(set_member).__name__}]"
+                )
+            if (
+                self.discriminator_inlined
+                and hasattr(set_member, "properties")
+                and self.discriminator_field_name not in set_member.properties
+            ):
+                raise BadArgumentException(
+                    f"object id \"{set_member.id}\" needs discriminator field "
+                    f"\"{self.discriminator_field_name}\"; either add that "
+                    f"field or set inline to false for "
+                    f"{type(self).__name__}[{type(set_member).__name__}]"
+                )
+            elif (
+                self.discriminator_inlined
+                and hasattr(set_member, "properties")
+                and self.discriminator_field_name in set_member.properties
+                and not isinstance(discriminator_value, self._t)
+            ):
+                raise BadArgumentException(
+                    f"the type of object id {set_member.id}'s discriminator field "
+                    f"\"{self.discriminator_field_name}\" does not match "
+                    f"OneOfSchema discriminator type; expected "
+                    f"{self._t.__name__} got "
+                    f"{type(self.discriminator_field_name).__name__}"
+                )
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -5404,6 +5409,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         return sub_type.unserialize(data, path)
 
     def validate(self, data: OneOfT, path: typing.Tuple[str] = tuple([])):
+        self._validate_compatibility()
         types = []
         for discriminator, item_schema in self.types.items():
             item_schema: typing.ForwardRef("RefType")
