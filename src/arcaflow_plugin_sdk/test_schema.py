@@ -1527,11 +1527,11 @@ class JSONSchemaTest(unittest.TestCase):
     def test_one_of(self):
         @dataclasses.dataclass
         class A:
-            a: str
+            msg_a: str
 
         @dataclasses.dataclass
         class B:
-            b: str
+            msg_b: str
 
         @dataclasses.dataclass
         class TestData:
@@ -1559,10 +1559,10 @@ class JSONSchemaTest(unittest.TestCase):
                 },
             ),
             "A": schema.ObjectType(
-                A, {"a": schema.PropertyType(schema.StringType())}
+                A, {"msg_a": schema.PropertyType(schema.StringType())}
             ),
             "B": schema.ObjectType(
-                B, {"b": schema.PropertyType(schema.StringType())}
+                B, {"msg_b": schema.PropertyType(schema.StringType())}
             ),
         }
         defs = schema._JSONSchemaDefs()
@@ -1595,44 +1595,44 @@ class JSONSchemaTest(unittest.TestCase):
                     "A": {
                         "type": "object",
                         "properties": {
-                            "a": {"type": "string"},
+                            "msg_a": {"type": "string"},
                             # "_type": {"type": "string", "const": "a"},
                         },
                         # "required": ["_type", "a"],
-                        "required": ["a"],
+                        "required": ["msg_a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
                     "A_discriminated_string_a": {
                         "type": "object",
                         "properties": {
-                            "a": {"type": "string"},
+                            "msg_a": {"type": "string"},
                             # "_type": {"type": "string", "const": "a"},
                         },
                         # "required": ["_type", "a"],
-                        "required": ["a"],
+                        "required": ["msg_a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
                     "B": {
                         "type": "object",
                         "properties": {
-                            "b": {"type": "string"},
+                            "msg_b": {"type": "string"},
                             # "_type": {"type": "string", "const": "b"},
                         },
                         # "required": ["_type", "b"],
-                        "required": ["b"],
+                        "required": ["msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
                     "B_discriminated_string_b": {
                         "type": "object",
                         "properties": {
-                            "b": {"type": "string"},
+                            "msg_b": {"type": "string"},
                             # "_type": {"type": "string", "const": "b"},
                         },
                         # "required": ["_type", "b"],
-                        "required": ["b"],
+                        "required": ["msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
