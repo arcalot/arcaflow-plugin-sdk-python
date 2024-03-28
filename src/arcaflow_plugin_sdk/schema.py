@@ -2693,6 +2693,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "const": k,
                 }
                 discriminated_object["required"].remove(self.discriminator_field_name)
+            # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
             )
@@ -2725,6 +2726,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                 }
                 discriminated_object["required"].remove(self.discriminator_field_name)
+            # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
             )
@@ -2836,6 +2838,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "const": str(k),
                 }
                 discriminated_object["required"].remove(self.discriminator_field_name)
+            # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
             )
@@ -2868,6 +2871,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                 }
                 discriminated_object["required"].remove(self.discriminator_field_name)
+            # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
             )
