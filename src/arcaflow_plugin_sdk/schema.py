@@ -2692,9 +2692,10 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                     "const": k,
                 }
-                discriminated_object["required"].insert(
-                    0, self.discriminator_field_name
-                )
+                discriminated_object["required"].remove(self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2723,9 +2724,10 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 ] = {
                     "type": "string",
                 }
-                discriminated_object["required"].insert(
-                    0, self.discriminator_field_name
-                )
+                discriminated_object["required"].remove(self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2833,9 +2835,10 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                     "const": str(k),
                 }
-                discriminated_object["required"].insert(
-                    0, self.discriminator_field_name
-                )
+                discriminated_object["required"].remove(self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2864,9 +2867,10 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 ] = {
                     "type": "string",
                 }
-                discriminated_object["required"].insert(
-                    0, self.discriminator_field_name
-                )
+                discriminated_object["required"].remove(self.discriminator_field_name)
+            discriminated_object["required"].insert(
+                0, self.discriminator_field_name
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name

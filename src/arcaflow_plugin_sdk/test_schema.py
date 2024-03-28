@@ -1525,6 +1525,8 @@ class JSONSchemaTest(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_one_of(self):
+
+        discriminator_field_name = "type_"
         @dataclasses.dataclass
         class A:
             msg_a: str
@@ -1553,7 +1555,7 @@ class JSONSchemaTest(unittest.TestCase):
                             },
                             scope,
                             discriminator_inlined=False,
-                            discriminator_field_name="type_",
+                            discriminator_field_name=discriminator_field_name,
                         )
                     )
                 },
@@ -1596,10 +1598,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_a": {"type": "string"},
-                            # "_type": {"type": "string", "const": "a"},
                         },
-                        # "required": ["_type", "a"],
-                        "required": ["msg_a"],
+                        "required": [discriminator_field_name, "msg_a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1607,10 +1607,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_a": {"type": "string"},
-                            # "_type": {"type": "string", "const": "a"},
                         },
-                        # "required": ["_type", "a"],
-                        "required": ["msg_a"],
+                        "required": [discriminator_field_name, "msg_a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1618,10 +1616,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_b": {"type": "string"},
-                            # "_type": {"type": "string", "const": "b"},
                         },
-                        # "required": ["_type", "b"],
-                        "required": ["msg_b"],
+                        "required": [discriminator_field_name, "msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1629,10 +1625,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_b": {"type": "string"},
-                            # "_type": {"type": "string", "const": "b"},
                         },
-                        # "required": ["_type", "b"],
-                        "required": ["msg_b"],
+                        "required": [discriminator_field_name, "msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1737,9 +1731,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_a": {"type": "string"},
-                            "type_": {"type": "string", "const": "a"},
+                            discriminator_field_name: {"type": "string", "const": "a"},
                         },
-                        "required": ["msg_a", "type_"],
+                        "required": [discriminator_field_name, "msg_a",],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1747,9 +1741,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_a": {"type": "string"},
-                            "type_": {"type": "string", "const": "a"},
+                            discriminator_field_name: {"type": "string", "const": "a"},
                         },
-                        "required": ["msg_a", "type_"],
+                        "required": [discriminator_field_name, "msg_a"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1757,9 +1751,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_b": {"type": "string"},
-                            "type_": {"type": "string", "const": "b"},
+                            discriminator_field_name: {"type": "string", "const": "b"},
                         },
-                        "required": ["msg_b", "type_"],
+                        "required": [discriminator_field_name, "msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1767,9 +1761,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg_b": {"type": "string"},
-                            "type_": {"type": "string", "const": "b"},
+                            discriminator_field_name: {"type": "string", "const": "b"},
                         },
-                        "required": ["msg_b", "type_"],
+                        "required": [discriminator_field_name, "msg_b"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
