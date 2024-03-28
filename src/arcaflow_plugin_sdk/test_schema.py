@@ -1565,14 +1565,14 @@ class JSONSchemaTest(unittest.TestCase):
                         schema.OneOfStringType(
                             {
                                 # cannot reference these objects at this point
-                                # "a": schema.RefType("A", scope),
-                                # "b": schema.RefType("B", scope),
-                                "A": schema.ObjectType(
-                                    A, {"a": schema.PropertyType(schema.StringType())}
-                                ),
-                                "B": schema.ObjectType(
-                                    B, {"b": schema.PropertyType(schema.StringType())}
-                                ),
+                                "a": schema.RefType("A", scope),
+                                "b": schema.RefType("B", scope),
+                                # "A": schema.ObjectType(
+                                #     A, {"a": schema.PropertyType(schema.StringType())}
+                                # ),
+                                # "B": schema.ObjectType(
+                                #     B, {"b": schema.PropertyType(schema.StringType())}
+                                # ),
                             },
                             scope,
                             discriminator_inlined=False,
