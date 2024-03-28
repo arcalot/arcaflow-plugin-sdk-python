@@ -1553,7 +1553,7 @@ class JSONSchemaTest(unittest.TestCase):
                             },
                             scope,
                             discriminator_inlined=False,
-                            discriminator_field_name="_type",
+                            discriminator_field_name="type_",
                         )
                     )
                 },
@@ -1633,6 +1633,143 @@ class JSONSchemaTest(unittest.TestCase):
                         },
                         # "required": ["_type", "b"],
                         "required": ["msg_b"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "ab": {
+                        "oneOf": [
+                            {"$ref": "#/$defs/A_discriminated_string_a"},
+                            {"$ref": "#/$defs/B_discriminated_string_b"},
+                        ]
+                    }
+                },
+                "required": ["ab"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            },
+            json_schema,
+        )
+
+    def test_one_of_inline(self):
+
+        discriminator_field_name = "type_"
+        @dataclasses.dataclass
+        class A:
+            type_: str
+            msg_a: str
+
+        @dataclasses.dataclass
+        class B:
+            type_: str
+            msg_b: str
+
+        @dataclasses.dataclass
+        class TestData:
+            ab: typing.Union[A, B]
+
+        scope = schema.ScopeType(
+            {},
+            "TestData",
+        )
+        scope.objects = {
+            "TestData": schema.ObjectType(
+                TestData,
+                {
+                    "ab": schema.PropertyType(
+                        schema.OneOfStringType(
+                            {
+                                "a": schema.RefType("A", scope),
+                                "b": schema.RefType("B", scope),
+                            },
+                            scope,
+                            discriminator_inlined=True,
+                            discriminator_field_name=discriminator_field_name,
+                        )
+                    )
+                },
+            ),
+            "A": schema.ObjectType(
+                A, {
+                    "msg_a": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name:
+                        schema.PropertyType(schema.StringType()),
+                }
+            ),
+            "B": schema.ObjectType(
+                B, {
+                    "msg_b": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name:
+                        schema.PropertyType(schema.StringType()),
+                }
+            ),
+        }
+        defs = schema._JSONSchemaDefs()
+        json_schema = scope._to_jsonschema_fragment(scope, defs)
+        self.assertEqual(
+            {
+                "$defs": {
+                    "TestData": {
+                        "type": "object",
+                        "properties": {
+                            "ab": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            "#/$defs/A_discriminated_string_a"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            "#/$defs/B_discriminated_string_b"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["ab"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    "A": {
+                        "type": "object",
+                        "properties": {
+                            "msg_a": {"type": "string"},
+                            "type_": {"type": "string", "const": "a"},
+                        },
+                        "required": ["msg_a", "type_"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    "A_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "msg_a": {"type": "string"},
+                            "type_": {"type": "string", "const": "a"},
+                        },
+                        "required": ["msg_a", "type_"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    "B": {
+                        "type": "object",
+                        "properties": {
+                            "msg_b": {"type": "string"},
+                            "type_": {"type": "string", "const": "b"},
+                        },
+                        "required": ["msg_b", "type_"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    "B_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "msg_b": {"type": "string"},
+                            "type_": {"type": "string", "const": "b"},
+                        },
+                        "required": ["msg_b", "type_"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
