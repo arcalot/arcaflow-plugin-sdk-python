@@ -532,7 +532,8 @@ discriminatorFunc = typing.Callable[
 ]
 
 
-def discriminator(discriminator_field_name: str) -> discriminatorFunc:
+def discriminator(discriminator_field_name: str,
+                  discriminator_inlined: bool = False) -> discriminatorFunc:
     """This annotation is used to manually set the discriminator field on a
     Union type. :param discriminator_field_name: the name of the discriminator
     field. :return: the callable decorator.
@@ -598,12 +599,14 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
                 "Unsupported discriminator type: {}".format(type(t))
             )
         for key, item in oneof.types.items():
+            # if discriminator_inlined and hasattr(item, "__discriminator_value"):
             if hasattr(item, "__discriminator_value"):
                 one_of[item.__discriminator_value] = item
             else:
                 one_of[key] = item
 
         oneof.discriminator_field_name = discriminator_field_name
+        oneof.discriminator_inlined = discriminator_inlined
 
         for key, item in oneof.types.items():
             try:
@@ -613,6 +616,18 @@ def discriminator(discriminator_field_name: str) -> discriminatorFunc:
                     "The discriminator value has an invalid value: {}. "
                     "Please check your annotations.".format(e.__str__())
                 ) from e
+
+        # Now validate that the discriminator is inlined if it's supposed
+        # to be, and not present in the objects if it's not supposed to
+        # be inlined.
+        # for key, item in oneof.types.items():
+        #     try:
+        #         discriminator_field_schema.validate(key)
+        #     except ConstraintException as e:
+        #         raise BadArgumentException(
+        #             "The discriminator value has an invalid value: {}. "
+        #             "Please check your annotations.".format(e.__str__())
+        #         ) from e
 
         return oneof
 
@@ -2604,7 +2619,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         "a": schema.RefSchema("A_ref"),
     ...         "b": schema.RefSchema("B_ref")
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False
     ... )
     >>> c = schema.ObjectSchema(
     ...     "C",
@@ -2636,17 +2652,26 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...                 )
     ...             }
     ...         )
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False,
     ... )
     """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
             "Name of the field used to discriminate between possible values."
-            " If this field ispresent on any of the component objects it must"
+            " If this field is present on any of the component objects it must"
             " also be a string."
         ),
     ] = "_type"
@@ -2660,16 +2685,16 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
             discriminated_object = defs.defs[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": k,
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                    "const": k,
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2692,15 +2717,15 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminator_mapping[k] = "#/components/schemas/" + name
 
             discriminated_object = defs.components[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2752,7 +2777,8 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     {
     ...         1: schema.RefSchema("A_ref"),
     ...         2: schema.RefSchema("B_ref")
-    ...     }
+    ...     },
+    ...     discriminator_inlined=False
     ... )
     >>> c = schema.ObjectSchema(
     ...     "C",
@@ -2773,6 +2799,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2792,16 +2826,16 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
             discriminated_object = defs.defs[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": str(k),
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                    "const": str(k),
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2824,15 +2858,15 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminator_mapping[k] = "#/components/schemas/" + name
 
             discriminated_object = defs.components[v.id]
-
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-            }
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            if self.discriminator_inlined:
+                discriminated_object["properties"][
+                    self.discriminator_field_name
+                ] = {
+                    "type": "string",
+                }
+                discriminated_object["required"].insert(
+                    0, self.discriminator_field_name
+                )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -4818,6 +4852,10 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     ):
         super().__init__(cls.__name__, properties)
         self._cls = cls
+        if "type_id" in properties:
+            print(cls.__name__)
+            print(properties)
+            print("-----------------------------------")
         self._validate_config(cls, properties)
 
     @property
@@ -5253,6 +5291,7 @@ DiscriminatorT = TypeVar("DiscriminatorT")
 
 class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
     discriminator_field_name: str
+    discriminator_inlined: bool
     types: Dict[DiscriminatorT, typing.ForwardRef("RefType")]
     _t: any
     _scope: typing.ForwardRef("ScopeType")
@@ -5263,6 +5302,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         t: Type[DiscriminatorT],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str,
+        discriminator_inlined: bool
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
@@ -5285,9 +5325,46 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                     " RefTypes, ObjectTypes, or ScopeTypes, {} found for"
                     " key {}".format(type(v).__name__, v)
                 )
+            if (
+                not discriminator_inlined
+                and hasattr(v, "properties")
+                and discriminator_field_name in v.properties
+            ):
+                raise BadArgumentException(
+                    f"object id \"{v.id}\" has conflicting field "
+                    f"\"{discriminator_field_name}\"; either remove that "
+                    f"field or set inline to true for "
+                    f"{type(self).__name__}[{type(v).__name__}]"
+                )
+            if (
+                discriminator_inlined
+                and hasattr(v, "properties")
+                and discriminator_field_name not in v.properties
+            ):
+                raise BadArgumentException(
+                    f"object id \"{v.id}\" needs discriminator field "
+                    f"\"{discriminator_field_name}\"; either add that "
+                    f"field or set inline to false for "
+                    f"{type(self).__name__}[{type(v).__name__}]"
+                )
+            elif (
+                discriminator_inlined
+                and hasattr(v, "properties")
+                and discriminator_field_name in v.properties
+                and not isinstance(k, t)
+            ):
+                raise BadArgumentException(
+                    f"the type of object id {v.id}'s discriminator field "
+                    f"\"{discriminator_field_name}\" does not match "
+                    f"OneOfSchema discriminator type; expected "
+                    f"{t.__name__} got "
+                    f"{type(discriminator_field_name).__name__}"
+                )
+
         self._t = t
         self._scope = scope
         self.discriminator_field_name = discriminator_field_name
+        self.discriminator_inlined = discriminator_inlined
 
     def unserialize(
         self, data: Any, path: typing.Tuple[str] = tuple([])
@@ -5407,16 +5484,19 @@ class OneOfStringType(
             str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
         ],
         scope: typing.ForwardRef("ScopeType"),
+        discriminator_inlined: bool = None,
         discriminator_field_name: str = "_type",
     ):
         # noinspection PyArgumentList
-        OneOfStringSchema.__init__(self, types, discriminator_field_name)
+        OneOfStringSchema.__init__(
+            self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
             t=str,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=discriminator_inlined
         )
 
 
@@ -5441,16 +5521,20 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
             ],
         ],
         scope: typing.ForwardRef("ScopeType"),
+        discriminator_inlined: bool = None,
         discriminator_field_name: str = "_type",
+        # discriminator_field_name: str = None,
     ):
         # noinspection PyArgumentList
-        OneOfIntSchema.__init__(self, types, discriminator_field_name)
+        OneOfIntSchema.__init__(
+            self, types, discriminator_inlined, discriminator_field_name)
         _OneOfType.__init__(
             self,
             types,
             t=int,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=discriminator_inlined
         )
 
 
@@ -6800,13 +6884,23 @@ class _SchemaBuilder:
                     f.type.display = DisplayValue()
                 f.type.display.description = getattr(f.type, "__description")
             types[discriminator_value] = f.type
+        # for _, v in types.items():
+        #     # if "type_id" in v.properties:
+        #     if not hasattr(v, "properties"):
+        #         print(v)
+        #         print("--------------------------------------------------------------")
+        #     elif hasattr(v, "properties") and "type_id" in v.properties:
+        #         print("~~~~~~~~~ has discriminator!!! ~~~~~~~~~~~~")
+        #         print(v)
+        #         print("--------------------------------------------------------------")
         if discriminator_type is str:
             return OneOfStringType(
                 types,
                 scope,
+                discriminator_inlined=False,
             )
         else:
-            return OneOfIntType(types, scope)
+            return OneOfIntType(types, scope, discriminator_inlined=False)
 
     @classmethod
     def _resolve_pattern(cls, t, type_hints: type, path, scope: ScopeType):
@@ -6842,11 +6936,16 @@ def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
     return scope
 
 
+
+
 # endregion
 
 # region Schema schemas
+from pprint import pprint
 
 SCOPE_SCHEMA = build_object_schema(ScopeSchema, True)
+# pprint(SCOPE_SCHEMA)
+# pprint(SCOPE_SCHEMA.to_jsonschema())
 """This variable holds a constructed, serializable/unserializable schema for a
 scope.
 
