@@ -1748,10 +1748,10 @@ class JSONSchemaTest(unittest.TestCase):
                 }
             ),
         }
-        # with self.assertRaises(Exception) as cm:
+        with self.assertRaises(Exception) as cm:
             # noinspection PyTypeChecker
-        scope.validate(TestData("abc"))
-        # self.assertIn("Invalid type", str(cm.exception))
+            scope.validate(TestData("abc"))
+        self.assertIn("Invalid type", str(cm.exception))
 
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
@@ -1785,8 +1785,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "properties": {
                             "msg_a": {"type": "string"},
                             discriminator_field_name: {"type": "string", "const": "a"},
+                            discriminator_default: {"type": "string"}
                         },
-                        "required": [discriminator_field_name, "msg_a",],
+                        "required": [discriminator_field_name, "msg_a", discriminator_default],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1795,8 +1796,9 @@ class JSONSchemaTest(unittest.TestCase):
                         "properties": {
                             "msg_a": {"type": "string"},
                             discriminator_field_name: {"type": "string", "const": "a"},
+                            discriminator_default: {"type": "string"}
                         },
-                        "required": [discriminator_field_name, "msg_a"],
+                        "required": [discriminator_field_name, "msg_a", discriminator_default],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
