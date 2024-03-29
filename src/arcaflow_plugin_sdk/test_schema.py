@@ -1402,6 +1402,11 @@ class JSONSchemaTest(unittest.TestCase):
         a: str
 
     @dataclasses.dataclass
+    class StrInline2:
+        type_: str
+        c: str
+
+    @dataclasses.dataclass
     class IntInline:
         type_: str
         b: int
@@ -1892,7 +1897,7 @@ class JSONSchemaTest(unittest.TestCase):
             json_schema,
         )
 
-    def test_build_one_of_inline(self):
+    def test_build_one_of(self):
         @dataclasses.dataclass
         class TestData:
             union: typing.Annotated[
@@ -1959,7 +1964,32 @@ class JSONSchemaTest(unittest.TestCase):
         #     )
         # }
 
+    def test_build_one_of_inline(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        JSONSchemaTest.StrInline,
+                        schema.discriminator_value("StrInline")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.StrInline2,
+                        schema.discriminator_value("StrInline2")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.StrBasic,
+                        schema.discriminator_value("StrBasic")
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=JSONSchemaTest.discriminator_field_name,
+                    discriminator_inlined=True,
+                )
+            ]
 
+        scope_actual = schema.build_object_schema(TestData)
+        pprint(scope_actual)
 
 
 def load_tests(loader, tests, ignore):
