@@ -1897,7 +1897,7 @@ class JSONSchemaTest(unittest.TestCase):
             json_schema,
         )
 
-    def test_build_one_of(self):
+    def test_build_one_of_error(self):
         @dataclasses.dataclass
         class TestData:
             union: typing.Annotated[
@@ -1921,50 +1921,13 @@ class JSONSchemaTest(unittest.TestCase):
                 )
             ]
 
-        scope_actual = schema.build_object_schema(TestData)
-        pprint(scope_actual)
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"\"{JSONSchemaTest.StrInline.__name__}\" has conflicting field",
+            str(cm.exception))
 
-        # scope = schema.ScopeType(
-        #     {},
-        #     "TestData",
-        # )
-        # scope.objects = {
-        #     "TestData": schema.ObjectType(
-        #         TestData,
-        #         {
-        #             "union": schema.PropertyType(
-        #                 schema.OneOfStringType(
-        #                     {
-        #                         "StrBasic": schema.RefType("StrBasic", scope),
-        #                         "StrBasic2": schema.RefType("StrBasic2", scope),
-        #                         "StrInline": schema.RefType("StrInline", scope)
-        #                     },
-        #                     scope,
-        #                     discriminator_inlined=False,
-        #                     discriminator_field_name=self.discriminator_field_name,
-        #                 )
-        #             )
-        #         },
-        #     ),
-        #     "StrBasic": schema.ObjectType(
-        #         JSONSchemaTest.StrBasic, {
-        #             "a": schema.PropertyType(schema.StringType()),
-        #         }
-        #     ),
-        #     "StrBasic2": schema.ObjectType(
-        #         JSONSchemaTest.StrBasic2, {
-        #             "c": schema.PropertyType(schema.StringType()),
-        #         }
-        #     ),
-        #     "StrInline": schema.ObjectType(
-        #         JSONSchemaTest.StrInline, {
-        #             "a": schema.PropertyType(schema.StringType()),
-        #             self.discriminator_field_name: schema.PropertyType(schema.StringType()),
-        #         }
-        #     )
-        # }
-
-    def test_build_one_of_inline(self):
+    def test_build_one_of_inline_error(self):
         @dataclasses.dataclass
         class TestData:
             union: typing.Annotated[
@@ -1987,9 +1950,42 @@ class JSONSchemaTest(unittest.TestCase):
                     discriminator_inlined=True,
                 )
             ]
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"\"{JSONSchemaTest.StrBasic.__name__}\" needs discriminator field",
+            str(cm.exception))
 
-        scope_actual = schema.build_object_schema(TestData)
-        pprint(scope_actual)
+    def test_build_one_of_inline_type_mismatch(self):
+        discriminator_wrong_type: int = 1
+
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        JSONSchemaTest.StrInline,
+                        schema.discriminator_value("StrInline")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.StrInline2,
+                        schema.discriminator_value("StrInline2")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.IntInline,
+                        schema.discriminator_value(discriminator_wrong_type)
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=JSONSchemaTest.discriminator_field_name,
+                    discriminator_inlined=True,
+                )
+            ]
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"Invalid discriminator value type: {type(discriminator_wrong_type)}",
+            str(cm.exception))
 
 
 def load_tests(loader, tests, ignore):

@@ -617,6 +617,7 @@ def discriminator(discriminator_field_name: str,
                     "Please check your annotations.".format(e.__str__())
                 ) from e
 
+        oneof._validate_discriminator()
         # Now validate that the discriminator is inlined if it's supposed
         # to be, and not present in the objects if it's not supposed to
         # be inlined.
