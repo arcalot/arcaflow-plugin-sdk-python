@@ -4860,10 +4860,6 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     ):
         super().__init__(cls.__name__, properties)
         self._cls = cls
-        if "type_id" in properties:
-            print(cls.__name__)
-            print(properties)
-            print("-----------------------------------")
         self._validate_config(cls, properties)
 
     @property

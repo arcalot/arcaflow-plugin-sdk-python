@@ -7,7 +7,6 @@ import unittest
 from dataclasses import dataclass
 from re import Pattern
 from pprint import pprint
-from xdrlib import ConversionError
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -1696,9 +1695,11 @@ class JSONSchemaTest(unittest.TestCase):
     def test_one_of_inline(self):
 
         discriminator_field_name = "type_"
+        discriminator_default = "_type"
         @dataclasses.dataclass
         class A:
             type_: str
+            _type: str
             msg_a: str
 
         @dataclasses.dataclass
@@ -1736,6 +1737,7 @@ class JSONSchemaTest(unittest.TestCase):
                     "msg_a": schema.PropertyType(schema.StringType()),
                     discriminator_field_name:
                         schema.PropertyType(schema.StringType()),
+                    discriminator_default: schema.PropertyType(schema.StringType()),
                 }
             ),
             "B": schema.ObjectType(
@@ -1746,6 +1748,11 @@ class JSONSchemaTest(unittest.TestCase):
                 }
             ),
         }
+        # with self.assertRaises(Exception) as cm:
+            # noinspection PyTypeChecker
+        scope.validate(TestData("abc"))
+        # self.assertIn("Invalid type", str(cm.exception))
+
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
         self.assertEqual(
