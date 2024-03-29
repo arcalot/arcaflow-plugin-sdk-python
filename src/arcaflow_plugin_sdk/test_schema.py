@@ -1254,7 +1254,9 @@ class SchemaBuilderTest(unittest.TestCase):
                     typing.Annotated[A, schema.discriminator_value(1)],
                     typing.Annotated[B, schema.discriminator_value(2)],
                 ],
-                schema.discriminator("discriminator"),
+                schema.discriminator(
+                    "discriminator",
+                    discriminator_inlined=True),
             ]
 
         scope = schema.build_object_schema(TestData)
