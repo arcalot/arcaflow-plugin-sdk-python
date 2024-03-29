@@ -1381,6 +1381,37 @@ class SchemaBuilderTest(unittest.TestCase):
 
 
 class JSONSchemaTest(unittest.TestCase):
+    discriminator_field_name = "type_"
+    discriminator_default = "_type"
+
+    @dataclasses.dataclass
+    class StrBasic:
+        a: str
+
+    @dataclasses.dataclass
+    class StrBasic2:
+        c: str
+
+    @dataclasses.dataclass
+    class IntBasic:
+        b: int
+
+    @dataclasses.dataclass
+    class StrInline:
+        type_: str
+        a: str
+
+    @dataclasses.dataclass
+    class IntInline:
+        type_: str
+        b: int
+
+    @dataclasses.dataclass
+    class StrTwoDiscriminators:
+        _type: str
+        type_: str
+        a2: str
+
     def _execute_test_cases(self, test_cases):
         for name in test_cases.keys():
             defs = schema._JSONSchemaDefs()
@@ -1860,6 +1891,75 @@ class JSONSchemaTest(unittest.TestCase):
             },
             json_schema,
         )
+
+    def test_build_one_of_inline(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        JSONSchemaTest.StrBasic,
+                        schema.discriminator_value("StrBasic")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.StrBasic2,
+                        schema.discriminator_value("StrBasic2")
+                    ],
+                    typing.Annotated[
+                        JSONSchemaTest.StrInline,
+                        schema.discriminator_value("StrInline")
+                    ]
+                ],
+                schema.discriminator(
+                    discriminator_field_name=JSONSchemaTest.discriminator_field_name,
+                    discriminator_inlined=False,
+                )
+            ]
+
+        scope_actual = schema.build_object_schema(TestData)
+        pprint(scope_actual)
+
+        # scope = schema.ScopeType(
+        #     {},
+        #     "TestData",
+        # )
+        # scope.objects = {
+        #     "TestData": schema.ObjectType(
+        #         TestData,
+        #         {
+        #             "union": schema.PropertyType(
+        #                 schema.OneOfStringType(
+        #                     {
+        #                         "StrBasic": schema.RefType("StrBasic", scope),
+        #                         "StrBasic2": schema.RefType("StrBasic2", scope),
+        #                         "StrInline": schema.RefType("StrInline", scope)
+        #                     },
+        #                     scope,
+        #                     discriminator_inlined=False,
+        #                     discriminator_field_name=self.discriminator_field_name,
+        #                 )
+        #             )
+        #         },
+        #     ),
+        #     "StrBasic": schema.ObjectType(
+        #         JSONSchemaTest.StrBasic, {
+        #             "a": schema.PropertyType(schema.StringType()),
+        #         }
+        #     ),
+        #     "StrBasic2": schema.ObjectType(
+        #         JSONSchemaTest.StrBasic2, {
+        #             "c": schema.PropertyType(schema.StringType()),
+        #         }
+        #     ),
+        #     "StrInline": schema.ObjectType(
+        #         JSONSchemaTest.StrInline, {
+        #             "a": schema.PropertyType(schema.StringType()),
+        #             self.discriminator_field_name: schema.PropertyType(schema.StringType()),
+        #         }
+        #     )
+        # }
+
+
 
 
 def load_tests(loader, tests, ignore):
