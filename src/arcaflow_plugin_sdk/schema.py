@@ -5338,7 +5338,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         self.discriminator_field_name = discriminator_field_name
         self.discriminator_inlined = discriminator_inlined
 
-    def _validate_compatibility(self):
+    def _validate_discriminator(self):
         # You can only validate a schema's compatibility after your
         # scope has been constructed and populated with all referenced
         # schemas.
@@ -5417,7 +5417,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         return sub_type.unserialize(data, path)
 
     def validate(self, data: OneOfT, path: typing.Tuple[str] = tuple([])):
-        self._validate_compatibility()
+        self._validate_discriminator()
         types = []
         for discriminator, item_schema in self.types.items():
             item_schema: typing.ForwardRef("RefType")

@@ -7,6 +7,7 @@ import unittest
 from dataclasses import dataclass
 from re import Pattern
 from pprint import pprint
+from xdrlib import ConversionError
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -467,6 +468,12 @@ class OneOfTest(unittest.TestCase):
         type_: str
         b: int
 
+    @dataclasses.dataclass
+    class StrTwoDiscriminators:
+        _type: str
+        type_: str
+        a2: str
+
     # default discriminator field name
     discriminator_default = "_type"
 
@@ -509,6 +516,45 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
+        self.scope_two_discriminators = schema.ScopeType(
+            {
+                "a": schema.ObjectType(
+                    OneOfTest.StrInline,
+                    {
+                        self.discriminator_field_name: PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a": PropertyType(schema.StringType()),
+                    },
+                ),
+                "a2": schema.ObjectType(
+                    OneOfTest.StrTwoDiscriminators,
+                    {
+                        self.discriminator_field_name: PropertyType(
+                            schema.StringType(),
+                        ),
+                        self.discriminator_default: PropertyType(
+                            schema.StringType(),
+                        ),
+                        "a2": PropertyType(schema.StringType()),
+                    },
+                ),
+            },
+            "a"
+        )
+
+    def test_discriminator_default_clash(self):
+        with self.assertRaises(ConstraintException) as cm:
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_two_discriminators),
+                    "a2": schema.RefType("a2", self.scope_two_discriminators),
+                },
+                scope=self.scope_two_discriminators,
+                discriminator_inlined=True,
+                discriminator_field_name=self.discriminator_field_name
+            ).validate({})
+        self.assertIn("Invalid type", str(cm.exception))
 
     def test_inline_discriminator_missing(self):
         with self.assertRaises(BadArgumentException) as cm:
@@ -518,7 +564,7 @@ class OneOfTest(unittest.TestCase):
                 discriminator_inlined=True,
                 discriminator_field_name=self.discriminator_field_name,
             ).validate({})
-        self.assertIn("needs discriminator field", cm.exception.__str__())
+        self.assertIn("needs discriminator field", str(cm.exception))
 
     def test_inline_discriminator_type_mismatch(self):
         with self.assertRaises(BadArgumentException) as cm:
@@ -531,7 +577,7 @@ class OneOfTest(unittest.TestCase):
             ).validate({})
         self.assertIn(
             "does not match OneOfSchema discriminator type",
-            cm.exception.__str__())
+            str(cm.exception))
 
     def test_has_discriminator_error(self):
         with self.assertRaises(BadArgumentException) as cm:
@@ -541,7 +587,7 @@ class OneOfTest(unittest.TestCase):
                 discriminator_inlined=False,
                 discriminator_field_name=self.discriminator_field_name,
             ).validate({})
-        self.assertIn("has conflicting field", cm.exception.__str__())
+        self.assertIn("has conflicting field", str(cm.exception))
 
     def test_unserialize_error_discriminator_type(self):
         s_type = schema.OneOfStringType(
