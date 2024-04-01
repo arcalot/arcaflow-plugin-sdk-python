@@ -1090,25 +1090,25 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_union(self):
         scope = schema.build_object_schema(StrBasicUnion)
-        self.assertEqual("StrBasicUnion", scope.root)
+        self.assertEqual(StrBasicUnion.__name__, scope.root)
         self.assertIsInstance(
-            scope.objects["StrBasicUnion"], schema.ObjectType
+            scope.objects[StrBasicUnion.__name__], schema.ObjectType
         )
-        self.assertIsInstance(scope.objects["StrBasic"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["StrBasic2"], schema.ObjectType)
+        self.assertIsInstance(scope.objects[StrBasic.__name__], schema.ObjectType)
+        self.assertIsInstance(scope.objects[StrBasic2.__name__], schema.ObjectType)
 
         self.assertIsInstance(
-            scope.objects["StrBasicUnion"].properties["union_basic"].type,
+            scope.objects[StrBasicUnion.__name__].properties["union_basic"].type,
             schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
-            scope.objects["StrBasicUnion"].properties["union_basic"].type
+            scope.objects[StrBasicUnion.__name__].properties["union_basic"].type
         )
         self.assertEqual(one_of_type.discriminator_field_name, "_type")
-        self.assertIsInstance(one_of_type.types["StrBasic"], schema.RefType)
-        self.assertEqual(one_of_type.types["StrBasic"].id, "StrBasic")
-        self.assertIsInstance(one_of_type.types["StrBasic2"], schema.RefType)
-        self.assertEqual(one_of_type.types["StrBasic2"].id, "StrBasic2")
+        self.assertIsInstance(one_of_type.types[StrBasic.__name__], schema.RefType)
+        self.assertEqual(one_of_type.types[StrBasic.__name__].id, "StrBasic")
+        self.assertIsInstance(one_of_type.types[StrBasic2.__name__], schema.RefType)
+        self.assertEqual(one_of_type.types[StrBasic2.__name__].id, "StrBasic2")
 
     def test_union_custom_discriminator(self):
         @dataclasses.dataclass
@@ -1126,27 +1126,27 @@ class SchemaBuilderTest(unittest.TestCase):
             ]
 
         scope = schema.build_object_schema(TestData)
-        self.assertEqual("TestData", scope.root)
-        self.assertIsInstance(scope.objects["TestData"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["StrInlineInt"], schema.ObjectType)
+        self.assertEqual(TestData.__name__, scope.root)
+        self.assertIsInstance(scope.objects[TestData.__name__], schema.ObjectType)
+        self.assertIsInstance(scope.objects[StrInlineInt.__name__], schema.ObjectType)
         self.assertIsInstance(
-            scope.objects["StrInlineInt2"], schema.ObjectType
+            scope.objects[StrInlineInt2.__name__], schema.ObjectType
         )
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["union"].type,
+            scope.objects[TestData.__name__].properties["union"].type,
             schema.OneOfIntType,
         )
         one_of_type: schema.OneOfIntType = (
-            scope.objects["TestData"].properties["union"].type
+            scope.objects[TestData.__name__].properties["union"].type
         )
         self.assertEqual(
             one_of_type.discriminator_field_name, discriminator_field_name
         )
         self.assertIsInstance(one_of_type.types[1], schema.RefType)
-        self.assertEqual(one_of_type.types[1].id, "StrInlineInt")
+        self.assertEqual(one_of_type.types[1].id, StrInlineInt.__name__)
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
-        self.assertEqual(one_of_type.types[2].id, "StrInlineInt2")
+        self.assertEqual(one_of_type.types[2].id, StrInlineInt2.__name__)
 
     def test_optional(self):
         @dataclasses.dataclass
@@ -1254,109 +1254,6 @@ class SchemaBuilderTest(unittest.TestCase):
 
 
 class JSONSchemaTest(unittest.TestCase):
-    def setUp(self):
-        self.jsonschema_fragment_oneof_basic = {
-            "$defs": {
-                StrBasicUnion.__name__: {
-                    "type": "object",
-                    "properties": {
-                        "union_basic": {
-                            "oneOf": [
-                                {
-                                    "$ref": (
-                                        f"#/$defs/{StrBasic.__name__}"
-                                        "_discriminated_string_"
-                                        "a"
-                                    )
-                                },
-                                {
-                                    "$ref": (
-                                        f"#/$defs/{StrBasic2.__name__}"
-                                        "_discriminated_string_"
-                                        "b"
-                                    )
-                                },
-                            ]
-                        }
-                    },
-                    "required": ["union_basic"],
-                    "additionalProperties": False,
-                    "dependentRequired": {},
-                },
-                StrBasic.__name__: {
-                    "type": "object",
-                    "properties": {
-                        "msg": {"type": "string"},
-                        discriminator_default: {
-                            "type": "string",
-                            "const": "a",
-                        },
-                    },
-                    "required": [discriminator_default, "msg"],
-                    "additionalProperties": False,
-                    "dependentRequired": {},
-                },
-                f"{StrBasic.__name__}_discriminated_string_a": {
-                    "type": "object",
-                    "properties": {
-                        "msg": {"type": "string"},
-                        discriminator_default: {
-                            "type": "string",
-                            "const": "a",
-                        },
-                    },
-                    "required": [discriminator_default, "msg"],
-                    "additionalProperties": False,
-                    "dependentRequired": {},
-                },
-                StrBasic2.__name__: {
-                    "type": "object",
-                    "properties": {
-                        "msg2": {"type": "string"},
-                        discriminator_default: {
-                            "type": "string",
-                            "const": "b",
-                        },
-                    },
-                    "required": [discriminator_default, "msg2"],
-                    "additionalProperties": False,
-                    "dependentRequired": {},
-                },
-                f"{StrBasic2.__name__}_discriminated_string_b": {
-                    "type": "object",
-                    "properties": {
-                        "msg2": {"type": "string"},
-                        discriminator_default: {
-                            "type": "string",
-                            "const": "b",
-                        },
-                    },
-                    "required": [discriminator_default, "msg2"],
-                    "additionalProperties": False,
-                    "dependentRequired": {},
-                },
-            },
-            "type": "object",
-            "properties": {
-                "union_basic": {
-                    "oneOf": [
-                        {
-                            "$ref": f"#/$defs/{StrBasic.__name__}"
-                                    f"_discriminated_string_"
-                                    f"a"
-                        },
-                        {
-                            "$ref": f"#/$defs/{StrBasic2.__name__}"
-                                    f"_discriminated_string_"
-                                    f"b"
-                        },
-                    ]
-                }
-            },
-            "required": ["union_basic"],
-            "additionalProperties": False,
-            "dependentRequired": {},
-        }
 
     def _execute_test_cases(self, test_cases):
         for name in test_cases.keys():
@@ -1599,7 +1496,108 @@ class JSONSchemaTest(unittest.TestCase):
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
         self.assertEqual(
-            self.jsonschema_fragment_oneof_basic,
+            {
+                "$defs": {
+                    StrBasicUnion.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "union_basic": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{StrBasic.__name__}"
+                                            "_discriminated_string_"
+                                            "a"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{StrBasic2.__name__}"
+                                            "_discriminated_string_"
+                                            "b"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["union_basic"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    StrBasic.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_default: {
+                                "type": "string",
+                                "const": "a",
+                            },
+                        },
+                        "required": [discriminator_default, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{StrBasic.__name__}_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_default: {
+                                "type": "string",
+                                "const": "a",
+                            },
+                        },
+                        "required": [discriminator_default, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    StrBasic2.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg2": {"type": "string"},
+                            discriminator_default: {
+                                "type": "string",
+                                "const": "b",
+                            },
+                        },
+                        "required": [discriminator_default, "msg2"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{StrBasic2.__name__}_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "msg2": {"type": "string"},
+                            discriminator_default: {
+                                "type": "string",
+                                "const": "b",
+                            },
+                        },
+                        "required": [discriminator_default, "msg2"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "union_basic": {
+                        "oneOf": [
+                            {
+                                "$ref": f"#/$defs/{StrBasic.__name__}"
+                                        f"_discriminated_string_"
+                                        f"a"
+                            },
+                            {
+                                "$ref": f"#/$defs/{StrBasic2.__name__}"
+                                        f"_discriminated_string_"
+                                        f"b"
+                            },
+                        ]
+                    }
+                },
+                "required": ["union_basic"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            },
             json_schema,
         )
 
