@@ -599,7 +599,6 @@ def discriminator(discriminator_field_name: str,
                 "Unsupported discriminator type: {}".format(type(t))
             )
         for key, item in oneof.types.items():
-            # if discriminator_inlined and hasattr(item, "__discriminator_value"):
             if hasattr(item, "__discriminator_value"):
                 one_of[item.__discriminator_value] = item
             else:
@@ -617,19 +616,10 @@ def discriminator(discriminator_field_name: str,
                     "Please check your annotations.".format(e.__str__())
                 ) from e
 
-        oneof._validate_discriminator()
         # Now validate that the discriminator is inlined if it's supposed
         # to be, and not present in the objects if it's not supposed to
         # be inlined.
-        # for key, item in oneof.types.items():
-        #     try:
-        #         discriminator_field_schema.validate(key)
-        #     except ConstraintException as e:
-        #         raise BadArgumentException(
-        #             "The discriminator value has an invalid value: {}. "
-        #             "Please check your annotations.".format(e.__str__())
-        #         ) from e
-
+        oneof._validate_discriminator()
         return oneof
 
     return call
@@ -6895,15 +6885,6 @@ class _SchemaBuilder:
                     f.type.display = DisplayValue()
                 f.type.display.description = getattr(f.type, "__description")
             types[discriminator_value] = f.type
-        # for _, v in types.items():
-        #     # if "type_id" in v.properties:
-        #     if not hasattr(v, "properties"):
-        #         print(v)
-        #         print("--------------------------------------------------------------")
-        #     elif hasattr(v, "properties") and "type_id" in v.properties:
-        #         print("~~~~~~~~~ has discriminator!!! ~~~~~~~~~~~~")
-        #         print(v)
-        #         print("--------------------------------------------------------------")
         if discriminator_type is str:
             return OneOfStringType(
                 types,
