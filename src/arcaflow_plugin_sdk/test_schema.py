@@ -509,7 +509,7 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        self.scope_mixed = schema.ScopeType(
+        self.scope_mixed_type = schema.ScopeType(
             {
                 "a": schema.ObjectType(
                     StrInline,
@@ -593,10 +593,10 @@ class OneOfTest(unittest.TestCase):
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_mixed),
-                "b": schema.RefType("b", self.scope_mixed),
+                "a": schema.RefType("a", self.scope_mixed_type),
+                "b": schema.RefType("b", self.scope_mixed_type),
             },
-            scope=self.scope_mixed,
+            scope=self.scope_mixed_type,
             discriminator_field_name=discriminator_field_name,
         )
 
@@ -618,10 +618,10 @@ class OneOfTest(unittest.TestCase):
     def test_validation(self):
         s = schema.OneOfStringType[StrInline](
             {
-                "a": schema.RefType("a", self.scope_mixed),
-                "b": schema.RefType("b", self.scope_mixed),
+                "a": schema.RefType("a", self.scope_mixed_type),
+                "b": schema.RefType("b", self.scope_mixed_type),
             },
-            scope=self.scope_mixed,
+            scope=self.scope_mixed_type,
             discriminator_field_name=discriminator_field_name,
         )
 
@@ -641,10 +641,10 @@ class OneOfTest(unittest.TestCase):
     def test_serialize(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_mixed),
-                "b": schema.RefType("b", self.scope_mixed),
+                "a": schema.RefType("a", self.scope_mixed_type),
+                "b": schema.RefType("b", self.scope_mixed_type),
             },
-            scope=self.scope_mixed,
+            scope=self.scope_mixed_type,
             discriminator_field_name=discriminator_field_name,
         )
         self.assertEqual(
