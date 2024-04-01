@@ -25,7 +25,6 @@ discriminator_default = "_type"
 discriminator_field_name = "type_"
 
 
-
 @dataclasses.dataclass
 class StrBasic:
     msg: str
@@ -535,8 +534,7 @@ class OneOfTest(unittest.TestCase):
             scope=self.scope_basic,
         )
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({
-                discriminator_default: "1", 1: "Hello world!"})
+            s_type.unserialize({discriminator_default: "1", 1: "Hello world!"})
 
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
@@ -558,16 +556,15 @@ class OneOfTest(unittest.TestCase):
             s_type.unserialize([])
         # Mismatching key value
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({
-                discriminator_default: "a", "b": "Hello world!"})
+            s_type.unserialize(
+                {discriminator_default: "a", "b": "Hello world!"}
+            )
         # Invalid key value
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({
-                discriminator_default: 1, "a": "Hello world!"})
+            s_type.unserialize({discriminator_default: 1, "a": "Hello world!"})
         # Invalid discriminator
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({
-                discriminator_default: 1, "b": "Hello world!"})
+            s_type.unserialize({discriminator_default: 1, "b": "Hello world!"})
 
         unserialized_data: StrBasic = s_type.unserialize(
             {discriminator_default: "a", "msg": "Hello world!"}
@@ -608,7 +605,8 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertIsInstance(unserialized_data, StrInline)
         self.assertEqual(
-            getattr(unserialized_data, discriminator_field_name), "a")
+            getattr(unserialized_data, discriminator_field_name), "a"
+        )
         self.assertEqual(unserialized_data.a, "Hello world!")
 
         unserialized_data2: IntBasic = s.unserialize(
@@ -1093,7 +1091,9 @@ class SchemaBuilderTest(unittest.TestCase):
     def test_union(self):
         scope = schema.build_object_schema(StrBasicUnion)
         self.assertEqual("StrBasicUnion", scope.root)
-        self.assertIsInstance(scope.objects["StrBasicUnion"], schema.ObjectType)
+        self.assertIsInstance(
+            scope.objects["StrBasicUnion"], schema.ObjectType
+        )
         self.assertIsInstance(scope.objects["StrBasic"], schema.ObjectType)
         self.assertIsInstance(scope.objects["StrBasic2"], schema.ObjectType)
 
@@ -1115,8 +1115,12 @@ class SchemaBuilderTest(unittest.TestCase):
         class TestData:
             union: typing.Annotated[
                 typing.Union[
-                    typing.Annotated[StrInlineInt, schema.discriminator_value(1)],
-                    typing.Annotated[StrInlineInt2, schema.discriminator_value(2)],
+                    typing.Annotated[
+                        StrInlineInt, schema.discriminator_value(1)
+                    ],
+                    typing.Annotated[
+                        StrInlineInt2, schema.discriminator_value(2)
+                    ],
                 ],
                 schema.discriminator(discriminator_field_name),
             ]
@@ -1125,15 +1129,20 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertEqual("TestData", scope.root)
         self.assertIsInstance(scope.objects["TestData"], schema.ObjectType)
         self.assertIsInstance(scope.objects["StrInlineInt"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["StrInlineInt2"], schema.ObjectType)
+        self.assertIsInstance(
+            scope.objects["StrInlineInt2"], schema.ObjectType
+        )
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["union"].type, schema.OneOfIntType
+            scope.objects["TestData"].properties["union"].type,
+            schema.OneOfIntType,
         )
         one_of_type: schema.OneOfIntType = (
             scope.objects["TestData"].properties["union"].type
         )
-        self.assertEqual(one_of_type.discriminator_field_name, discriminator_field_name)
+        self.assertEqual(
+            one_of_type.discriminator_field_name, discriminator_field_name
+        )
         self.assertIsInstance(one_of_type.types[1], schema.RefType)
         self.assertEqual(one_of_type.types[1].id, "StrInlineInt")
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
@@ -1247,83 +1256,107 @@ class SchemaBuilderTest(unittest.TestCase):
 class JSONSchemaTest(unittest.TestCase):
     def setUp(self):
         self.jsonschema_fragment_oneof_basic = {
-                "$defs": {
-                    StrBasicUnion.__name__: {
-                        "type": "object",
-                        "properties": {
-                            "union_basic": {
-                                "oneOf": [
-                                    {
-                                        "$ref": (
-                                            f"#/$defs/{StrBasic.__name__}_discriminated_string_a"
-                                        )
-                                    },
-                                    {
-                                        "$ref": (
-                                            f"#/$defs/{StrBasic2.__name__}_discriminated_string_b"
-                                        )
-                                    },
-                                ]
-                            }
-                        },
-                        "required": ["union_basic"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
+            "$defs": {
+                StrBasicUnion.__name__: {
+                    "type": "object",
+                    "properties": {
+                        "union_basic": {
+                            "oneOf": [
+                                {
+                                    "$ref": (
+                                        f"#/$defs/{StrBasic.__name__}"
+                                        "_discriminated_string_"
+                                        "a"
+                                    )
+                                },
+                                {
+                                    "$ref": (
+                                        f"#/$defs/{StrBasic2.__name__}"
+                                        "_discriminated_string_"
+                                        "b"
+                                    )
+                                },
+                            ]
+                        }
                     },
-                    StrBasic.__name__: {
-                        "type": "object",
-                        "properties": {
-                            "msg": {"type": "string"},
-                            discriminator_default: {"type": "string", "const": "a"},
-                        },
-                        "required": [discriminator_default, "msg"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    f"{StrBasic.__name__}_discriminated_string_a": {
-                        "type": "object",
-                        "properties": {
-                            "msg": {"type": "string"},
-                            discriminator_default: {"type": "string", "const": "a"},
-                        },
-                        "required": [discriminator_default, "msg"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    StrBasic2.__name__: {
-                        "type": "object",
-                        "properties": {
-                            "msg2": {"type": "string"},
-                            discriminator_default: {"type": "string", "const": "b"},
-                        },
-                        "required": [discriminator_default, "msg2"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    f"{StrBasic2.__name__}_discriminated_string_b": {
-                        "type": "object",
-                        "properties": {
-                            "msg2": {"type": "string"},
-                            discriminator_default: {"type": "string", "const": "b"},
-                        },
-                        "required": [discriminator_default, "msg2"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
+                    "required": ["union_basic"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
                 },
-                "type": "object",
-                "properties": {
-                    "union_basic": {
-                        "oneOf": [
-                            {"$ref": f"#/$defs/{StrBasic.__name__}_discriminated_string_a"},
-                            {"$ref": f"#/$defs/{StrBasic2.__name__}_discriminated_string_b"},
-                        ]
-                    }
+                StrBasic.__name__: {
+                    "type": "object",
+                    "properties": {
+                        "msg": {"type": "string"},
+                        discriminator_default: {
+                            "type": "string",
+                            "const": "a",
+                        },
+                    },
+                    "required": [discriminator_default, "msg"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
                 },
-                "required": ["union_basic"],
-                "additionalProperties": False,
-                "dependentRequired": {},
-            }
+                f"{StrBasic.__name__}_discriminated_string_a": {
+                    "type": "object",
+                    "properties": {
+                        "msg": {"type": "string"},
+                        discriminator_default: {
+                            "type": "string",
+                            "const": "a",
+                        },
+                    },
+                    "required": [discriminator_default, "msg"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
+                },
+                StrBasic2.__name__: {
+                    "type": "object",
+                    "properties": {
+                        "msg2": {"type": "string"},
+                        discriminator_default: {
+                            "type": "string",
+                            "const": "b",
+                        },
+                    },
+                    "required": [discriminator_default, "msg2"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
+                },
+                f"{StrBasic2.__name__}_discriminated_string_b": {
+                    "type": "object",
+                    "properties": {
+                        "msg2": {"type": "string"},
+                        discriminator_default: {
+                            "type": "string",
+                            "const": "b",
+                        },
+                    },
+                    "required": [discriminator_default, "msg2"],
+                    "additionalProperties": False,
+                    "dependentRequired": {},
+                },
+            },
+            "type": "object",
+            "properties": {
+                "union_basic": {
+                    "oneOf": [
+                        {
+                            "$ref": f"#/$defs/{StrBasic.__name__}"
+                                    f"_discriminated_string_"
+                                    f"a"
+                        },
+                        {
+                            "$ref": f"#/$defs/{StrBasic2.__name__}"
+                                    f"_discriminated_string_"
+                                    f"b"
+                        },
+                    ]
+                }
+            },
+            "required": ["union_basic"],
+            "additionalProperties": False,
+            "dependentRequired": {},
+        }
 
     def _execute_test_cases(self, test_cases):
         for name in test_cases.keys():
