@@ -33,7 +33,7 @@ class StrBasic:
 
 @dataclasses.dataclass
 class StrBasic2:
-    b: int
+    msg2: int
 
 
 @dataclasses.dataclass
@@ -1293,20 +1293,20 @@ class JSONSchemaTest(unittest.TestCase):
                     StrBasic2.__name__: {
                         "type": "object",
                         "properties": {
-                            "b": {"type": "string"},
+                            "msg2": {"type": "string"},
                             discriminator_default: {"type": "string", "const": "b"},
                         },
-                        "required": [discriminator_default, "b"],
+                        "required": [discriminator_default, "msg2"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
                     f"{StrBasic2.__name__}_discriminated_string_b": {
                         "type": "object",
                         "properties": {
-                            "b": {"type": "string"},
+                            "msg2": {"type": "string"},
                             discriminator_default: {"type": "string", "const": "b"},
                         },
-                        "required": [discriminator_default, "b"],
+                        "required": [discriminator_default, "msg2"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1560,7 +1560,7 @@ class JSONSchemaTest(unittest.TestCase):
                 StrBasic, {"msg": schema.PropertyType(schema.StringType())}
             ),
             StrBasic2.__name__: schema.ObjectType(
-                StrBasic2, {"b": schema.PropertyType(schema.StringType())}
+                StrBasic2, {"msg2": schema.PropertyType(schema.StringType())}
             ),
         }
         defs = schema._JSONSchemaDefs()
