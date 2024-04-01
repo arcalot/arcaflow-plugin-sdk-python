@@ -25,9 +25,10 @@ discriminator_default = "_type"
 discriminator_field_name = "type_"
 
 
+
 @dataclasses.dataclass
 class StrBasic:
-    a: str
+    msg: str
 
 
 @dataclasses.dataclass
@@ -47,7 +48,7 @@ class StrInline:
 
 
 @dataclasses.dataclass
-class InlineInt:
+class StrInlineInt:
     type_: int
     msg: str
 
@@ -56,6 +57,11 @@ class InlineInt:
 class StrInlineInt2:
     type_: int
     msg2: str
+
+
+@dataclasses.dataclass
+class StrBasicUnion:
+    union_basic: typing.Union[StrBasic, StrBasic2]
 
 
 class Color(enum.Enum):
@@ -498,7 +504,7 @@ class OneOfTest(unittest.TestCase):
             {
                 "a": schema.ObjectType(
                     StrBasic,
-                    {"a": PropertyType(schema.StringType())},
+                    {"msg": PropertyType(schema.StringType())},
                 ),
                 "b": self.obj_b,
             },
@@ -564,10 +570,10 @@ class OneOfTest(unittest.TestCase):
                 discriminator_default: 1, "b": "Hello world!"})
 
         unserialized_data: StrBasic = s_type.unserialize(
-            {discriminator_default: "a", "a": "Hello world!"}
+            {discriminator_default: "a", "msg": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data, StrBasic)
-        self.assertEqual(unserialized_data.a, "Hello world!")
+        self.assertEqual(unserialized_data.msg, "Hello world!")
         unserialized_data2: IntBasic = s_type.unserialize(
             {discriminator_default: "b", "b": 42}
         )
@@ -582,10 +588,10 @@ class OneOfTest(unittest.TestCase):
             scope=self.scope_basic,
         )
         unserialized_data3: StrBasic = s_type_int.unserialize(
-            {discriminator_default: 1, "a": "Hello world!"}
+            {discriminator_default: 1, "msg": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data3, StrBasic)
-        self.assertEqual(unserialized_data3.a, "Hello world!")
+        self.assertEqual(unserialized_data3.msg, "Hello world!")
 
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
@@ -1085,22 +1091,18 @@ class SchemaBuilderTest(unittest.TestCase):
         )
 
     def test_union(self):
-        @dataclasses.dataclass
-        class TestData:
-            union_basic: typing.Union[StrBasic, StrBasic2]
-
-        scope = schema.build_object_schema(TestData)
-        self.assertEqual("TestData", scope.root)
-        self.assertIsInstance(scope.objects["TestData"], schema.ObjectType)
+        scope = schema.build_object_schema(StrBasicUnion)
+        self.assertEqual("StrBasicUnion", scope.root)
+        self.assertIsInstance(scope.objects["StrBasicUnion"], schema.ObjectType)
         self.assertIsInstance(scope.objects["StrBasic"], schema.ObjectType)
         self.assertIsInstance(scope.objects["StrBasic2"], schema.ObjectType)
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["union_basic"].type,
+            scope.objects["StrBasicUnion"].properties["union_basic"].type,
             schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
-            scope.objects["TestData"].properties["union_basic"].type
+            scope.objects["StrBasicUnion"].properties["union_basic"].type
         )
         self.assertEqual(one_of_type.discriminator_field_name, "_type")
         self.assertIsInstance(one_of_type.types["StrBasic"], schema.RefType)
@@ -1110,42 +1112,32 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_union_custom_discriminator(self):
         @dataclasses.dataclass
-        class A:
-            discriminator: int
-            a: str
-
-        @dataclasses.dataclass
-        class B:
-            discriminator: int
-            b: str
-
-        @dataclasses.dataclass
         class TestData:
-            a: typing.Annotated[
+            union: typing.Annotated[
                 typing.Union[
-                    typing.Annotated[A, schema.discriminator_value(1)],
-                    typing.Annotated[B, schema.discriminator_value(2)],
+                    typing.Annotated[StrInlineInt, schema.discriminator_value(1)],
+                    typing.Annotated[StrInlineInt2, schema.discriminator_value(2)],
                 ],
-                schema.discriminator("discriminator"),
+                schema.discriminator(discriminator_field_name),
             ]
 
         scope = schema.build_object_schema(TestData)
         self.assertEqual("TestData", scope.root)
         self.assertIsInstance(scope.objects["TestData"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["A"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["B"], schema.ObjectType)
+        self.assertIsInstance(scope.objects["StrInlineInt"], schema.ObjectType)
+        self.assertIsInstance(scope.objects["StrInlineInt2"], schema.ObjectType)
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["a"].type, schema.OneOfIntType
+            scope.objects["TestData"].properties["union"].type, schema.OneOfIntType
         )
         one_of_type: schema.OneOfIntType = (
-            scope.objects["TestData"].properties["a"].type
+            scope.objects["TestData"].properties["union"].type
         )
-        self.assertEqual(one_of_type.discriminator_field_name, "discriminator")
+        self.assertEqual(one_of_type.discriminator_field_name, discriminator_field_name)
         self.assertIsInstance(one_of_type.types[1], schema.RefType)
-        self.assertEqual(one_of_type.types[1].id, "A")
+        self.assertEqual(one_of_type.types[1].id, "StrInlineInt")
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
-        self.assertEqual(one_of_type.types[2].id, "B")
+        self.assertEqual(one_of_type.types[2].id, "StrInlineInt2")
 
     def test_optional(self):
         @dataclasses.dataclass
@@ -1253,6 +1245,86 @@ class SchemaBuilderTest(unittest.TestCase):
 
 
 class JSONSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.jsonschema_fragment_oneof_basic = {
+                "$defs": {
+                    StrBasicUnion.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "union_basic": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{StrBasic.__name__}_discriminated_string_a"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{StrBasic2.__name__}_discriminated_string_b"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["union_basic"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    StrBasic.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_default: {"type": "string", "const": "a"},
+                        },
+                        "required": [discriminator_default, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{StrBasic.__name__}_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_default: {"type": "string", "const": "a"},
+                        },
+                        "required": [discriminator_default, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    StrBasic2.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "b": {"type": "string"},
+                            discriminator_default: {"type": "string", "const": "b"},
+                        },
+                        "required": [discriminator_default, "b"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{StrBasic2.__name__}_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "b": {"type": "string"},
+                            discriminator_default: {"type": "string", "const": "b"},
+                        },
+                        "required": [discriminator_default, "b"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "union_basic": {
+                        "oneOf": [
+                            {"$ref": f"#/$defs/{StrBasic.__name__}_discriminated_string_a"},
+                            {"$ref": f"#/$defs/{StrBasic2.__name__}_discriminated_string_b"},
+                        ]
+                    }
+                },
+                "required": ["union_basic"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            }
+
     def _execute_test_cases(self, test_cases):
         for name in test_cases.keys():
             defs = schema._JSONSchemaDefs()
@@ -1464,126 +1536,37 @@ class JSONSchemaTest(unittest.TestCase):
         self.assertEqual(expected, result)
 
     def test_one_of(self):
-        @dataclasses.dataclass
-        class A:
-            a: str
-
-        @dataclasses.dataclass
-        class B:
-            b: str
-
-        @dataclasses.dataclass
-        class TestData:
-            a: typing.Union[A, B]
-
         scope = schema.ScopeType(
             {},
-            "TestData",
+            StrBasicUnion.__name__,
         )
         scope.objects = {
-            "TestData": schema.ObjectType(
-                TestData,
+            str(StrBasicUnion.__name__): schema.ObjectType(
+                StrBasicUnion,
                 {
-                    "a": schema.PropertyType(
+                    "union_basic": schema.PropertyType(
                         schema.OneOfStringType(
                             {
-                                "a": schema.RefType("A", scope),
-                                "b": schema.RefType("B", scope),
+                                "a": schema.RefType(StrBasic.__name__, scope),
+                                "b": schema.RefType(StrBasic2.__name__, scope),
                             },
                             scope,
-                            "_type",
+                            discriminator_default,
                         )
                     )
                 },
             ),
-            "A": schema.ObjectType(
-                A, {"a": schema.PropertyType(schema.StringType())}
+            StrBasic.__name__: schema.ObjectType(
+                StrBasic, {"msg": schema.PropertyType(schema.StringType())}
             ),
-            "B": schema.ObjectType(
-                B, {"b": schema.PropertyType(schema.StringType())}
+            StrBasic2.__name__: schema.ObjectType(
+                StrBasic2, {"b": schema.PropertyType(schema.StringType())}
             ),
         }
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
         self.assertEqual(
-            {
-                "$defs": {
-                    "TestData": {
-                        "type": "object",
-                        "properties": {
-                            "a": {
-                                "oneOf": [
-                                    {
-                                        "$ref": (
-                                            "#/$defs/A_discriminated_string_a"
-                                        )
-                                    },
-                                    {
-                                        "$ref": (
-                                            "#/$defs/B_discriminated_string_b"
-                                        )
-                                    },
-                                ]
-                            }
-                        },
-                        "required": ["a"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    "A": {
-                        "type": "object",
-                        "properties": {
-                            "a": {"type": "string"},
-                            "_type": {"type": "string", "const": "a"},
-                        },
-                        "required": ["_type", "a"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    "A_discriminated_string_a": {
-                        "type": "object",
-                        "properties": {
-                            "a": {"type": "string"},
-                            "_type": {"type": "string", "const": "a"},
-                        },
-                        "required": ["_type", "a"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    "B": {
-                        "type": "object",
-                        "properties": {
-                            "b": {"type": "string"},
-                            "_type": {"type": "string", "const": "b"},
-                        },
-                        "required": ["_type", "b"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                    "B_discriminated_string_b": {
-                        "type": "object",
-                        "properties": {
-                            "b": {"type": "string"},
-                            "_type": {"type": "string", "const": "b"},
-                        },
-                        "required": ["_type", "b"],
-                        "additionalProperties": False,
-                        "dependentRequired": {},
-                    },
-                },
-                "type": "object",
-                "properties": {
-                    "a": {
-                        "oneOf": [
-                            {"$ref": "#/$defs/A_discriminated_string_a"},
-                            {"$ref": "#/$defs/B_discriminated_string_b"},
-                        ]
-                    }
-                },
-                "required": ["a"],
-                "additionalProperties": False,
-                "dependentRequired": {},
-            },
+            self.jsonschema_fragment_oneof_basic,
             json_schema,
         )
 
