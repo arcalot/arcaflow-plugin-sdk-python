@@ -15,7 +15,6 @@ from arcaflow_plugin_sdk.schema import (
     SchemaBuildException,
 )
 
-
 # default discriminator field name
 discriminator_default = "_type"
 
