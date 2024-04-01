@@ -46,6 +46,18 @@ class StrInline:
     a: str
 
 
+@dataclasses.dataclass
+class InlineInt:
+    type_: int
+    msg: str
+
+
+@dataclasses.dataclass
+class StrInlineInt2:
+    type_: int
+    msg2: str
+
+
 class Color(enum.Enum):
     GREEN = "green"
     RED = "red"
@@ -1074,35 +1086,27 @@ class SchemaBuilderTest(unittest.TestCase):
 
     def test_union(self):
         @dataclasses.dataclass
-        class A:
-            a: str
-
-        @dataclasses.dataclass
-        class B:
-            b: str
-
-        @dataclasses.dataclass
         class TestData:
-            a: typing.Union[A, B]
+            union_basic: typing.Union[StrBasic, StrBasic2]
 
         scope = schema.build_object_schema(TestData)
         self.assertEqual("TestData", scope.root)
         self.assertIsInstance(scope.objects["TestData"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["A"], schema.ObjectType)
-        self.assertIsInstance(scope.objects["B"], schema.ObjectType)
+        self.assertIsInstance(scope.objects["StrBasic"], schema.ObjectType)
+        self.assertIsInstance(scope.objects["StrBasic2"], schema.ObjectType)
 
         self.assertIsInstance(
-            scope.objects["TestData"].properties["a"].type,
+            scope.objects["TestData"].properties["union_basic"].type,
             schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
-            scope.objects["TestData"].properties["a"].type
+            scope.objects["TestData"].properties["union_basic"].type
         )
         self.assertEqual(one_of_type.discriminator_field_name, "_type")
-        self.assertIsInstance(one_of_type.types["A"], schema.RefType)
-        self.assertEqual(one_of_type.types["A"].id, "A")
-        self.assertIsInstance(one_of_type.types["B"], schema.RefType)
-        self.assertEqual(one_of_type.types["B"].id, "B")
+        self.assertIsInstance(one_of_type.types["StrBasic"], schema.RefType)
+        self.assertEqual(one_of_type.types["StrBasic"].id, "StrBasic")
+        self.assertIsInstance(one_of_type.types["StrBasic2"], schema.RefType)
+        self.assertEqual(one_of_type.types["StrBasic2"].id, "StrBasic2")
 
     def test_union_custom_discriminator(self):
         @dataclasses.dataclass
