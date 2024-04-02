@@ -25,7 +25,7 @@ class Output:
     description="Says hello :)",
     outputs={"success": Output},
 )
-def hello_world(params: Input) -> Tuple[str, Union[Output]]:
+def hello_world(params: Input) -> Tuple[str, Output]:
     print("Hello world!")
     return "success", Output("Hello, {}!".format(params.name))
 
