@@ -3,8 +3,8 @@ import os
 import signal
 import time
 import unittest
-from threading import Event
-from typing import List, TextIO, Tuple, Union
+from threading import Condition, Lock
+from typing import List, TextIO, Tuple, Union, Optional
 
 from arcaflow_plugin_sdk import atp, plugin, schema
 
@@ -49,7 +49,6 @@ class StepTestInput:
 
 @dataclasses.dataclass
 class SignalTestInput:
-    final: bool  # The last one will trigger the end of the step.
     value: int
 
 
@@ -60,14 +59,16 @@ class SignalTestOutput:
 
 class SignalTestStep:
     signal_values: List[int]
-    exit_event: Event
+    exit_condition: Condition
+    lock: Lock
 
     def __init__(self):
         # Due to the way Python works, this MUST be done here, and not inlined
         # above, or else it will be shared by all objects, resulting in a
         # shared list and event, which would cause problems.
         self.signal_values = []
-        self.exit_event = Event()
+        self.lock = Lock()
+        self.exit_condition = Condition(self.lock)
 
     @plugin.step_with_signals(
         id="signal_test_step",
@@ -81,7 +82,10 @@ class SignalTestStep:
     def signal_test_step(
         self, params: StepTestInput
     ) -> Tuple[str, Union[SignalTestOutput]]:
-        self.exit_event.wait(params.wait_time_seconds)
+        with self.exit_condition:
+            self.exit_condition.wait_for(
+                lambda: len(self.signal_values) >= params.expected_signal_count,
+                timeout=params.wait_time_seconds)
         return "success", SignalTestOutput(self.signal_values)
 
     @plugin.signal_handler(
@@ -93,12 +97,11 @@ class SignalTestStep:
         ),
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
-        if signal_input.value < 0:
-            # self.exit_event.set()
-            raise Exception(f"Value below zero: {signal_input.value}")
-        self.signal_values.append(signal_input.value)
-        if signal_input.final:
-            self.exit_event.set()
+        with self.exit_condition:
+            if signal_input.value < 0:
+                raise Exception(f"Value below zero: {signal_input.value}")
+            self.signal_values.append(signal_input.value)
+            self.exit_condition.notify()
 
 
 test_schema = plugin.build_schema(hello_world)
@@ -200,22 +203,23 @@ class ATPTest(unittest.TestCase):
             )
 
             client.start_work(
-                self.id(), "signal_test_step", {"wait_time_seconds": "5"}
+                self.id(), "signal_test_step",
+                {"wait_time_seconds": "5", "expected_signal_count": "3"}
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": "false", "value": "1"},
+                {"value": "1"},
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": "false", "value": "2"},
+                {"value": "2"},
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": "false", "value": "3"},
+                {"value": "3"},
             )
             result = client.read_single_result()
             self.assertEqual(result.run_id, self.id())
@@ -251,27 +255,29 @@ class ATPTest(unittest.TestCase):
             step_b_id = self.id() + "_b"
 
             client.start_work(
-                step_a_id, "signal_test_step", {"wait_time_seconds": "5"}
+                step_a_id, "signal_test_step",
+                {"wait_time_seconds": 5.0, "expected_signal_count": 2}
             )
             client.start_work(
-                step_b_id, "signal_test_step", {"wait_time_seconds": "5"}
+                step_b_id, "signal_test_step",
+                {"wait_time_seconds": 5.0, "expected_signal_count": 1}
             )
             client.send_signal(
                 step_a_id,
                 "record_value",
-                {"final": "false", "value": "1"},
+                {"value": "1"},
             )
             client.send_signal(
                 step_b_id,
                 "record_value",
-                {"final": "true", "value": "2"},
+                {"value": "2"},
             )
             step_b_result = client.read_single_result()
 
             client.send_signal(
                 step_a_id,
                 "record_value",
-                {"final": "true", "value": "3"},
+                {"value": "3"},
             )
             step_a_result = client.read_single_result()
             client.send_client_done()
@@ -381,12 +387,13 @@ class ATPTest(unittest.TestCase):
             )
 
             client.start_work(
-                self.id(), "signal_test_step", {"wait_time_seconds": 5.0}
+                self.id(), "signal_test_step",
+                {"wait_time_seconds": 5.0, "expected_signal_count": 1}
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": False, "value": "-1"},
+                {"value": "-1"},
             )
 
             # Note: The exception is raised after the step finishes in the test
