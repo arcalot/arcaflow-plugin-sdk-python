@@ -29,6 +29,7 @@ def hello_world(params: Input) -> Tuple[str, Union[Output]]:
     print("Hello world!")
     return "success", Output("Hello, {}!".format(params.name))
 
+
 # noinspection PyTypeChecker
 @plugin.step(
     id="hello-world-broken",
@@ -84,8 +85,8 @@ class SignalTestStep:
     ) -> Tuple[str, Union[SignalTestOutput]]:
         with self.exit_condition:
             self.exit_condition.wait_for(
-                lambda: len(self.signal_values) >=\
-                        params.expected_signal_count,
+                lambda:
+                    len(self.signal_values) >= params.expected_signal_count,
                 timeout=params.wait_time_seconds)
         return "success", SignalTestOutput(self.signal_values)
 
