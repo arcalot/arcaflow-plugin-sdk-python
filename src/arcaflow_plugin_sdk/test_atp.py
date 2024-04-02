@@ -206,22 +206,22 @@ class ATPTest(unittest.TestCase):
 
             client.start_work(
                 self.id(), "signal_test_step",
-                {"wait_time_seconds": "5", "expected_signal_count": "3"}
+                {"wait_time_seconds": 5.0, "expected_signal_count": 3}
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"value": "1"},
+                {"value": 1},
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"value": "2"},
+                {"value": 2},
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"value": "3"},
+                {"value": 3},
             )
             result = client.read_single_result()
             self.assertEqual(result.run_id, self.id())
@@ -267,19 +267,19 @@ class ATPTest(unittest.TestCase):
             client.send_signal(
                 step_a_id,
                 "record_value",
-                {"value": "1"},
+                {"value": 1},
             )
             client.send_signal(
                 step_b_id,
                 "record_value",
-                {"value": "2"},
+                {"value": 2},
             )
             step_b_result = client.read_single_result()
 
             client.send_signal(
                 step_a_id,
                 "record_value",
-                {"value": "3"},
+                {"value": 3},
             )
             step_a_result = client.read_single_result()
             client.send_client_done()
@@ -396,7 +396,7 @@ class ATPTest(unittest.TestCase):
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"value": "-1"},
+                {"value": -1},
             )
 
             # Note: The exception is raised after the step finishes in the test
