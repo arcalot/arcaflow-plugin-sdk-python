@@ -199,12 +199,14 @@ class ATPServer:
                         server_fatal=False,
                         error_msg=f"Unknown runtime message ID: {msg_id}",
                     )
-                    self.stderr.write(
-                        f"Unknown kind of runtime message: {msg_id}"
+                    self.stderr.write(bytes(
+                        f"Unknown kind of runtime message: {msg_id}",
+                        encoding="utf")
                     )
 
         except cbor2.CBORDecodeError as err:
-            self.stderr.write(f"Error while decoding CBOR: {err}")
+            self.stderr.write(bytes(
+                f"Error while decoding CBOR: {err}", encoding="utf"))
             self.send_error_message(
                 "",
                 step_fatal=False,
