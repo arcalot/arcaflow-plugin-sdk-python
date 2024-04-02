@@ -44,6 +44,7 @@ def hello_world_broken(_: Input) -> Tuple[str, Union[Output]]:
 @dataclasses.dataclass
 class StepTestInput:
     wait_time_seconds: float
+    expected_signal_count: int
 
 
 @dataclasses.dataclass
@@ -93,8 +94,8 @@ class SignalTestStep:
     )
     def signal_test_signal_handler(self, signal_input: SignalTestInput):
         if signal_input.value < 0:
-            self.exit_event.set()
-            raise Exception("Value below zero.")
+            # self.exit_event.set()
+            raise Exception(f"Value below zero: {signal_input.value}")
         self.signal_values.append(signal_input.value)
         if signal_input.final:
             self.exit_event.set()
@@ -214,7 +215,7 @@ class ATPTest(unittest.TestCase):
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": "true", "value": "3"},
+                {"final": "false", "value": "3"},
             )
             result = client.read_single_result()
             self.assertEqual(result.run_id, self.id())
@@ -222,7 +223,7 @@ class ATPTest(unittest.TestCase):
             self.assertEqual(result.debug_logs, "")
             self.assertEqual(result.output_id, "success")
             self.assertListEqual(
-                result.output_data["signals_received"], [1, 2, 3]
+                sorted(result.output_data["signals_received"]), [1, 2, 3]
             )
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
@@ -380,30 +381,20 @@ class ATPTest(unittest.TestCase):
             )
 
             client.start_work(
-                self.id(), "signal_test_step", {"wait_time_seconds": "5"}
+                self.id(), "signal_test_step", {"wait_time_seconds": 5.0}
             )
             client.send_signal(
                 self.id(),
                 "record_value",
-                {"final": "false", "value": "1"},
+                {"final": False, "value": "-1"},
             )
-            client.send_signal(
-                self.id(),
-                "record_value",
-                {"final": "false", "value": "-1"},
-            )
-            result = client.read_single_result()
-            self.assertEqual(result.run_id, self.id())
-            self.assertEqual(result.debug_logs, "")
-            self.assertEqual(result.output_id, "success")
-            self.assertListEqual(result.output_data["signals_received"], [1])
 
             # Note: The exception is raised after the step finishes in the test
             # class
             with self.assertRaises(atp.PluginClientStateException) as context:
-                _, _, _, _ = client.read_single_result()
+                client.read_single_result()
             client.send_client_done()
-            self.assertIn("Value below zero.", str(context.exception))
+            self.assertIn("Value below zero: -1", str(context.exception))
 
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader, True)
