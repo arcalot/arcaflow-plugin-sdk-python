@@ -15,8 +15,9 @@ from arcaflow_plugin_sdk.schema import (
     SchemaBuildException,
 )
 
-# default discriminator field name
-discriminator_default = "_type"
+# default discriminator field name used by the OneOfType
+# when no discriminator field name is declared
+default_discriminator = "_type"
 
 # The string "type_" is the discriminator identifier that will
 # be embedded in StrInline. It must match the OneOfType's
@@ -543,7 +544,7 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             discriminator_value = "O"
             s_type.unserialize(
-                {discriminator_default: discriminator_value,
+                {default_discriminator: discriminator_value,
                  1: "Hello world!"})
 
         # Invalid type for 'data' argument
@@ -552,22 +553,22 @@ class OneOfTest(unittest.TestCase):
         # Mismatching key value
         with self.assertRaises(ConstraintException):
             s_type.unserialize(
-                {discriminator_default: "a", "b": "Hello world!"}
+                {default_discriminator: "a", "b": "Hello world!"}
             )
         # Invalid key value
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({discriminator_default: 1, "a": "Hello world!"})
+            s_type.unserialize({default_discriminator: 1, "a": "Hello world!"})
         # Invalid discriminator
         with self.assertRaises(ConstraintException):
-            s_type.unserialize({discriminator_default: 1, "b": "Hello world!"})
+            s_type.unserialize({default_discriminator: 1, "b": "Hello world!"})
 
         unserialized_data: StrBasic = s_type.unserialize(
-            {discriminator_default: "a", "msg": "Hello world!"}
+            {default_discriminator: "a", "msg": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data, StrBasic)
         self.assertEqual(unserialized_data.msg, "Hello world!")
         unserialized_data2: IntBasic = s_type.unserialize(
-            {discriminator_default: "b", "b": 42}
+            {default_discriminator: "b", "b": 42}
         )
         self.assertIsInstance(unserialized_data2, IntBasic)
         self.assertEqual(unserialized_data2.b, 42)
@@ -580,7 +581,7 @@ class OneOfTest(unittest.TestCase):
             scope=self.scope_basic,
         )
         unserialized_data3: StrBasic = s_type_int.unserialize(
-            {discriminator_default: 1, "msg": "Hello world!"}
+            {default_discriminator: 1, "msg": "Hello world!"}
         )
         self.assertIsInstance(unserialized_data3, StrBasic)
         self.assertEqual(unserialized_data3.msg, "Hello world!")
@@ -1492,7 +1493,7 @@ class JSONSchemaTest(unittest.TestCase):
                                 "b": schema.RefType(StrBasic2.__name__, scope),
                             },
                             scope,
-                            discriminator_default,
+                            default_discriminator,
                         )
                     )
                 },
@@ -1539,12 +1540,12 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
-                            discriminator_default: {
+                            default_discriminator: {
                                 "type": "string",
                                 "const": "a",
                             },
                         },
-                        "required": [discriminator_default, "msg"],
+                        "required": [default_discriminator, "msg"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1552,12 +1553,12 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
-                            discriminator_default: {
+                            default_discriminator: {
                                 "type": "string",
                                 "const": "a",
                             },
                         },
-                        "required": [discriminator_default, "msg"],
+                        "required": [default_discriminator, "msg"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1565,12 +1566,12 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
-                            discriminator_default: {
+                            default_discriminator: {
                                 "type": "string",
                                 "const": "b",
                             },
                         },
-                        "required": [discriminator_default, "msg2"],
+                        "required": [default_discriminator, "msg2"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -1578,12 +1579,12 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
-                            discriminator_default: {
+                            default_discriminator: {
                                 "type": "string",
                                 "const": "b",
                             },
                         },
-                        "required": [discriminator_default, "msg2"],
+                        "required": [default_discriminator, "msg2"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
