@@ -543,8 +543,7 @@ class OneOfTest(unittest.TestCase):
         # Invalid type, string, for discriminator value
         # that requires an integer
         with self.assertRaises(ConstraintException):
-            s_type.unserialize(
-                {default_discriminator: "k", 1: "Hello world!"})
+            s_type.unserialize({default_discriminator: "k", 1: "Hello world!"})
 
         # Invalid type for 'data' argument
         with self.assertRaises(ConstraintException):
@@ -1089,25 +1088,21 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(
             scope.objects[BasicUnion.__name__], schema.ObjectType
         )
-        self.assertIsInstance(
-            scope.objects[Basic.__name__], schema.ObjectType
-        )
+        self.assertIsInstance(scope.objects[Basic.__name__], schema.ObjectType)
         self.assertIsInstance(
             scope.objects[Basic2.__name__], schema.ObjectType
         )
 
         self.assertIsInstance(
-            scope.objects[BasicUnion.__name__]
-            .properties["union_basic"]
-            .type,
+            scope.objects[BasicUnion.__name__].properties["union_basic"].type,
             schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
-            scope.objects[BasicUnion.__name__]
-            .properties["union_basic"]
-            .type
+            scope.objects[BasicUnion.__name__].properties["union_basic"].type
         )
-        self.assertEqual(one_of_type.discriminator_field_name, default_discriminator)
+        self.assertEqual(
+            one_of_type.discriminator_field_name, default_discriminator
+        )
         self.assertIsInstance(
             one_of_type.types[Basic.__name__], schema.RefType
         )
@@ -1122,9 +1117,7 @@ class SchemaBuilderTest(unittest.TestCase):
         class TestData:
             union: typing.Annotated[
                 typing.Union[
-                    typing.Annotated[
-                        InlineInt, schema.discriminator_value(1)
-                    ],
+                    typing.Annotated[InlineInt, schema.discriminator_value(1)],
                     typing.Annotated[
                         InlineInt2, schema.discriminator_value(2)
                     ],
