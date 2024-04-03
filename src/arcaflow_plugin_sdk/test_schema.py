@@ -540,12 +540,11 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({"b": 42})
 
-        # Invalid type for discriminator value
+        # Invalid type, string, for discriminator value
+        # that requires an integer
         with self.assertRaises(ConstraintException):
-            discriminator_value = "O"
             s_type.unserialize(
-                {default_discriminator: discriminator_value,
-                 1: "Hello world!"})
+                {default_discriminator: "k", 1: "Hello world!"})
 
         # Invalid type for 'data' argument
         with self.assertRaises(ConstraintException):
