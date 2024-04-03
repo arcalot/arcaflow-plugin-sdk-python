@@ -26,41 +26,41 @@ discriminator_field_name = "type_"
 
 
 @dataclasses.dataclass
-class StrBasic:
+class Basic:
     msg: str
 
 
 @dataclasses.dataclass
-class StrBasic2:
+class Basic2:
     msg2: str
 
 
 @dataclasses.dataclass
-class IntBasic:
+class Basic3:
     b: int
 
 
 @dataclasses.dataclass
-class StrInline:
+class InlineStr:
     type_: str
     a: str
 
 
 @dataclasses.dataclass
-class StrInlineInt:
+class InlineInt:
     type_: int
     msg: str
 
 
 @dataclasses.dataclass
-class StrInlineInt2:
+class InlineInt2:
     type_: int
     msg2: str
 
 
 @dataclasses.dataclass
-class StrBasicUnion:
-    union_basic: typing.Union[StrBasic, StrBasic2]
+class BasicUnion:
+    union_basic: typing.Union[Basic, Basic2]
 
 
 class Color(enum.Enum):
@@ -497,12 +497,12 @@ class ObjectTest(unittest.TestCase):
 class OneOfTest(unittest.TestCase):
     def setUp(self):
         self.obj_b = schema.ObjectType(
-            IntBasic, {"b": PropertyType(schema.IntType())}
+            Basic3, {"b": PropertyType(schema.IntType())}
         )
         self.scope_basic = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    StrBasic,
+                    Basic,
                     {"msg": PropertyType(schema.StringType())},
                 ),
                 "b": self.obj_b,
@@ -512,7 +512,7 @@ class OneOfTest(unittest.TestCase):
         self.scope_mixed_type = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    StrInline,
+                    InlineStr,
                     {
                         discriminator_field_name: PropertyType(
                             schema.StringType(),
@@ -561,15 +561,15 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({default_discriminator: 1, "b": "Hello world!"})
 
-        unserialized_data: StrBasic = s_type.unserialize(
+        unserialized_data: Basic = s_type.unserialize(
             {default_discriminator: "a", "msg": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data, StrBasic)
+        self.assertIsInstance(unserialized_data, Basic)
         self.assertEqual(unserialized_data.msg, "Hello world!")
-        unserialized_data2: IntBasic = s_type.unserialize(
+        unserialized_data2: Basic3 = s_type.unserialize(
             {default_discriminator: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data2, IntBasic)
+        self.assertIsInstance(unserialized_data2, Basic3)
         self.assertEqual(unserialized_data2.b, 42)
 
         s_type_int = schema.OneOfIntType(
@@ -579,10 +579,10 @@ class OneOfTest(unittest.TestCase):
             },
             scope=self.scope_basic,
         )
-        unserialized_data3: StrBasic = s_type_int.unserialize(
+        unserialized_data3: Basic = s_type_int.unserialize(
             {default_discriminator: 1, "msg": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data3, StrBasic)
+        self.assertIsInstance(unserialized_data3, Basic)
         self.assertEqual(unserialized_data3.msg, "Hello world!")
 
     def test_unserialize_embedded(self):
@@ -595,23 +595,23 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=discriminator_field_name,
         )
 
-        unserialized_data: StrInline = s.unserialize(
+        unserialized_data: InlineStr = s.unserialize(
             {discriminator_field_name: "a", "a": "Hello world!"}
         )
-        self.assertIsInstance(unserialized_data, StrInline)
+        self.assertIsInstance(unserialized_data, InlineStr)
         self.assertEqual(
             getattr(unserialized_data, discriminator_field_name), "a"
         )
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: IntBasic = s.unserialize(
+        unserialized_data2: Basic3 = s.unserialize(
             {discriminator_field_name: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data2, IntBasic)
+        self.assertIsInstance(unserialized_data2, Basic3)
         self.assertEqual(unserialized_data2.b, 42)
 
     def test_validation(self):
-        s = schema.OneOfStringType[StrInline](
+        s = schema.OneOfStringType[InlineStr](
             {
                 "a": schema.RefType("a", self.scope_mixed_type),
                 "b": schema.RefType("b", self.scope_mixed_type),
@@ -622,16 +622,16 @@ class OneOfTest(unittest.TestCase):
 
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.validate(StrInline(None, "Hello world!"))
+            s.validate(InlineStr(None, "Hello world!"))
 
         with self.assertRaises(ConstraintException):
-            s.validate(StrInline("b", "Hello world!"))
+            s.validate(InlineStr("b", "Hello world!"))
 
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.validate(StrBasic("Hello world!"))
+            s.validate(Basic("Hello world!"))
 
-        s.validate(StrInline("a", "Hello world!"))
+        s.validate(InlineStr("a", "Hello world!"))
 
     def test_serialize(self):
         s = schema.OneOfStringType(
@@ -643,26 +643,26 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=discriminator_field_name,
         )
         self.assertEqual(
-            s.serialize(StrInline("a", "Hello world!")),
+            s.serialize(InlineStr("a", "Hello world!")),
             {discriminator_field_name: "a", "a": "Hello world!"},
         )
         self.assertEqual(
-            s.serialize(IntBasic(42)),
+            s.serialize(Basic3(42)),
             {discriminator_field_name: "b", "b": 42},
         )
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
-            s.serialize(StrBasic("Hello world!"))
+            s.serialize(Basic("Hello world!"))
 
         with self.assertRaises(ConstraintException):
-            s.serialize(StrInline("b", "Hello world!"))
+            s.serialize(InlineStr("b", "Hello world!"))
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
         s = schema.OneOfStringType(
             {
                 "a": schema.ObjectType(
-                    StrInline,
+                    InlineStr,
                     {
                         discriminator_field_name: PropertyType(
                             schema.StringType(),
@@ -671,7 +671,7 @@ class OneOfTest(unittest.TestCase):
                     },
                 ),
                 "b": schema.ObjectType(
-                    IntBasic, {"b": PropertyType(schema.IntType())}
+                    Basic3, {"b": PropertyType(schema.IntType())}
                 ),
             },
             scope=scope,
@@ -680,7 +680,7 @@ class OneOfTest(unittest.TestCase):
         unserialized_data = s.unserialize(
             {discriminator_field_name: "b", "b": 42}
         )
-        self.assertIsInstance(unserialized_data, IntBasic)
+        self.assertIsInstance(unserialized_data, Basic3)
 
 
 class SerializationTest(unittest.TestCase):
@@ -1084,38 +1084,38 @@ class SchemaBuilderTest(unittest.TestCase):
         )
 
     def test_union(self):
-        scope = schema.build_object_schema(StrBasicUnion)
-        self.assertEqual(StrBasicUnion.__name__, scope.root)
+        scope = schema.build_object_schema(BasicUnion)
+        self.assertEqual(BasicUnion.__name__, scope.root)
         self.assertIsInstance(
-            scope.objects[StrBasicUnion.__name__], schema.ObjectType
+            scope.objects[BasicUnion.__name__], schema.ObjectType
         )
         self.assertIsInstance(
-            scope.objects[StrBasic.__name__], schema.ObjectType
+            scope.objects[Basic.__name__], schema.ObjectType
         )
         self.assertIsInstance(
-            scope.objects[StrBasic2.__name__], schema.ObjectType
+            scope.objects[Basic2.__name__], schema.ObjectType
         )
 
         self.assertIsInstance(
-            scope.objects[StrBasicUnion.__name__]
+            scope.objects[BasicUnion.__name__]
             .properties["union_basic"]
             .type,
             schema.OneOfStringType,
         )
         one_of_type: schema.OneOfStringType = (
-            scope.objects[StrBasicUnion.__name__]
+            scope.objects[BasicUnion.__name__]
             .properties["union_basic"]
             .type
         )
-        self.assertEqual(one_of_type.discriminator_field_name, "_type")
+        self.assertEqual(one_of_type.discriminator_field_name, default_discriminator)
         self.assertIsInstance(
-            one_of_type.types[StrBasic.__name__], schema.RefType
+            one_of_type.types[Basic.__name__], schema.RefType
         )
-        self.assertEqual(one_of_type.types[StrBasic.__name__].id, "StrBasic")
+        self.assertEqual(one_of_type.types[Basic.__name__].id, "Basic")
         self.assertIsInstance(
-            one_of_type.types[StrBasic2.__name__], schema.RefType
+            one_of_type.types[Basic2.__name__], schema.RefType
         )
-        self.assertEqual(one_of_type.types[StrBasic2.__name__].id, "StrBasic2")
+        self.assertEqual(one_of_type.types[Basic2.__name__].id, "Basic2")
 
     def test_union_custom_discriminator(self):
         @dataclasses.dataclass
@@ -1123,10 +1123,10 @@ class SchemaBuilderTest(unittest.TestCase):
             union: typing.Annotated[
                 typing.Union[
                     typing.Annotated[
-                        StrInlineInt, schema.discriminator_value(1)
+                        InlineInt, schema.discriminator_value(1)
                     ],
                     typing.Annotated[
-                        StrInlineInt2, schema.discriminator_value(2)
+                        InlineInt2, schema.discriminator_value(2)
                     ],
                 ],
                 schema.discriminator(discriminator_field_name),
@@ -1138,10 +1138,10 @@ class SchemaBuilderTest(unittest.TestCase):
             scope.objects[TestData.__name__], schema.ObjectType
         )
         self.assertIsInstance(
-            scope.objects[StrInlineInt.__name__], schema.ObjectType
+            scope.objects[InlineInt.__name__], schema.ObjectType
         )
         self.assertIsInstance(
-            scope.objects[StrInlineInt2.__name__], schema.ObjectType
+            scope.objects[InlineInt2.__name__], schema.ObjectType
         )
 
         self.assertIsInstance(
@@ -1155,9 +1155,9 @@ class SchemaBuilderTest(unittest.TestCase):
             one_of_type.discriminator_field_name, discriminator_field_name
         )
         self.assertIsInstance(one_of_type.types[1], schema.RefType)
-        self.assertEqual(one_of_type.types[1].id, StrInlineInt.__name__)
+        self.assertEqual(one_of_type.types[1].id, InlineInt.__name__)
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
-        self.assertEqual(one_of_type.types[2].id, StrInlineInt2.__name__)
+        self.assertEqual(one_of_type.types[2].id, InlineInt2.__name__)
 
     def test_optional(self):
         @dataclasses.dataclass
@@ -1479,17 +1479,17 @@ class JSONSchemaTest(unittest.TestCase):
     def test_one_of(self):
         scope = schema.ScopeType(
             {},
-            StrBasicUnion.__name__,
+            BasicUnion.__name__,
         )
         scope.objects = {
-            str(StrBasicUnion.__name__): schema.ObjectType(
-                StrBasicUnion,
+            str(BasicUnion.__name__): schema.ObjectType(
+                BasicUnion,
                 {
                     "union_basic": schema.PropertyType(
                         schema.OneOfStringType(
                             {
-                                "a": schema.RefType(StrBasic.__name__, scope),
-                                "b": schema.RefType(StrBasic2.__name__, scope),
+                                "a": schema.RefType(Basic.__name__, scope),
+                                "b": schema.RefType(Basic2.__name__, scope),
                             },
                             scope,
                             default_discriminator,
@@ -1497,11 +1497,11 @@ class JSONSchemaTest(unittest.TestCase):
                     )
                 },
             ),
-            StrBasic.__name__: schema.ObjectType(
-                StrBasic, {"msg": schema.PropertyType(schema.StringType())}
+            Basic.__name__: schema.ObjectType(
+                Basic, {"msg": schema.PropertyType(schema.StringType())}
             ),
-            StrBasic2.__name__: schema.ObjectType(
-                StrBasic2, {"msg2": schema.PropertyType(schema.StringType())}
+            Basic2.__name__: schema.ObjectType(
+                Basic2, {"msg2": schema.PropertyType(schema.StringType())}
             ),
         }
         defs = schema._JSONSchemaDefs()
@@ -1509,21 +1509,21 @@ class JSONSchemaTest(unittest.TestCase):
         self.assertEqual(
             {
                 "$defs": {
-                    StrBasicUnion.__name__: {
+                    BasicUnion.__name__: {
                         "type": "object",
                         "properties": {
                             "union_basic": {
                                 "oneOf": [
                                     {
                                         "$ref": (
-                                            f"#/$defs/{StrBasic.__name__}"
+                                            f"#/$defs/{Basic.__name__}"
                                             "_discriminated_string_"
                                             "a"
                                         )
                                     },
                                     {
                                         "$ref": (
-                                            f"#/$defs/{StrBasic2.__name__}"
+                                            f"#/$defs/{Basic2.__name__}"
                                             "_discriminated_string_"
                                             "b"
                                         )
@@ -1535,7 +1535,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    StrBasic.__name__: {
+                    Basic.__name__: {
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
@@ -1548,7 +1548,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{StrBasic.__name__}_discriminated_string_a": {
+                    f"{Basic.__name__}_discriminated_string_a": {
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
@@ -1561,7 +1561,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    StrBasic2.__name__: {
+                    Basic2.__name__: {
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
@@ -1574,7 +1574,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{StrBasic2.__name__}_discriminated_string_b": {
+                    f"{Basic2.__name__}_discriminated_string_b": {
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
@@ -1593,12 +1593,12 @@ class JSONSchemaTest(unittest.TestCase):
                     "union_basic": {
                         "oneOf": [
                             {
-                                "$ref": f"#/$defs/{StrBasic.__name__}"
+                                "$ref": f"#/$defs/{Basic.__name__}"
                                 f"_discriminated_string_"
                                 f"a"
                             },
                             {
-                                "$ref": f"#/$defs/{StrBasic2.__name__}"
+                                "$ref": f"#/$defs/{Basic2.__name__}"
                                 f"_discriminated_string_"
                                 f"b"
                             },
