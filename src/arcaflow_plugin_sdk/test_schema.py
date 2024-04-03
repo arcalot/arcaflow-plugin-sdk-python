@@ -509,30 +509,11 @@ class ObjectTest(unittest.TestCase):
 
 class OneOfTest(unittest.TestCase):
     def setUp(self):
-        self.obj_b = schema.ObjectType(
+        self.obj_basic = schema.ObjectType(
+            Basic, {"msg": PropertyType(schema.StringType())},
+        )
+        self.obj_basic_b = schema.ObjectType(
             Basic3, {"b": PropertyType(schema.IntType())}
-        )
-        self.scope_basic = schema.ScopeType(
-            {
-                "a": schema.ObjectType(
-                    Basic,
-                    {"msg": PropertyType(schema.StringType())},
-                ),
-                "b": self.obj_b,
-            },
-            "a",
-        )
-        self.scope_mixed_type = schema.ScopeType(
-            {
-                "a": schema.ObjectType(
-                    Basic,
-                    {
-                        "msg": PropertyType(schema.StringType()),
-                    },
-                ),
-                "b": self.obj_b,
-            },
-            "a",
         )
         self.obj_inline_str = schema.ObjectType(
             InlineStr,
@@ -542,6 +523,31 @@ class OneOfTest(unittest.TestCase):
                 ),
                 "a": PropertyType(schema.StringType()),
             }
+        )
+        self.obj_inline_str2 = schema.ObjectType(
+            InlineStr2,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                "code": PropertyType(schema.IntType()),
+            }
+        )
+        self.scope_basic = schema.ScopeType(
+            {
+                "a": self.obj_basic,
+                "b": self.obj_basic_b,
+            },
+            "a",
+        )
+        self.scope_mixed_type = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "b": self.obj_inline_str2,
+                "basic": self.obj_basic,
+                "basic_b": self.obj_basic_b,
+            },
+            "a",
         )
         self.obj_double_inline_str = schema.ObjectType(
             DoubleInlineStr,
@@ -558,19 +564,85 @@ class OneOfTest(unittest.TestCase):
         self.scope_inlined = schema.ScopeType(
             {
                 "a": self.obj_inline_str,
-                "b": schema.ObjectType(
-                    InlineStr2,
-                    {
-                        discriminator_field_name: PropertyType(
-                            schema.StringType(),
-                        ),
-                        "code": PropertyType(schema.StringType()),
-                    }
-                ),
+                "b": self.obj_inline_str2,
                 "a2": self.obj_double_inline_str,
             },
             "a"
         )
+
+    # def test_discriminator_default_clash(self):
+    #     with self.assertRaises(ConstraintException) as cm:
+    #         schema.OneOfStringType(
+    #             {
+    #                 "a": schema.RefType("a", self.scope_inlined),
+    #                 "b": schema.RefType("b", self.scope_inlined),
+    #                 "a2": schema.RefType("a2", self.scope_inlined),
+    #             },
+    #             scope=self.scope_inlined,
+    #             discriminator_inlined=True,
+    #             discriminator_field_name=discriminator_field_name
+    #         ).validate({})
+    #     self.assertIn("Invalid type", str(cm.exception))
+    #     print(str(cm.exception))
+
+    def test_inline_discriminator_missing(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_mixed_type),
+                    "b": schema.RefType("b", self.scope_mixed_type),
+                    "basic": schema.RefType("basic", self.scope_mixed_type),
+                },
+                scope=self.scope_mixed_type,
+                discriminator_inlined=True,
+                discriminator_field_name=discriminator_field_name,
+            ).validate({})
+        self.assertIn("needs discriminator field", str(cm.exception))
+
+    def test_has_discriminator_error(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_mixed_type),
+                    "a2": schema.RefType("a2", self.scope_mixed_type),
+                    "basic": schema.RefType("basic", self.scope_mixed_type),
+                    "basic_b": schema.RefType("basic_b", self.scope_mixed_type)
+                },
+                scope=self.scope_mixed_type,
+                discriminator_field_name=discriminator_field_name,
+                discriminator_inlined=False,
+            ).validate({})
+        self.assertIn(
+            f"has conflicting field \"{discriminator_field_name}\"",
+            str(cm.exception))
+
+    def test_inline_discriminator_type_mismatch(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            # noinspection PyTypeChecker
+            schema.OneOfIntType(
+                {
+                    "a": schema.RefType("a", self.scope_inlined),
+                    "b": schema.RefType("b", self.scope_inlined),
+                },
+                scope=self.scope_inlined,
+                discriminator_field_name=discriminator_field_name,
+                discriminator_inlined=True,
+            ).validate({})
+        self.assertIn(
+            "does not match OneOfSchema discriminator type",
+            str(cm.exception))
+
+    def test_unserialize_error_discriminator_type(self):
+        s_type = schema.OneOfStringType(
+            {
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
+            },
+            scope=self.scope_basic,
+        )
+        with self.assertRaises(ConstraintException):
+            s_type.unserialize({
+                default_discriminator: "1", 1: "Hello world!"})
 
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
@@ -751,7 +823,6 @@ class OneOfTest(unittest.TestCase):
         #     str(cm.exception),
         #     "unsure"
         # )
-
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
