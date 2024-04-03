@@ -524,17 +524,6 @@ class OneOfTest(unittest.TestCase):
             "a",
         )
 
-    def test_unserialize_error_discriminator_type(self):
-        s_type = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", self.scope_basic),
-                "b": schema.RefType("b", self.scope_basic),
-            },
-            scope=self.scope_basic,
-        )
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({discriminator_default: "1", 1: "Hello world!"})
-
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
             {
@@ -550,7 +539,13 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             s_type.unserialize({"b": 42})
 
-        # invalid type for 'data' argument
+        # Invalid type for discriminator value
+        with self.assertRaises(ConstraintException):
+            discriminator_value = "O"
+            s_type.unserialize(
+                {discriminator_default: discriminator_value, 1: "Hello world!"})
+
+        # Invalid type for 'data' argument
         with self.assertRaises(ConstraintException):
             s_type.unserialize([])
         # Mismatching key value
