@@ -730,13 +730,13 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        # weird error happens with discriminator field when we try to
-        # unserialize here
-        # unserialized_data2: DoubleInlineStr = s.unserialize(
-        #     {discriminator_field_name: "a2", "msg": "Hi again"}
-        # )
-        # self.assertIsInstance(unserialized_data2, DoubleInlineStr)
-        # self.assertEqual(unserialized_data2.msg, "Hi again")
+        unserialized_data2: DoubleInlineStr = s.unserialize(
+            {discriminator_field_name: "a2",
+             default_discriminator: "a",
+             "msg": "Hi again"}
+        )
+        self.assertIsInstance(unserialized_data2, DoubleInlineStr)
+        self.assertEqual(unserialized_data2.msg, "Hi again")
 
     def test_validation(self):
         s = schema.OneOfStringType[Basic](
