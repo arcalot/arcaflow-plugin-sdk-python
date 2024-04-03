@@ -59,6 +59,13 @@ class InlineInt2:
 
 
 @dataclasses.dataclass
+class DoubleInlineStr:
+    _type: str
+    type_: str
+    msg: str
+
+
+@dataclasses.dataclass
 class BasicUnion:
     union_basic: typing.Union[Basic, Basic2]
 
@@ -512,17 +519,42 @@ class OneOfTest(unittest.TestCase):
         self.scope_mixed_type = schema.ScopeType(
             {
                 "a": schema.ObjectType(
-                    InlineStr,
+                    Basic,
                     {
-                        discriminator_field_name: PropertyType(
-                            schema.StringType(),
-                        ),
-                        "a": PropertyType(schema.StringType()),
+                        "msg": PropertyType(schema.StringType()),
                     },
                 ),
                 "b": self.obj_b,
             },
             "a",
+        )
+        self.obj_inline_str = schema.ObjectType(
+            InlineStr,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                "a": PropertyType(schema.StringType()),
+            }
+        )
+        self.obj_double_inline_str = schema.ObjectType(
+            DoubleInlineStr,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                default_discriminator: PropertyType(
+                    schema.StringType(),
+                ),
+                "msg": PropertyType(schema.StringType()),
+            }
+        )
+        self.scope_inlined = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "a2": self.obj_double_inline_str,
+            },
+            "a"
         )
 
     def test_unserialize(self):
@@ -630,26 +662,57 @@ class OneOfTest(unittest.TestCase):
     def test_serialize(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_mixed_type),
-                "b": schema.RefType("b", self.scope_mixed_type),
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
             },
-            scope=self.scope_mixed_type,
+            scope=self.scope_basic,
             discriminator_field_name=discriminator_field_name,
         )
         self.assertEqual(
-            s.serialize(InlineStr("a", "Hello world!")),
-            {discriminator_field_name: "a", "a": "Hello world!"},
+            s.serialize(Basic("Hello world!")),
+            {discriminator_field_name: "a", "msg": "Hello world!"},
         )
         self.assertEqual(
             s.serialize(Basic3(42)),
             {discriminator_field_name: "b", "b": 42},
         )
-        with self.assertRaises(ConstraintException):
+        # the InlineStr schema is not within the scope of this OneOf
+        with self.assertRaises(ConstraintException) as cm:
             # noinspection PyTypeChecker
-            s.serialize(Basic("Hello world!"))
+            s.serialize(InlineStr("a", "Hello world!"))
+        self.assertIn(
+            f"Invalid type: '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
 
-        with self.assertRaises(ConstraintException):
+    def test_serialize_inline(self):
+        s = schema.OneOfStringType(
+            {
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
+            },
+            scope=self.scope_inlined,
+            discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=True,
+        )
+        self.assertEqual(
+            s.serialize(InlineStr("a", "Hello world!")),
+            {discriminator_field_name: "a", "a": "Hello world!"})
+        with self.assertRaises(ConstraintException) as cm:
             s.serialize(InlineStr("b", "Hello world!"))
+        self.assertIn(
+            f"Invalid value for '{discriminator_field_name}' "
+            f"on '{InlineStr.__name__}'",
+            str(cm.exception),
+           )
+        # with self.assertRaises(ConstraintException) as cm:
+        #     # noinspection PyTypeChecker
+        #     s.serialize(Basic("Hello world!"))
+        # self.assertIn(
+        #     str(cm.exception),
+        #     "unsure"
+        # )
+
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
@@ -1117,7 +1180,8 @@ class SchemaBuilderTest(unittest.TestCase):
                         InlineInt2, schema.discriminator_value(2)
                     ],
                 ],
-                schema.discriminator(discriminator_field_name, discriminator_inlined=True),
+                schema.discriminator(
+                    discriminator_field_name, discriminator_inlined=True),
             ]
 
         scope = schema.build_object_schema(TestData)
