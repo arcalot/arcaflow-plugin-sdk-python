@@ -543,7 +543,8 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException):
             discriminator_value = "O"
             s_type.unserialize(
-                {discriminator_default: discriminator_value, 1: "Hello world!"})
+                {discriminator_default: discriminator_value,
+                 1: "Hello world!"})
 
         # Invalid type for 'data' argument
         with self.assertRaises(ConstraintException):
