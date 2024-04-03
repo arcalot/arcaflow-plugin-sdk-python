@@ -32,7 +32,7 @@ class StrBasic:
 
 @dataclasses.dataclass
 class StrBasic2:
-    msg2: int
+    msg2: str
 
 
 @dataclasses.dataclass
