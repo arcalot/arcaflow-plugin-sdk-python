@@ -612,9 +612,6 @@ class OneOfTest(unittest.TestCase):
                     "a": schema.RefType("a", self.scope_mixed_type),
                     "a2": schema.RefType("a2", self.scope_mixed_type),
                     "basic": schema.RefType("basic", self.scope_mixed_type),
-                    "basic_b": schema.RefType(
-                        "basic_b", self.scope_mixed_type
-                    ),
                 },
                 scope=self.scope_mixed_type,
                 discriminator_field_name=discriminator_field_name,
@@ -1356,7 +1353,8 @@ class SchemaBuilderTest(unittest.TestCase):
         with self.assertRaises(SchemaBuildException) as cm:
             schema.build_object_schema(TestData)
         self.assertIn(
-            f'"{InlineStr.__name__}" has conflicting field', str(cm.exception)
+            f'"{InlineStr.__name__}" has conflicting field '
+            f'"{discriminator_field_name}"', str(cm.exception)
         )
 
     def test_build_one_of_inline_error(self):
