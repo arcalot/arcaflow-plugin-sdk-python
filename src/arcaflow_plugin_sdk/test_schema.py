@@ -1326,6 +1326,96 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
         self.assertEqual(one_of_type.types[2].id, InlineInt2.__name__)
 
+    def test_build_one_of_error(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        Basic,
+                        schema.discriminator_value("Basic")
+                    ],
+                    typing.Annotated[
+                        Basic2,
+                        schema.discriminator_value("Basic2")
+                    ],
+                    typing.Annotated[
+                        InlineStr,
+                        schema.discriminator_value("InlineStr")
+                    ]
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=False,
+                )
+            ]
+
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"\"{InlineStr.__name__}\" has conflicting field",
+            str(cm.exception))
+
+    def test_build_one_of_inline_error(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        InlineStr,
+                        schema.discriminator_value("InlineStr")
+                    ],
+                    typing.Annotated[
+                        InlineStr2,
+                        schema.discriminator_value("InlineStr2")
+                    ],
+                    typing.Annotated[
+                        Basic,
+                        schema.discriminator_value("Basic")
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=True,
+                )
+            ]
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"\"{Basic.__name__}\" needs discriminator field",
+            str(cm.exception))
+
+    def test_build_one_of_inline_type_mismatch(self):
+        discriminator_wrong_type: int = 1
+
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        InlineStr,
+                        schema.discriminator_value("InlineStr")
+                    ],
+                    typing.Annotated[
+                        InlineStr2,
+                        schema.discriminator_value("InlineStr2")
+                    ],
+                    typing.Annotated[
+                        InlineInt,
+                        schema.discriminator_value(discriminator_wrong_type)
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=True,
+                )
+            ]
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f"Invalid discriminator value type: {type(discriminator_wrong_type)}",
+            str(cm.exception))
+
     def test_optional(self):
         @dataclasses.dataclass
         class TestData:
