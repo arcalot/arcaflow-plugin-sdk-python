@@ -76,6 +76,11 @@ class BasicUnion:
     union_basic: typing.Union[Basic, Basic2]
 
 
+@dataclasses.dataclass
+class InlineUnion:
+    union: typing.Union[InlineStr, InlineStr2]
+
+
 class Color(enum.Enum):
     GREEN = "green"
     RED = "red"
@@ -1644,7 +1649,7 @@ class JSONSchemaTest(unittest.TestCase):
             BasicUnion.__name__,
         )
         scope.objects = {
-            str(BasicUnion.__name__): schema.ObjectType(
+            BasicUnion.__name__: schema.ObjectType(
                 BasicUnion,
                 {
                     "union_basic": schema.PropertyType(
@@ -1752,6 +1757,140 @@ class JSONSchemaTest(unittest.TestCase):
                     }
                 },
                 "required": ["union_basic"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            },
+            json_schema,
+        )
+
+    def test_one_of_inline(self):
+        scope = schema.ScopeType(
+            {},
+            InlineUnion.__name__,
+        )
+        scope.objects = {
+            InlineUnion.__name__: schema.ObjectType(
+                InlineUnion,
+                {
+                    "union": schema.PropertyType(
+                        schema.OneOfStringType(
+                            {
+                                "a": schema.RefType(InlineStr.__name__, scope),
+                                "b": schema.RefType(InlineStr2.__name__, scope),
+                            },
+                            scope,
+                            discriminator_inlined=True,
+                            discriminator_field_name=discriminator_field_name,
+                        )
+                    )
+                },
+            ),
+            InlineStr.__name__: schema.ObjectType(
+                InlineStr, {
+                    "a": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name:
+                        schema.PropertyType(schema.StringType()),
+                }
+            ),
+            InlineStr2.__name__: schema.ObjectType(
+                InlineStr2, {
+                    "code": schema.PropertyType(schema.IntType()),
+                    discriminator_field_name:
+                        schema.PropertyType(schema.StringType()),
+                }
+            ),
+        }
+
+        defs = schema._JSONSchemaDefs()
+        json_schema = scope._to_jsonschema_fragment(scope, defs)
+        self.assertEqual(
+            {
+                "$defs": {
+                    InlineUnion.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "union": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineStr.__name__}"
+                                            "_discriminated_string_"
+                                            "a"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineStr2.__name__}"
+                                            "_discriminated_string_"
+                                            "b"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["union"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineStr.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            discriminator_field_name: {"type": "string", "const": "a"},
+                        },
+                        "required": [discriminator_field_name, "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineStr.__name__}_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            discriminator_field_name: {"type": "string", "const": "a"},
+                        },
+                        "required": [discriminator_field_name, "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineStr2.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "code": {"type": "integer"},
+                            discriminator_field_name: {"type": "string", "const": "b"},
+                        },
+                        "required": [discriminator_field_name, "code"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineStr2.__name__}_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "code": {"type": "integer"},
+                            discriminator_field_name: {"type": "string", "const": "b"},
+                        },
+                        "required": [discriminator_field_name, "code"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "union": {
+                        "oneOf": [
+                            {
+                                "$ref": f"#/$defs/{InlineStr.__name__}"
+                                f"_discriminated_string_"
+                                f"a"
+                            },
+                            {
+                                "$ref": f"#/$defs/{InlineStr2.__name__}"
+                                f"_discriminated_string_"
+                                f"b"
+                            },
+                        ]
+                    }
+                },
+                "required": ["union"],
                 "additionalProperties": False,
                 "dependentRequired": {},
             },
