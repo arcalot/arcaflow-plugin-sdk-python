@@ -6,6 +6,7 @@ import typing
 import unittest
 from dataclasses import dataclass
 from re import Pattern
+from pprint import pprint
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -1415,6 +1416,30 @@ class SchemaBuilderTest(unittest.TestCase):
             f"{type(discriminator_wrong_type)}",
             str(cm.exception),
         )
+
+    def test_build_one_of_double_inline(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        InlineStr, schema.discriminator_value("InlineStr")
+                    ],
+                    typing.Annotated[
+                        InlineStr2, schema.discriminator_value("InlineStr2")
+                    ],
+                    typing.Annotated[
+                        DoubleInlineStr,
+                        schema.discriminator_value("DoubleInlineStr"),
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=True,
+                ),
+            ]
+        s = schema.build_object_schema(TestData)
+        pprint(s.to_jsonschema())
 
     def test_optional(self):
         @dataclasses.dataclass
