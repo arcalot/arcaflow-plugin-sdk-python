@@ -63,6 +63,7 @@ This region holds two variables, ``SCOPE_SCHEMA`` and ``SCHEMA_SCHEMA``. You can
 schemas themselves. For example, you can create a client that calls Arcaflow plugins and use these classes to
 unserialize schemas that the plugins send.
 """  # noqa: E501
+
 import collections
 import dataclasses
 import enum
@@ -532,8 +533,9 @@ discriminatorFunc = typing.Callable[
 ]
 
 
-def discriminator(discriminator_field_name: str,
-                  discriminator_inlined: bool = False) -> discriminatorFunc:
+def discriminator(
+    discriminator_field_name: str, discriminator_inlined: bool = False
+) -> discriminatorFunc:
     """This annotation is used to manually set the discriminator field on a
     Union type. :param discriminator_field_name: the name of the discriminator
     field. :return: the callable decorator.
@@ -629,7 +631,7 @@ _discriminator = discriminator
 
 
 def discriminator_value(
-    discriminator_value: typing.Union[str, int, enum.Enum]
+    discriminator_value: typing.Union[str, int, enum.Enum],
 ):
     """This annotation adds a custom value for an instance of a discriminator.
     The value must match the discriminator field This annotation works only
@@ -2545,9 +2547,9 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     property_id
                 ] = property.required_if
             # noinspection PyProtectedMember
-            defs.defs[self.id]["properties"][
-                property_id
-            ] = property._to_jsonschema_fragment(scope, defs)
+            defs.defs[self.id]["properties"][property_id] = (
+                property._to_jsonschema_fragment(scope, defs)
+            )
 
         return {"$ref": "#/$defs/" + self.id}
 
@@ -2569,9 +2571,9 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             if property.required:
                 defs.components[self.id]["required"].append(property_id)
             # noinspection PyProtectedMember
-            defs.components[self.id]["properties"][
-                property_id
-            ] = property._to_openapi_fragment(scope, defs)
+            defs.components[self.id]["properties"][property_id] = (
+                property._to_openapi_fragment(scope, defs)
+            )
 
         return {"$ref": "#/components/schemas/" + self.id}
 
@@ -2683,7 +2685,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                     "const": k,
                 }
-                discriminated_object["required"].remove(self.discriminator_field_name)
+                discriminated_object["required"].remove(
+                    self.discriminator_field_name
+                )
             # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
@@ -2716,7 +2720,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 ] = {
                     "type": "string",
                 }
-                discriminated_object["required"].remove(self.discriminator_field_name)
+                discriminated_object["required"].remove(
+                    self.discriminator_field_name
+                )
             # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
@@ -2828,7 +2834,9 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     "type": "string",
                     "const": str(k),
                 }
-                discriminated_object["required"].remove(self.discriminator_field_name)
+                discriminated_object["required"].remove(
+                    self.discriminator_field_name
+                )
             # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
@@ -2861,7 +2869,9 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 ] = {
                     "type": "string",
                 }
-                discriminated_object["required"].remove(self.discriminator_field_name)
+                discriminated_object["required"].remove(
+                    self.discriminator_field_name
+                )
             # discriminator must have the first position
             discriminated_object["required"].insert(
                 0, self.discriminator_field_name
@@ -5297,7 +5307,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         t: Type[DiscriminatorT],
         scope: typing.ForwardRef("ScopeType"),
         discriminator_field_name: str,
-        discriminator_inlined: bool
+        discriminator_inlined: bool,
     ):
         if not isinstance(scope, ScopeType):
             raise BadArgumentException(
@@ -5336,9 +5346,9 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 and self.discriminator_field_name in set_member.properties
             ):
                 raise BadArgumentException(
-                    f"object id \"{set_member.id}\" has conflicting field "
-                    f"\"{self.discriminator_field_name}\"; either remove that "
-                    f"field or set inline to true for "
+                    f'object id "{set_member.id}" has conflicting field '
+                    f'"{self.discriminator_field_name}"; either remove that '
+                    "field or set inline to true for "
                     f"{type(self).__name__}[{type(set_member).__name__}]"
                 )
             if (
@@ -5347,9 +5357,9 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 and self.discriminator_field_name not in set_member.properties
             ):
                 raise BadArgumentException(
-                    f"object id \"{set_member.id}\" needs discriminator field "
-                    f"\"{self.discriminator_field_name}\"; either add that "
-                    f"field or set inline to false for "
+                    f'object id "{set_member.id}" needs discriminator field '
+                    f'"{self.discriminator_field_name}"; either add that '
+                    "field or set inline to false for "
                     f"{type(self).__name__}[{type(set_member).__name__}]"
                 )
             elif (
@@ -5359,11 +5369,11 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 and not isinstance(discriminator_value, self._t)
             ):
                 raise BadArgumentException(
-                    f"the type of object id {set_member.id}'s discriminator field "
-                    f"\"{self.discriminator_field_name}\" does not match "
-                    f"OneOfSchema discriminator type; expected "
-                    f"{self._t.__name__} got "
-                    f"{type(self.discriminator_field_name).__name__}"
+                    f"the type of object id {set_member.id}'s discriminator"
+                    f' field "{self.discriminator_field_name}" does not match'
+                    " OneOfSchema discriminator type; expected"
+                    f" {self._t.__name__} got"
+                    f" {type(self.discriminator_field_name).__name__}"
                 )
 
     def unserialize(
@@ -5464,9 +5474,9 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                             ),
                         )
                 else:
-                    serialized_data[
-                        self.discriminator_field_name
-                    ] = discriminator
+                    serialized_data[self.discriminator_field_name] = (
+                        discriminator
+                    )
                 return serialized_data
         raise ConstraintException(
             tuple(path),
@@ -5490,14 +5500,15 @@ class OneOfStringType(
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(
-            self, types, discriminator_inlined, discriminator_field_name)
+            self, types, discriminator_inlined, discriminator_field_name
+        )
         _OneOfType.__init__(
             self,
             types,
             t=str,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
-            discriminator_inlined=discriminator_inlined
+            discriminator_inlined=discriminator_inlined,
         )
 
 
@@ -5528,14 +5539,15 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(
-            self, types, discriminator_inlined, discriminator_field_name)
+            self, types, discriminator_inlined, discriminator_field_name
+        )
         _OneOfType.__init__(
             self,
             types,
             t=int,
             scope=scope,
             discriminator_field_name=discriminator_field_name,
-            discriminator_inlined=discriminator_inlined
+            discriminator_inlined=discriminator_inlined,
         )
 
 
@@ -6928,16 +6940,11 @@ def build_object_schema(t, _skip_validation: bool = False) -> ScopeType:
     return scope
 
 
-
-
 # endregion
 
 # region Schema schemas
-from pprint import pprint
 
 SCOPE_SCHEMA = build_object_schema(ScopeSchema, True)
-# pprint(SCOPE_SCHEMA)
-# pprint(SCOPE_SCHEMA.to_jsonschema())
 """This variable holds a constructed, serializable/unserializable schema for a
 scope.
 
