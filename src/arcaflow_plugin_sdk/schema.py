@@ -5356,6 +5356,11 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 and hasattr(set_member, "properties")
                 and self.discriminator_field_name not in set_member.properties
             ):
+                # source
+                # more source
+                a = 1 + 1
+                b = a + 2
+                c = 3
                 raise BadArgumentException(
                     f'object id "{set_member.id}" needs discriminator field '
                     f'"{self.discriminator_field_name}"; either add that '
