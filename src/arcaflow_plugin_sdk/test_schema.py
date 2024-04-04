@@ -6,7 +6,6 @@ import typing
 import unittest
 from dataclasses import dataclass
 from re import Pattern
-from pprint import pprint
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -716,9 +715,11 @@ class OneOfTest(unittest.TestCase):
         self.assertEqual(unserialized_data.a, "Hello world!")
 
         unserialized_data2: DoubleInlineStr = s.unserialize(
-            {discriminator_field_name: "a2",
-             default_discriminator: "a",
-             "msg": "Hi again"}
+            {
+                discriminator_field_name: "a2",
+                default_discriminator: "a",
+                "msg": "Hi again",
+            }
         )
         self.assertIsInstance(unserialized_data2, DoubleInlineStr)
         self.assertEqual(unserialized_data2.msg, "Hi again")
@@ -1340,7 +1341,8 @@ class SchemaBuilderTest(unittest.TestCase):
             schema.build_object_schema(TestData)
         self.assertIn(
             f'"{InlineStr.__name__}" has conflicting field '
-            f'"{discriminator_field_name}"', str(cm.exception)
+            f'"{discriminator_field_name}"',
+            str(cm.exception),
         )
 
     def test_one_of_inline_discriminator_missing_error(self):
@@ -1399,7 +1401,7 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertIn(
             "Invalid discriminator value type: "
             f"{type(discriminator_wrong_type)}",
-            str(cm.exception)
+            str(cm.exception),
         )
 
     def test_optional(self):
@@ -1820,14 +1822,18 @@ class JSONSchemaTest(unittest.TestCase):
                     "union_basic": {
                         "oneOf": [
                             {
-                                "$ref": f"#/$defs/{Basic.__name__}"
-                                f"_discriminated_string_"
-                                f"a"
+                                "$ref": (
+                                    f"#/$defs/{Basic.__name__}"
+                                    "_discriminated_string_"
+                                    "a"
+                                )
                             },
                             {
-                                "$ref": f"#/$defs/{Basic2.__name__}"
-                                f"_discriminated_string_"
-                                f"b"
+                                "$ref": (
+                                    f"#/$defs/{Basic2.__name__}"
+                                    "_discriminated_string_"
+                                    "b"
+                                )
                             },
                         ]
                     }
@@ -1856,7 +1862,8 @@ class JSONSchemaTest(unittest.TestCase):
                                     InlineStr2.__name__, scope
                                 ),
                                 "a2": schema.RefType(
-                                    DoubleInlineStr.__name__, scope)
+                                    DoubleInlineStr.__name__, scope
+                                ),
                             },
                             scope,
                             discriminator_inlined=True,
@@ -1886,11 +1893,15 @@ class JSONSchemaTest(unittest.TestCase):
             DoubleInlineStr.__name__: schema.ObjectType(
                 DoubleInlineStr,
                 {
-                    default_discriminator: schema.PropertyType(schema.StringType()),
-                    discriminator_field_name: schema.PropertyType(schema.StringType()),
+                    default_discriminator: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
                     "msg": schema.PropertyType(schema.StringType()),
                 },
-            )
+            ),
         }
 
         defs = schema._JSONSchemaDefs()
@@ -1919,7 +1930,8 @@ class JSONSchemaTest(unittest.TestCase):
                                     },
                                     {
                                         "$ref": (
-                                            f"#/$defs/{DoubleInlineStr.__name__}"
+                                            "#/$defs/"
+                                            f"{DoubleInlineStr.__name__}"
                                             "_discriminated_string_"
                                             "a2"
                                         )
@@ -1991,11 +2003,13 @@ class JSONSchemaTest(unittest.TestCase):
                                 "type": "string",
                                 "const": "a2",
                             },
-                            default_discriminator: {
-                                "type": "string"
-                            }
+                            default_discriminator: {"type": "string"},
                         },
-                        "required": [discriminator_field_name, default_discriminator, "msg"],
+                        "required": [
+                            discriminator_field_name,
+                            default_discriminator,
+                            "msg",
+                        ],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -2007,11 +2021,13 @@ class JSONSchemaTest(unittest.TestCase):
                                 "type": "string",
                                 "const": "a2",
                             },
-                            default_discriminator: {
-                                "type": "string"
-                            }
+                            default_discriminator: {"type": "string"},
                         },
-                        "required": [discriminator_field_name, default_discriminator, "msg"],
+                        "required": [
+                            discriminator_field_name,
+                            default_discriminator,
+                            "msg",
+                        ],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -2021,20 +2037,26 @@ class JSONSchemaTest(unittest.TestCase):
                     "union": {
                         "oneOf": [
                             {
-                                "$ref": f"#/$defs/{InlineStr.__name__}"
-                                "_discriminated_string_"
-                                "a"
+                                "$ref": (
+                                    f"#/$defs/{InlineStr.__name__}"
+                                    "_discriminated_string_"
+                                    "a"
+                                )
                             },
                             {
-                                "$ref": f"#/$defs/{InlineStr2.__name__}"
-                                "_discriminated_string_"
-                                "b"
+                                "$ref": (
+                                    f"#/$defs/{InlineStr2.__name__}"
+                                    "_discriminated_string_"
+                                    "b"
+                                )
                             },
                             {
-                                "$ref": f"#/$defs/{DoubleInlineStr.__name__}"
-                                "_discriminated_string_"
-                                "a2"
-                            }
+                                "$ref": (
+                                    f"#/$defs/{DoubleInlineStr.__name__}"
+                                    "_discriminated_string_"
+                                    "a2"
+                                )
+                            },
                         ]
                     }
                 },
