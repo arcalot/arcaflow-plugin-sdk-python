@@ -2669,7 +2669,11 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-    def _insert_discriminator(self, discriminated_object: typing.Dict[str, typing.Any], discriminator_value: str) -> typing.Dict[str, typing.Any]:
+    def _insert_discriminator(
+        self,
+        discriminated_object: typing.Dict[str, typing.Any],
+        discriminator_value: str,
+    ) -> typing.Dict[str, typing.Any]:
         if self.discriminator_inlined:
             discriminated_object["properties"][
                 self.discriminator_field_name
@@ -2694,7 +2698,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = self._insert_discriminator(defs.defs[v.id], k)
+            discriminated_object = self._insert_discriminator(
+                defs.defs[v.id], k
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2717,7 +2723,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             name = v.id + "_discriminated_string_" + _id_typeize(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
-            discriminated_object = self._insert_discriminator(defs.defs[v.id], k)
+            discriminated_object = self._insert_discriminator(
+                defs.defs[v.id], k
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2809,7 +2817,11 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-    def _insert_discriminator(self, discriminated_object: typing.Dict[str, typing.Any], discriminator_value: str) -> typing.Dict[str, typing.Any]:
+    def _insert_discriminator(
+        self,
+        discriminated_object: typing.Dict[str, typing.Any],
+        discriminator_value: str,
+    ) -> typing.Dict[str, typing.Any]:
         if self.discriminator_inlined:
             discriminated_object["properties"][
                 self.discriminator_field_name
@@ -2834,7 +2846,9 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = self._insert_discriminator(defs.defs[v.id], str(k))
+            discriminated_object = self._insert_discriminator(
+                defs.defs[v.id], str(k)
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2856,7 +2870,9 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             name = v.id + "_discriminated_int_" + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
 
-            discriminated_object = self._insert_discriminator(defs.defs[v.id], str(k))
+            discriminated_object = self._insert_discriminator(
+                defs.defs[v.id], str(k)
+            )
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
