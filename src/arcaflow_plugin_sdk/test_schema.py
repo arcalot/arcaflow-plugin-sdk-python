@@ -624,17 +624,6 @@ class OneOfTest(unittest.TestCase):
             "does not match OneOfSchema discriminator type", str(cm.exception)
         )
 
-    def test_unserialize_error_discriminator_type(self):
-        s_type = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", self.scope_basic),
-                "b": schema.RefType("b", self.scope_basic),
-            },
-            scope=self.scope_basic,
-        )
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: "1", 1: "Hello world!"})
-
     def test_unserialize(self):
         s_type = schema.OneOfStringType(
             {
@@ -645,30 +634,53 @@ class OneOfTest(unittest.TestCase):
         )
 
         # Incomplete values to unserialize
-        with self.assertRaises(ConstraintException):
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"a": "Hello world!"})
-        with self.assertRaises(ConstraintException):
+        self.assertIn(
+            f"'{s_type.discriminator_field_name}': Required discriminator field not found",
+            str(cm.exception)
+        )
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"b": 42})
+        self.assertIn(
+            f"'{s_type.discriminator_field_name}': Required discriminator field not found",
+            str(cm.exception)
+        )
 
-        # Invalid type, string, for discriminator value
-        # that requires an integer
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: "k", 1: "Hello world!"})
+        # Key not in this OneOf union
+        absent_key = "k"
+        with self.assertRaises(ConstraintException) as cm:
+            s_type.unserialize({default_discriminator: absent_key, 1: "Hello world!"})
+        self.assertIn(
+            f"Invalid value for field: '{absent_key}'",
+            str(cm.exception)
+        )
 
         # Invalid type for 'data' argument
-        with self.assertRaises(ConstraintException):
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize([])
-        # Mismatching key value
-        with self.assertRaises(ConstraintException):
+        self.assertIn("Must be a dict", str(cm.exception))
+
+        # Invalid parameter for the selected member type
+        invalid_member_param = "b"
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize(
                 {default_discriminator: "a", "b": "Hello world!"}
             )
-        # Invalid key value
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: 1, "a": "Hello world!"})
-        # Invalid discriminator
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: 1, "b": "Hello world!"})
+        self.assertIn(
+            f"Invalid parameter '{invalid_member_param}'",
+            str(cm.exception)
+        )
+
+        # Invalid type for discriminator value
+        discriminator_wrong_type = 1
+        with self.assertRaises(ConstraintException) as cm:
+            s_type.unserialize({default_discriminator: discriminator_wrong_type, "a": "Hello world!"})
+        self.assertIn(
+            f"{type(s_type.discriminator_field_name).__name__} required, "
+            f"{type(discriminator_wrong_type).__name__} found",
+            str(cm.exception)
+        )
 
         unserialized_data: Basic = s_type.unserialize(
             {default_discriminator: "a", "msg": "Hello world!"}
