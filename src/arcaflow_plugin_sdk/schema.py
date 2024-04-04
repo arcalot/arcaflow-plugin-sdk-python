@@ -2669,6 +2669,23 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
+    def _insert_discriminator(self, discriminated_object: typing.Dict[str, typing.Any], discriminator_value: str) -> typing.Dict[str, typing.Any]:
+        if self.discriminator_inlined:
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
+                "type": "string",
+                "const": discriminator_value,
+            }
+            discriminated_object["required"].remove(
+                self.discriminator_field_name
+            )
+        # discriminator must have the first position
+        discriminated_object["required"].insert(
+            0, self.discriminator_field_name
+        )
+        return discriminated_object
+
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
@@ -2677,26 +2694,13 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = defs.defs[v.id]
-            if self.discriminator_inlined:
-                discriminated_object["properties"][
-                    self.discriminator_field_name
-                ] = {
-                    "type": "string",
-                    "const": k,
-                }
-                discriminated_object["required"].remove(
-                    self.discriminator_field_name
-                )
-            # discriminator must have the first position
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            discriminated_object = self._insert_discriminator(defs.defs[v.id], k)
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
                 if v.display.description is not None:
                     discriminated_object["description"] = v.display.description
+
             name = v.id + "_discriminated_string_" + _id_typeize(k)
             defs.defs[name] = discriminated_object
             one_of.append({"$ref": "#/$defs/" + name})
@@ -2710,23 +2714,10 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         for k, v in self.types.items():
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_openapi_fragment(scope, defs)
+
             name = v.id + "_discriminated_string_" + _id_typeize(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
-
-            discriminated_object = defs.components[v.id]
-            if self.discriminator_inlined:
-                discriminated_object["properties"][
-                    self.discriminator_field_name
-                ] = {
-                    "type": "string",
-                }
-                discriminated_object["required"].remove(
-                    self.discriminator_field_name
-                )
-            # discriminator must have the first position
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            discriminated_object = self._insert_discriminator(defs.defs[v.id], k)
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2818,6 +2809,23 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
+    def _insert_discriminator(self, discriminated_object: typing.Dict[str, typing.Any], discriminator_value: str) -> typing.Dict[str, typing.Any]:
+        if self.discriminator_inlined:
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
+                "type": "string",
+                "const": discriminator_value,
+            }
+            discriminated_object["required"].remove(
+                self.discriminator_field_name
+            )
+        # discriminator must have the first position
+        discriminated_object["required"].insert(
+            0, self.discriminator_field_name
+        )
+        return discriminated_object
+
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
@@ -2826,21 +2834,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = defs.defs[v.id]
-            if self.discriminator_inlined:
-                discriminated_object["properties"][
-                    self.discriminator_field_name
-                ] = {
-                    "type": "string",
-                    "const": str(k),
-                }
-                discriminated_object["required"].remove(
-                    self.discriminator_field_name
-                )
-            # discriminator must have the first position
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            discriminated_object = self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2862,20 +2856,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             name = v.id + "_discriminated_int_" + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
 
-            discriminated_object = defs.components[v.id]
-            if self.discriminator_inlined:
-                discriminated_object["properties"][
-                    self.discriminator_field_name
-                ] = {
-                    "type": "string",
-                }
-                discriminated_object["required"].remove(
-                    self.discriminator_field_name
-                )
-            # discriminator must have the first position
-            discriminated_object["required"].insert(
-                0, self.discriminator_field_name
-            )
+            discriminated_object = self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
