@@ -6,7 +6,7 @@ import typing
 import unittest
 from dataclasses import dataclass
 from re import Pattern
-from pprint import pprint
+
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -637,23 +637,26 @@ class OneOfTest(unittest.TestCase):
         with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"a": "Hello world!"})
         self.assertIn(
-            f"'{s_type.discriminator_field_name}': Required discriminator field not found",
-            str(cm.exception)
+            f"'{s_type.discriminator_field_name}': Required discriminator"
+            " field not found",
+            str(cm.exception),
         )
         with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"b": 42})
         self.assertIn(
-            f"'{s_type.discriminator_field_name}': Required discriminator field not found",
-            str(cm.exception)
+            f"'{s_type.discriminator_field_name}': Required discriminator"
+            " field not found",
+            str(cm.exception),
         )
 
         # Key not in this OneOf union
         absent_key = "k"
         with self.assertRaises(ConstraintException) as cm:
-            s_type.unserialize({default_discriminator: absent_key, 1: "Hello world!"})
+            s_type.unserialize(
+                {default_discriminator: absent_key, 1: "Hello world!"}
+            )
         self.assertIn(
-            f"Invalid value for field: '{absent_key}'",
-            str(cm.exception)
+            f"Invalid value for field: '{absent_key}'", str(cm.exception)
         )
 
         # Invalid type for 'data' argument
@@ -668,18 +671,22 @@ class OneOfTest(unittest.TestCase):
                 {default_discriminator: "a", "b": "Hello world!"}
             )
         self.assertIn(
-            f"Invalid parameter '{invalid_member_param}'",
-            str(cm.exception)
+            f"Invalid parameter '{invalid_member_param}'", str(cm.exception)
         )
 
         # Invalid type for discriminator value
         discriminator_wrong_type = 1
         with self.assertRaises(ConstraintException) as cm:
-            s_type.unserialize({default_discriminator: discriminator_wrong_type, "a": "Hello world!"})
+            s_type.unserialize(
+                {
+                    default_discriminator: discriminator_wrong_type,
+                    "a": "Hello world!",
+                }
+            )
         self.assertIn(
             f"{type(s_type.discriminator_field_name).__name__} required, "
             f"{type(discriminator_wrong_type).__name__} found",
-            str(cm.exception)
+            str(cm.exception),
         )
 
         unserialized_data: Basic = s_type.unserialize(
