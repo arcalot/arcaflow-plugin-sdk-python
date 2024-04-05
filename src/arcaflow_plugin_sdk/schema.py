@@ -2674,13 +2674,30 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object: typing.Dict[str, typing.Any],
         discriminator_value: str,
     ) -> typing.Dict[str, typing.Any]:
+        """This function adds a member type's discriminator field as a
+        property with a constant value equal to its discriminated value.
+        The discriminator field is moved to the zeroth index of the list
+        of required fields in a data packet.
+
+        :param discriminated_object: A dictionary in the form of a json fragment
+            of an object's schema in the scope of this OneOf's union.
+        :param discriminator_value: The value that represents the given object in
+            its OneOf's union.
+        :returns: A dictionary in the form of a json fragment of an object's schema
+            in the scope of this OneOf's union updated to reflect its membership
+            in this OneOf's union.
+        """
         if self.discriminator_inlined:
+            # update the object's schema to show the only valid value
+            # for this object's discriminator
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
                 "type": "string",
                 "const": discriminator_value,
             }
+            # discriminator field is already present in the required
+            # list when the discriminator is inlined
             discriminated_object["required"].remove(
                 self.discriminator_field_name
             )
@@ -2822,13 +2839,30 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object: typing.Dict[str, typing.Any],
         discriminator_value: str,
     ) -> typing.Dict[str, typing.Any]:
+        """This function adds a member type's discriminator field as a
+        property with a constant value equal to its discriminated value.
+        The discriminator field is moved to the zeroth index of the list
+        of required fields in a data packet.
+
+        :param discriminated_object: A dictionary in the form of a json fragment
+            of an object's schema in the scope of this OneOf's union.
+        :param discriminator_value: The value that represents the given object in
+            its OneOf's union.
+        :returns: A dictionary in the form of a json fragment of an object's schema
+            in the scope of this OneOf's union updated to reflect its membership
+            in this OneOf's union.
+        """
         if self.discriminator_inlined:
+            # update the object's schema to show the only valid value
+            # for this object's discriminator
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
                 "type": "string",
                 "const": discriminator_value,
             }
+            # discriminator field is already present in the required
+            # list when the discriminator is inlined
             discriminated_object["required"].remove(
                 self.discriminator_field_name
             )
