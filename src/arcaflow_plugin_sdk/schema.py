@@ -2538,7 +2538,6 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "additionalProperties": False,
             "dependentRequired": {},
         }
-
         for property_id, property in self.properties.items():
             if property.required:
                 defs.defs[self.id]["required"].append(property_id)
@@ -2576,6 +2575,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             )
 
         return {"$ref": "#/components/schemas/" + self.id}
+
+
 
 
 @dataclass
