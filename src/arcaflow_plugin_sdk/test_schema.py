@@ -7,7 +7,6 @@ import unittest
 from dataclasses import dataclass
 from re import Pattern
 
-
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
     BadArgumentException,
