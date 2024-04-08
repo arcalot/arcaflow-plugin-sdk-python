@@ -2577,8 +2577,6 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
-
-
 @dataclass
 class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """This class holds the definition of variable types with a string
@@ -2632,10 +2630,10 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-    
-    You can also inline, or embed, your discriminator field into a member type's schema. Using `type_` as the 
+
+    You can also inline, or embed, your discriminator field into a member type's schema. Using `type_` as the
     discriminator field, the previous example with inline discriminators would look like this:
-    
+
         >>> from arcaflow_plugin_sdk import schema
     >>> a = schema.ObjectSchema(
     ...     "A",
@@ -2645,7 +2643,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         ),
     ...         "type_": schema.PropertySchema(
     ...             type=schema.StringSchema(),
-    ...        )    
+    ...        )
     ...     }
     ... )
     >>> b = schema.ObjectSchema(
@@ -2715,8 +2713,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         str,
         _name("Discriminator field name"),
         _description(
-            "Name of the field whose value is used to discriminate between possible subobject types. If this field "
-            "is present in any of the subobjects it must have a type of string."
+            "Name of the field whose value is used to discriminate between"
+            " possible subobject types. If this field is present in any of the"
+            " subobjects it must have a type of string."
         ),
     ] = "_type"
 
@@ -2866,10 +2865,10 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-    
-    You can also inline, or embed, your discriminator field into a member type's schema. Using `type_` as the 
+
+    You can also inline, or embed, your discriminator field into a member type's schema. Using `type_` as the
     discriminator field, the previous example with inline discriminators would look like this:
-    
+
     >>> from arcaflow_plugin_sdk import schema
     >>> a = schema.ObjectSchema(
     ...     "A",
@@ -2890,7 +2889,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         ),
     ...         "type_": schema.PropertySchema(
     ...             type=schema.IntSchema(),
-    ...         ),    
+    ...         ),
     ...     }
     ... )
     >>> one_of = schema.OneOfIntSchema(
@@ -2917,7 +2916,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-    
+
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
