@@ -2697,7 +2697,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         )
     ...     },
     ...     discriminator_inlined=False,
-    ... )"""  # noqa: E501
+    ... )
+    """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_inlined: typing.Annotated[
@@ -2914,7 +2915,8 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...         "C_ref": c,
     ...     },
     ...     "C",
-    ... )"""  # noqa: E501
+    ... )
+    """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
     discriminator_inlined: typing.Annotated[
