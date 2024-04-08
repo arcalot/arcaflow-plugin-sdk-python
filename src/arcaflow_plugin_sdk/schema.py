@@ -2723,7 +2723,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _insert_discriminator(
         self,
         discriminated_object: typing.Dict[str, typing.Any],
-        discriminator_value: str,
+        discriminator_val: str,
     ) -> typing.Dict[str, typing.Any]:
         """This function adds a member type's discriminator field as a
         property with a constant value equal to its discriminated value.
@@ -2732,7 +2732,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
         :param discriminated_object: A dictionary in the form of a json fragment
             of an object's schema in the scope of this OneOf's union.
-        :param discriminator_value: The value that represents the given object in
+        :param discriminator_val: The value that represents the given object in
             its OneOf's union.
         :returns: A dictionary in the form of a json fragment of an object's schema
             in the scope of this OneOf's union updated to reflect its membership
@@ -2745,7 +2745,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 self.discriminator_field_name
             ] = {
                 "type": "string",
-                "const": discriminator_value,
+                "const": discriminator_val,
             }
             # discriminator field is already present in the required
             # list when the discriminator is inlined
@@ -2940,7 +2940,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     def _insert_discriminator(
         self,
         discriminated_object: typing.Dict[str, typing.Any],
-        discriminator_value: str,
+        discriminator_val: str,
     ) -> typing.Dict[str, typing.Any]:
         """This function adds a member type's discriminator field as a
         property with a constant value equal to its discriminated value.
@@ -2949,7 +2949,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
         :param discriminated_object: A dictionary in the form of a json fragment
             of an object's schema in the scope of this OneOf's union.
-        :param discriminator_value: The value that represents the given object in
+        :param discriminator_val: The value that represents the given object in
             its OneOf's union.
         :returns: A dictionary in the form of a json fragment of an object's schema
             in the scope of this OneOf's union updated to reflect its membership
@@ -2962,7 +2962,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 self.discriminator_field_name
             ] = {
                 "type": "string",
-                "const": discriminator_value,
+                "const": discriminator_val,
             }
             # discriminator field is already present in the required
             # list when the discriminator is inlined
