@@ -2715,9 +2715,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         str,
         _name("Discriminator field name"),
         _description(
-            "Name of the field used to discriminate between possible values."
-            " If this field is present on any of the component objects it must"
-            " also be a string."
+            "Name of the field whose value is used to discriminate between possible subobject types. If this field "
+            "is present in any of the subobjects it must have a type of string."
         ),
     ] = "_type"
 
