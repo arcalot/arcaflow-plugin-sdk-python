@@ -2725,7 +2725,9 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object: typing.Dict[str, typing.Any],
         discriminator_val: str,
     ) -> typing.Dict[str, typing.Any]:
-        """This function adds a member type's discriminator field as a
+        """Add a discriminator field as a property of a member type.
+
+        This function adds a member type's discriminator field as a
         property with a constant value equal to its discriminated value.
         The discriminator field is moved to the zeroth index of the list
         of required fields in a data packet.
@@ -2942,7 +2944,9 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object: typing.Dict[str, typing.Any],
         discriminator_val: str,
     ) -> typing.Dict[str, typing.Any]:
-        """This function adds a member type's discriminator field as a
+        """Add a discriminator field as a property of a member type.
+
+        This function adds a member type's discriminator field as a
         property with a constant value equal to its discriminated value.
         The discriminator field is moved to the zeroth index of the list
         of required fields in a data packet.
@@ -5470,9 +5474,9 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
         self.discriminator_inlined = discriminator_inlined
 
     def _validate_discriminator(self):
-        # You can only validate a schema's compatibility after your
-        # scope has been constructed and populated with all referenced
-        # schemas.
+        # Performs consistency checks on the discriminator configured
+        # for this type instance. Note that this requires a
+        # fully-constructed and populated scope.
         for discriminator_value, set_member in self.types.items():
             if (
                 not self.discriminator_inlined
