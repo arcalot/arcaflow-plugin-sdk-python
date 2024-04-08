@@ -2726,18 +2726,18 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ) -> typing.Dict[str, typing.Any]:
         """Add a discriminator field as a property of a member type.
 
-        This function adds a member type's discriminator field as a
-        property with a constant value equal to its discriminated value.
-        The discriminator field is moved to the zeroth index of the list
-        of required fields in a data packet.
+        This function adds a member type's discriminator field as a property
+        with a constant value equal to its discriminated value. The
+        discriminator field is moved to the zeroth index of the list of
+        required fields in a data packet.
 
-        :param discriminated_object: A dictionary in the form of a json fragment
-            of an object's schema in the scope of this OneOf's union.
+        :param discriminated_object: A dictionary in the form of a json
+            fragment of an object's schema in the scope of this OneOf's union.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
-        :returns: A dictionary in the form of a json fragment of an object's schema
-            in the scope of this OneOf's union updated to reflect its membership
-            in this OneOf's union.
+        :returns: A dictionary in the form of a json fragment of an object's
+            schema in the scope of this OneOf's union updated to reflect its
+            membership in this OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
@@ -2916,7 +2916,6 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ...     },
     ...     "C",
     ... )
-
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
@@ -2945,18 +2944,18 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ) -> typing.Dict[str, typing.Any]:
         """Add a discriminator field as a property of a member type.
 
-        This function adds a member type's discriminator field as a
-        property with a constant value equal to its discriminated value.
-        The discriminator field is moved to the zeroth index of the list
-        of required fields in a data packet.
+        This function adds a member type's discriminator field as a property
+        with a constant value equal to its discriminated value. The
+        discriminator field is moved to the zeroth index of the list of
+        required fields in a data packet.
 
-        :param discriminated_object: A dictionary in the form of a json fragment
-            of an object's schema in the scope of this OneOf's union.
+        :param discriminated_object: A dictionary in the form of a json
+            fragment of an object's schema in the scope of this OneOf's union.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
-        :returns: A dictionary in the form of a json fragment of an object's schema
-            in the scope of this OneOf's union updated to reflect its membership
-            in this OneOf's union.
+        :returns: A dictionary in the form of a json fragment of an object's
+            schema in the scope of this OneOf's union updated to reflect its
+            membership in this OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
