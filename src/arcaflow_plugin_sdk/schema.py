@@ -5507,7 +5507,7 @@ class _OneOfType(AbstractType[OneOfT], Generic[OneOfT, DiscriminatorT]):
                 raise BadArgumentException(
                     f"the type of object id {set_member.id}'s discriminator"
                     f' field "{self.discriminator_field_name}" does not match'
-                    " OneOfSchema discriminator type; expected"
+                    " discriminated union type; expected"
                     f" {self._t.__name__} got"
                     f" {type(self.discriminator_field_name).__name__}"
                 )
