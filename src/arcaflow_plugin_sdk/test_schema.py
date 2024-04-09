@@ -620,7 +620,7 @@ class OneOfTest(unittest.TestCase):
                 discriminator_inlined=True,
             ).validate({})
         self.assertIn(
-            "does not match OneOfSchema discriminator type", str(cm.exception)
+            "does not match discriminated union type", str(cm.exception)
         )
 
     def test_unserialize(self):
