@@ -2705,7 +2705,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         bool,
         _name("Discriminator field inlined"),
         _description(
-            "True if the discriminator is a field in each schema of the underlying objects"
+            "True if the discriminator is a field in each schema of the"
+            " underlying objects"
         ),
     ]
     discriminator_field_name: typing.Annotated[
@@ -2730,13 +2731,13 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminator field is moved to the zeroth index of the list of
         required fields in a data packet.
 
-        :param discriminated_object: A Python dict which represents the relevant
-            fragment of the scope's JSON definition.
+        :param discriminated_object: A Python dict which represents the
+            relevant fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
         :returns: A Python dict which represents the relevant fragment of the
-            scope's JSON definition updated to reflect its membership in
-            this OneOf's union.
+            scope's JSON definition updated to reflect its membership in this
+            OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
@@ -2948,13 +2949,13 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminator field is moved to the zeroth index of the list of
         required fields in a data packet.
 
-        :param discriminated_object: A Python dict which represents the relevant
-            fragment of the scope's JSON definition.
+        :param discriminated_object: A Python dict which represents the
+            relevant fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
         :returns: A Python dict which represents the relevant fragment of the
-            scope's JSON definition updated to reflect its membership in
-            this OneOf's union.
+            scope's JSON definition updated to reflect its membership in this
+            OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
