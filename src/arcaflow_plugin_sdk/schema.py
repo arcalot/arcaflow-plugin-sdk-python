@@ -2705,8 +2705,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         bool,
         _name("Discriminator field inlined"),
         _description(
-            "True if the discriminator is a field in each schema of the"
-            " underlying objects"
+            "True if the discriminator is a field in each schema of the underlying objects"
         ),
     ]
     discriminator_field_name: typing.Annotated[
@@ -2731,13 +2730,10 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminator field is moved to the zeroth index of the list of
         required fields in a data packet.
 
-        :param discriminated_object: A Python dict which represents the
-            relevant fragment of the scope's JSON definition.
+        :param discriminated_object: A Python dict which represents the relevant
+            fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
-        :returns: A Python dict which represents the relevant fragment of the
-            scope's JSON definition updated to reflect its membership in this
-            OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
@@ -2757,7 +2753,6 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object["required"].insert(
             0, self.discriminator_field_name
         )
-        return discriminated_object
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2767,9 +2762,8 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = self._insert_discriminator(
-                defs.defs[v.id], k
-            )
+            self._insert_discriminator(defs.defs[v.id], k)
+
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
@@ -2777,7 +2771,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     discriminated_object["description"] = v.display.description
 
             name = v.id + "_discriminated_string_" + _id_typeize(k)
-            defs.defs[name] = discriminated_object
+            defs.defs[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/$defs/" + name})
         return {"oneOf": one_of}
 
@@ -2792,16 +2786,14 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
             name = v.id + "_discriminated_string_" + _id_typeize(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
-            discriminated_object = self._insert_discriminator(
-                defs.defs[v.id], k
-            )
+            self._insert_discriminator(defs.defs[v.id], k)
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
                 if v.display.description is not None:
                     discriminated_object["description"] = v.display.description
 
-            defs.components[name] = discriminated_object
+            defs.components[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/components/schemas/" + name})
         return {
             "oneOf": one_of,
@@ -2949,13 +2941,10 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminator field is moved to the zeroth index of the list of
         required fields in a data packet.
 
-        :param discriminated_object: A Python dict which represents the
-            relevant fragment of the scope's JSON definition.
+        :param discriminated_object: A Python dict which represents the relevant
+            fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
             its OneOf's union.
-        :returns: A Python dict which represents the relevant fragment of the
-            scope's JSON definition updated to reflect its membership in this
-            OneOf's union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
@@ -2975,7 +2964,6 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminated_object["required"].insert(
             0, self.discriminator_field_name
         )
-        return discriminated_object
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -2985,16 +2973,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
 
-            discriminated_object = self._insert_discriminator(
-                defs.defs[v.id], str(k)
-            )
+            self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
                 if v.display.description is not None:
                     discriminated_object["description"] = v.display.description
             name = v.id + "_discriminated_int_" + str(k)
-            defs.defs[name] = discriminated_object
+            defs.defs[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/$defs/" + name})
         return {"oneOf": one_of}
 
@@ -3009,16 +2995,14 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             name = v.id + "_discriminated_int_" + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
 
-            discriminated_object = self._insert_discriminator(
-                defs.defs[v.id], str(k)
-            )
+            self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
                 if v.display.name is not None:
                     discriminated_object["title"] = v.display.name
                 if v.display.description is not None:
                     discriminated_object["description"] = v.display.description
 
-            defs.components[name] = discriminated_object
+            defs.components[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/components/schemas/" + name})
         return {
             "oneOf": one_of,
