@@ -596,7 +596,9 @@ class OneOfTest(unittest.TestCase):
                 {
                     "a": schema.RefType("a", self.scope_mixed_type),
                     "basic": schema.RefType("basic", self.scope_mixed_type),
-                    "basic_b": schema.RefType("basic_b", self.scope_mixed_type),
+                    "basic_b": schema.RefType(
+                        "basic_b", self.scope_mixed_type
+                    ),
                 },
                 scope=self.scope_mixed_type,
                 discriminator_field_name=discriminator_field_name,
@@ -668,7 +670,10 @@ class OneOfTest(unittest.TestCase):
         invalid_member_param = "b"
         with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize(
-                {default_discriminator: "a", invalid_member_param: "Hello world!"}
+                {
+                    default_discriminator: "a",
+                    invalid_member_param: "Hello world!",
+                }
             )
         self.assertIn(
             f"Invalid parameter '{invalid_member_param}'", str(cm.exception)
