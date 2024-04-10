@@ -600,6 +600,8 @@ class OneOfTest(unittest.TestCase):
         self.assertIn("needs discriminator field", str(cm.exception))
 
     def test_has_discriminator_error(self):
+        # error when a schema should not have the given discriminator
+        # as a property
         with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
                 {
@@ -618,6 +620,8 @@ class OneOfTest(unittest.TestCase):
             str(cm.exception),
         )
 
+        # error when a schema should not have the default discriminator
+        # as a property
         with self.assertRaises(BadArgumentException) as cm:
             schema.OneOfStringType(
                 {
@@ -628,17 +632,12 @@ class OneOfTest(unittest.TestCase):
                     ),
                 },
                 scope=self.scope_mixed_type2,
-                discriminator_field_name=discriminator_field_name,
                 discriminator_inlined=False,
             ).validate({})
         self.assertIn(
-            f'has conflicting field "{discriminator_field_name}"',
+            f'has conflicting field "{default_discriminator}"',
             str(cm.exception),
         )
-
-
-
-
 
     def test_inline_discriminator_type_mismatch(self):
         with self.assertRaises(BadArgumentException) as cm:
