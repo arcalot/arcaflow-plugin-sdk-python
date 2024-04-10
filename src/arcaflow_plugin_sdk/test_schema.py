@@ -546,15 +546,6 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
-        self.scope_mixed_type = schema.ScopeType(
-            {
-                "a": self.obj_inline_str,
-                "a2": self.obj_inline_str2,
-                "basic": self.obj_basic,
-                "basic_b": self.obj_basic_b,
-            },
-            "a",
-        )
         self.obj_double_inline_str = schema.ObjectType(
             DoubleInlineStr,
             {
@@ -566,6 +557,24 @@ class OneOfTest(unittest.TestCase):
                 ),
                 "msg": PropertyType(schema.StringType()),
             },
+        )
+        self.scope_mixed_type = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "a2": self.obj_inline_str2,
+                "basic": self.obj_basic,
+                "basic_b": self.obj_basic_b,
+            },
+            "a",
+        )
+        self.scope_mixed_type2 = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "aa": self.obj_double_inline_str,
+                "basic": self.obj_basic,
+                "basic_b": self.obj_basic_b,
+            },
+            "a",
         )
         self.scope_inlined = schema.ScopeType(
             {
@@ -608,6 +617,28 @@ class OneOfTest(unittest.TestCase):
             f'has conflicting field "{discriminator_field_name}"',
             str(cm.exception),
         )
+
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "aa": schema.RefType("aa", self.scope_mixed_type2),
+                    "basic": schema.RefType("basic", self.scope_mixed_type2),
+                    "basic_b": schema.RefType(
+                        "basic_b", self.scope_mixed_type2
+                    ),
+                },
+                scope=self.scope_mixed_type2,
+                discriminator_field_name=discriminator_field_name,
+                discriminator_inlined=False,
+            ).validate({})
+        self.assertIn(
+            f'has conflicting field "{discriminator_field_name}"',
+            str(cm.exception),
+        )
+
+
+
+
 
     def test_inline_discriminator_type_mismatch(self):
         with self.assertRaises(BadArgumentException) as cm:
