@@ -2734,7 +2734,7 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         :param discriminated_object: A Python dict which represents the
             relevant fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
-            its OneOf's union.
+            its discriminated union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
@@ -2945,7 +2945,7 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         :param discriminated_object: A Python dict which represents the
             relevant fragment of the scope's JSON definition.
         :param discriminator_val: The value that represents the given object in
-            its OneOf's union.
+            its discriminated union.
         """
         if self.discriminator_inlined:
             # update the object's schema to show the only valid value
