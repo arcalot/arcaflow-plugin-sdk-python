@@ -668,7 +668,7 @@ class OneOfTest(unittest.TestCase):
         invalid_member_param = "b"
         with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize(
-                {default_discriminator: "a", "b": "Hello world!"}
+                {default_discriminator: "a", invalid_member_param: "Hello world!"}
             )
         self.assertIn(
             f"Invalid parameter '{invalid_member_param}'", str(cm.exception)
