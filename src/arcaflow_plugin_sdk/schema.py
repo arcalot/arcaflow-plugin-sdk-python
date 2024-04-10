@@ -5656,7 +5656,6 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
         scope: typing.ForwardRef("ScopeType"),
         discriminator_inlined: bool = False,
         discriminator_field_name: str = "_type",
-        # discriminator_field_name: str = None,
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(
