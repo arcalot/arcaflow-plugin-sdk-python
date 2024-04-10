@@ -759,12 +759,22 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=discriminator_field_name,
             discriminator_inlined=False,
         )
-        with self.assertRaises(ConstraintException):
+        with self.assertRaises(ConstraintException) as cm:
             # noinspection PyTypeChecker
             s.validate(InlineStr(None, "Hello world!"))
-        with self.assertRaises(ConstraintException):
+        self.assertIn(
+            f"Invalid type: '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
+        with self.assertRaises(ConstraintException) as cm:
             # noinspection PyTypeChecker
             s.validate(InlineStr("b", "Hello world!"))
+        self.assertIn(
+            f"Invalid type: '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
+        # validate with the class used as the generic type parameter
+        # in constructing the OneOfStringType
         s.validate(Basic("Hello world!"))
 
     def test_validation_inline(self):
