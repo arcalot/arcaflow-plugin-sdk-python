@@ -595,8 +595,8 @@ class OneOfTest(unittest.TestCase):
             schema.OneOfStringType(
                 {
                     "a": schema.RefType("a", self.scope_mixed_type),
-                    "a2": schema.RefType("a2", self.scope_mixed_type),
                     "basic": schema.RefType("basic", self.scope_mixed_type),
+                    "basic_b": schema.RefType("basic_b", self.scope_mixed_type),
                 },
                 scope=self.scope_mixed_type,
                 discriminator_field_name=discriminator_field_name,
