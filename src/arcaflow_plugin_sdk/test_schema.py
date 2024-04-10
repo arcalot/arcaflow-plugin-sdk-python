@@ -549,7 +549,7 @@ class OneOfTest(unittest.TestCase):
         self.scope_mixed_type = schema.ScopeType(
             {
                 "a": self.obj_inline_str,
-                "b": self.obj_inline_str2,
+                "a2": self.obj_inline_str2,
                 "basic": self.obj_basic,
                 "basic_b": self.obj_basic_b,
             },
@@ -581,7 +581,7 @@ class OneOfTest(unittest.TestCase):
             schema.OneOfStringType(
                 {
                     "a": schema.RefType("a", self.scope_mixed_type),
-                    "b": schema.RefType("b", self.scope_mixed_type),
+                    "a2": schema.RefType("a2", self.scope_mixed_type),
                     "basic": schema.RefType("basic", self.scope_mixed_type),
                 },
                 scope=self.scope_mixed_type,
