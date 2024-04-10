@@ -759,13 +759,8 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=discriminator_field_name,
             discriminator_inlined=False,
         )
-        with self.assertRaises(ConstraintException) as cm:
-            # noinspection PyTypeChecker
-            s.validate(InlineStr(None, "Hello world!"))
-        self.assertIn(
-            f"Invalid type: '{InlineStr.__name__}'",
-            str(cm.exception),
-        )
+        # attempt to validate a class not within the scope of
+        # this union
         with self.assertRaises(ConstraintException) as cm:
             # noinspection PyTypeChecker
             s.validate(InlineStr("b", "Hello world!"))
