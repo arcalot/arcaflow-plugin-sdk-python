@@ -14,7 +14,10 @@ jobs:
     name: Build
     strategy:
       matrix:
-        python-version: [ '3.9', '3.10', 'pypy3.9' ]
+        python-version:
+          - ${{ vars.ARCALOT_PYTHON_VERSION }}
+          - '3.10'
+          - 'pypy3.9'
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code
@@ -72,7 +75,7 @@ jobs:
           python -m poetry run coverage html
       - name: Publish coverage report to job summary
         # publishing only once
-        if: ${{ matrix.python-version == '3.9'}}
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         run: |
           poetry run html2text --ignore-images --ignore-links -b 0 htmlcov/index.html >> $GITHUB_STEP_SUMMARY
       - name: Generate documentation
@@ -88,6 +91,7 @@ jobs:
           path: dist
           if-no-files-found: error
       - name: Upload coverage HTML artifact
+        if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}
@@ -105,7 +109,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ matrix.python-version }}
+          name: dist-${{ vars.ARCALOT_PYTHON_VERSION }}
           path: dist
       - name: Install twine
         run: pip install -U twine
