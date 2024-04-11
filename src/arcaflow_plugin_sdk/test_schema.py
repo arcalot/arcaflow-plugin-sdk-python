@@ -47,6 +47,12 @@ class InlineStr:
 
 
 @dataclasses.dataclass
+class InlineStr2:
+    type_: str
+    code: int
+
+
+@dataclasses.dataclass
 class InlineInt:
     type_: int
     msg: str
@@ -59,8 +65,20 @@ class InlineInt2:
 
 
 @dataclasses.dataclass
+class DoubleInlineStr:
+    _type: str
+    type_: str
+    msg: str
+
+
+@dataclasses.dataclass
 class BasicUnion:
     union_basic: typing.Union[Basic, Basic2]
+
+
+@dataclasses.dataclass
+class InlineUnion:
+    union: typing.Union[InlineStr, InlineStr2, DoubleInlineStr]
 
 
 class Color(enum.Enum):
@@ -496,33 +514,146 @@ class ObjectTest(unittest.TestCase):
 
 class OneOfTest(unittest.TestCase):
     def setUp(self):
-        self.obj_b = schema.ObjectType(
+        self.obj_basic = schema.ObjectType(
+            Basic,
+            {"msg": PropertyType(schema.StringType())},
+        )
+        self.obj_basic_b = schema.ObjectType(
             Basic3, {"b": PropertyType(schema.IntType())}
+        )
+        self.obj_inline_str = schema.ObjectType(
+            InlineStr,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                "a": PropertyType(schema.StringType()),
+            },
+        )
+        self.obj_inline_str2 = schema.ObjectType(
+            InlineStr2,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                "code": PropertyType(schema.IntType()),
+            },
         )
         self.scope_basic = schema.ScopeType(
             {
-                "a": schema.ObjectType(
-                    Basic,
-                    {"msg": PropertyType(schema.StringType())},
-                ),
-                "b": self.obj_b,
+                "a": self.obj_basic,
+                "b": self.obj_basic_b,
             },
             "a",
         )
+        self.obj_double_inline_str = schema.ObjectType(
+            DoubleInlineStr,
+            {
+                discriminator_field_name: PropertyType(
+                    schema.StringType(),
+                ),
+                default_discriminator: PropertyType(
+                    schema.StringType(),
+                ),
+                "msg": PropertyType(schema.StringType()),
+            },
+        )
         self.scope_mixed_type = schema.ScopeType(
             {
-                "a": schema.ObjectType(
-                    InlineStr,
-                    {
-                        discriminator_field_name: PropertyType(
-                            schema.StringType(),
-                        ),
-                        "a": PropertyType(schema.StringType()),
-                    },
-                ),
-                "b": self.obj_b,
+                "a": self.obj_inline_str,
+                "a2": self.obj_inline_str2,
+                "basic": self.obj_basic,
+                "basic_b": self.obj_basic_b,
             },
             "a",
+        )
+        self.scope_mixed_type2 = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "aa": self.obj_double_inline_str,
+                "basic": self.obj_basic,
+                "basic_b": self.obj_basic_b,
+            },
+            "a",
+        )
+        self.scope_inlined = schema.ScopeType(
+            {
+                "a": self.obj_inline_str,
+                "b": self.obj_inline_str2,
+                "a2": self.obj_double_inline_str,
+            },
+            "a",
+        )
+
+    def test_inline_discriminator_missing(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_mixed_type),
+                    "a2": schema.RefType("a2", self.scope_mixed_type),
+                    "basic": schema.RefType("basic", self.scope_mixed_type),
+                },
+                scope=self.scope_mixed_type,
+                discriminator_inlined=True,
+                discriminator_field_name=discriminator_field_name,
+            ).validate({})
+        self.assertIn("needs discriminator field", str(cm.exception))
+
+    def test_has_discriminator_error(self):
+        # error when a schema should not have the given discriminator
+        # as a property
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "a": schema.RefType("a", self.scope_mixed_type),
+                    "basic": schema.RefType("basic", self.scope_mixed_type),
+                    "basic_b": schema.RefType(
+                        "basic_b", self.scope_mixed_type
+                    ),
+                },
+                scope=self.scope_mixed_type,
+                discriminator_field_name=discriminator_field_name,
+                discriminator_inlined=False,
+            ).validate({})
+        self.assertIn(
+            f'has conflicting field "{discriminator_field_name}"',
+            str(cm.exception),
+        )
+
+        # error when a schema should not have the default discriminator
+        # as a property
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.OneOfStringType(
+                {
+                    "aa": schema.RefType("aa", self.scope_mixed_type2),
+                    "basic": schema.RefType("basic", self.scope_mixed_type2),
+                    "basic_b": schema.RefType(
+                        "basic_b", self.scope_mixed_type2
+                    ),
+                },
+                scope=self.scope_mixed_type2,
+                discriminator_inlined=False,
+            ).validate({})
+        self.assertIn(
+            f'has conflicting field "{default_discriminator}"',
+            str(cm.exception),
+        )
+
+    def test_inline_discriminator_type_mismatch(self):
+        with self.assertRaises(BadArgumentException) as cm:
+            # noinspection PyTypeChecker
+            schema.OneOfIntType(
+                {
+                    "a": schema.RefType("a", self.scope_inlined),
+                    "b": schema.RefType("b", self.scope_inlined),
+                },
+                scope=self.scope_inlined,
+                discriminator_field_name=discriminator_field_name,
+                discriminator_inlined=True,
+            ).validate({})
+        self.assertIn(
+            "does not match the discriminator type for the union",
+            str(cm.exception),
         )
 
     def test_unserialize(self):
@@ -535,30 +666,63 @@ class OneOfTest(unittest.TestCase):
         )
 
         # Incomplete values to unserialize
-        with self.assertRaises(ConstraintException):
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"a": "Hello world!"})
-        with self.assertRaises(ConstraintException):
+        self.assertIn(
+            f"'{s_type.discriminator_field_name}': Required discriminator"
+            " field not found",
+            str(cm.exception),
+        )
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize({"b": 42})
+        self.assertIn(
+            f"'{s_type.discriminator_field_name}': Required discriminator"
+            " field not found",
+            str(cm.exception),
+        )
 
-        # Invalid type, string, for discriminator value
-        # that requires an integer
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: "k", 1: "Hello world!"})
+        # Key not in this OneOf union
+        absent_key = "k"
+        with self.assertRaises(ConstraintException) as cm:
+            s_type.unserialize(
+                {default_discriminator: absent_key, 1: "Hello world!"}
+            )
+        self.assertIn(
+            f"Invalid value for field: '{absent_key}'", str(cm.exception)
+        )
 
         # Invalid type for 'data' argument
-        with self.assertRaises(ConstraintException):
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize([])
-        # Mismatching key value
-        with self.assertRaises(ConstraintException):
+        self.assertIn("Must be a dict", str(cm.exception))
+
+        # Invalid parameter for the selected member type
+        invalid_member_param = "b"
+        with self.assertRaises(ConstraintException) as cm:
             s_type.unserialize(
-                {default_discriminator: "a", "b": "Hello world!"}
+                {
+                    default_discriminator: "a",
+                    invalid_member_param: "Hello world!",
+                }
             )
-        # Invalid key value
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: 1, "a": "Hello world!"})
-        # Invalid discriminator
-        with self.assertRaises(ConstraintException):
-            s_type.unserialize({default_discriminator: 1, "b": "Hello world!"})
+        self.assertIn(
+            f"Invalid parameter '{invalid_member_param}'", str(cm.exception)
+        )
+
+        # Invalid type for discriminator value
+        discriminator_wrong_type = 1
+        with self.assertRaises(ConstraintException) as cm:
+            s_type.unserialize(
+                {
+                    default_discriminator: discriminator_wrong_type,
+                    "a": "Hello world!",
+                }
+            )
+        self.assertIn(
+            f"{type(s_type.discriminator_field_name).__name__} required, "
+            f"{type(discriminator_wrong_type).__name__} found",
+            str(cm.exception),
+        )
 
         unserialized_data: Basic = s_type.unserialize(
             {default_discriminator: "a", "msg": "Hello world!"}
@@ -587,11 +751,13 @@ class OneOfTest(unittest.TestCase):
     def test_unserialize_embedded(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_mixed_type),
-                "b": schema.RefType("b", self.scope_mixed_type),
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
+                "a2": schema.RefType("a2", self.scope_inlined),
             },
-            scope=self.scope_mixed_type,
+            scope=self.scope_inlined,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=True,
         )
 
         unserialized_data: InlineStr = s.unserialize(
@@ -603,58 +769,114 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertEqual(unserialized_data.a, "Hello world!")
 
-        unserialized_data2: Basic3 = s.unserialize(
-            {discriminator_field_name: "b", "b": 42}
+        unserialized_data2: DoubleInlineStr = s.unserialize(
+            {
+                discriminator_field_name: "a2",
+                default_discriminator: "a",
+                "msg": "Hi again",
+            }
         )
-        self.assertIsInstance(unserialized_data2, Basic3)
-        self.assertEqual(unserialized_data2.b, 42)
+        self.assertIsInstance(unserialized_data2, DoubleInlineStr)
+        self.assertEqual(unserialized_data2.msg, "Hi again")
 
     def test_validation(self):
+        s = schema.OneOfStringType[Basic](
+            {
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
+            },
+            scope=self.scope_basic,
+            discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=False,
+        )
+        # attempt to validate a class not within the scope of
+        # this union
+        with self.assertRaises(ConstraintException) as cm:
+            # noinspection PyTypeChecker
+            s.validate(InlineStr("b", "Hello world!"))
+        self.assertIn(
+            f"Invalid type: '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
+        # validate with the class used as the generic type parameter
+        # in constructing the OneOfStringType
+        s.validate(Basic("Hello world!"))
+
+    def test_validation_inline(self):
         s = schema.OneOfStringType[InlineStr](
             {
-                "a": schema.RefType("a", self.scope_mixed_type),
-                "b": schema.RefType("b", self.scope_mixed_type),
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
+                "a2": schema.RefType("a2", self.scope_inlined),
             },
-            scope=self.scope_mixed_type,
+            scope=self.scope_inlined,
             discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=True,
         )
-
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
             s.validate(InlineStr(None, "Hello world!"))
-
         with self.assertRaises(ConstraintException):
             s.validate(InlineStr("b", "Hello world!"))
-
         with self.assertRaises(ConstraintException):
             # noinspection PyTypeChecker
             s.validate(Basic("Hello world!"))
-
         s.validate(InlineStr("a", "Hello world!"))
 
     def test_serialize(self):
         s = schema.OneOfStringType(
             {
-                "a": schema.RefType("a", self.scope_mixed_type),
-                "b": schema.RefType("b", self.scope_mixed_type),
+                "a": schema.RefType("a", self.scope_basic),
+                "b": schema.RefType("b", self.scope_basic),
             },
-            scope=self.scope_mixed_type,
+            scope=self.scope_basic,
             discriminator_field_name=discriminator_field_name,
         )
         self.assertEqual(
-            s.serialize(InlineStr("a", "Hello world!")),
-            {discriminator_field_name: "a", "a": "Hello world!"},
+            s.serialize(Basic("Hello world!")),
+            {discriminator_field_name: "a", "msg": "Hello world!"},
         )
         self.assertEqual(
             s.serialize(Basic3(42)),
             {discriminator_field_name: "b", "b": 42},
         )
-        with self.assertRaises(ConstraintException):
+        # the InlineStr schema is not within the scope of this OneOf
+        with self.assertRaises(ConstraintException) as cm:
+            # noinspection PyTypeChecker
+            s.serialize(InlineStr("a", "Hello world!"))
+        self.assertIn(
+            f"Invalid type: '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
+
+    def test_serialize_inline(self):
+        s = schema.OneOfStringType(
+            {
+                "a": schema.RefType("a", self.scope_inlined),
+                "b": schema.RefType("b", self.scope_inlined),
+            },
+            scope=self.scope_inlined,
+            discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=True,
+        )
+        self.assertEqual(
+            s.serialize(InlineStr("a", "Hello world!")),
+            {discriminator_field_name: "a", "a": "Hello world!"},
+        )
+        with self.assertRaises(ConstraintException) as cm:
+            s.serialize(InlineStr("b", "Hello world!"))
+        self.assertIn(
+            f"Invalid value for '{discriminator_field_name}' "
+            f"on '{InlineStr.__name__}'",
+            str(cm.exception),
+        )
+        with self.assertRaises(ConstraintException) as cm:
             # noinspection PyTypeChecker
             s.serialize(Basic("Hello world!"))
-
-        with self.assertRaises(ConstraintException):
-            s.serialize(InlineStr("b", "Hello world!"))
+        self.assertIn(
+            f"Invalid type: '{Basic.__name__}'",
+            str(cm.exception),
+        )
 
     def test_object(self):
         scope = schema.ScopeType({}, "")
@@ -1122,7 +1344,9 @@ class SchemaBuilderTest(unittest.TestCase):
                         InlineInt2, schema.discriminator_value(2)
                     ],
                 ],
-                schema.discriminator(discriminator_field_name),
+                schema.discriminator(
+                    discriminator_field_name, discriminator_inlined=True
+                ),
             ]
 
         scope = schema.build_object_schema(TestData)
@@ -1151,6 +1375,84 @@ class SchemaBuilderTest(unittest.TestCase):
         self.assertEqual(one_of_type.types[1].id, InlineInt.__name__)
         self.assertIsInstance(one_of_type.types[2], schema.RefType)
         self.assertEqual(one_of_type.types[2].id, InlineInt2.__name__)
+
+    def test_one_of_has_discriminator_error(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[Basic, Basic2, InlineStr],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=False,
+                ),
+            ]
+
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f'"{InlineStr.__name__}" has conflicting field '
+            f'"{discriminator_field_name}"',
+            str(cm.exception),
+        )
+
+    def test_one_of_inline_discriminator_missing_error(self):
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        InlineStr, schema.discriminator_value("InlineStr")
+                    ],
+                    typing.Annotated[
+                        InlineStr2, schema.discriminator_value("InlineStr2")
+                    ],
+                    typing.Annotated[
+                        Basic, schema.discriminator_value("Basic")
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=True,
+                ),
+            ]
+
+        with self.assertRaises(SchemaBuildException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            f'"{Basic.__name__}" needs discriminator field', str(cm.exception)
+        )
+
+    def test_one_of_inline_discriminator_type_mismatch(self):
+        discriminator_wrong_type: int = 1
+
+        @dataclasses.dataclass
+        class TestData:
+            union: typing.Annotated[
+                typing.Union[
+                    typing.Annotated[
+                        InlineStr, schema.discriminator_value("InlineStr")
+                    ],
+                    typing.Annotated[
+                        InlineStr2, schema.discriminator_value("InlineStr2")
+                    ],
+                    typing.Annotated[
+                        InlineInt,
+                        schema.discriminator_value(discriminator_wrong_type),
+                    ],
+                ],
+                schema.discriminator(
+                    discriminator_field_name=discriminator_field_name,
+                    discriminator_inlined=True,
+                ),
+            ]
+
+        with self.assertRaises(BadArgumentException) as cm:
+            schema.build_object_schema(TestData)
+        self.assertIn(
+            "Invalid discriminator value type: "
+            f"{type(discriminator_wrong_type)}",
+            str(cm.exception),
+        )
 
     def test_optional(self):
         @dataclasses.dataclass
@@ -1475,7 +1777,7 @@ class JSONSchemaTest(unittest.TestCase):
             BasicUnion.__name__,
         )
         scope.objects = {
-            str(BasicUnion.__name__): schema.ObjectType(
+            BasicUnion.__name__: schema.ObjectType(
                 BasicUnion,
                 {
                     "union_basic": schema.PropertyType(
@@ -1485,7 +1787,7 @@ class JSONSchemaTest(unittest.TestCase):
                                 "b": schema.RefType(Basic2.__name__, scope),
                             },
                             scope,
-                            default_discriminator,
+                            discriminator_inlined=False,
                         )
                     )
                 },
@@ -1532,10 +1834,6 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
-                            default_discriminator: {
-                                "type": "string",
-                                "const": "a",
-                            },
                         },
                         "required": [default_discriminator, "msg"],
                         "additionalProperties": False,
@@ -1545,10 +1843,6 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
-                            default_discriminator: {
-                                "type": "string",
-                                "const": "a",
-                            },
                         },
                         "required": [default_discriminator, "msg"],
                         "additionalProperties": False,
@@ -1558,10 +1852,6 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
-                            default_discriminator: {
-                                "type": "string",
-                                "const": "b",
-                            },
                         },
                         "required": [default_discriminator, "msg2"],
                         "additionalProperties": False,
@@ -1571,10 +1861,6 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},
-                            default_discriminator: {
-                                "type": "string",
-                                "const": "b",
-                            },
                         },
                         "required": [default_discriminator, "msg2"],
                         "additionalProperties": False,
@@ -1586,19 +1872,245 @@ class JSONSchemaTest(unittest.TestCase):
                     "union_basic": {
                         "oneOf": [
                             {
-                                "$ref": f"#/$defs/{Basic.__name__}"
-                                f"_discriminated_string_"
-                                f"a"
+                                "$ref": (
+                                    f"#/$defs/{Basic.__name__}"
+                                    "_discriminated_string_"
+                                    "a"
+                                )
                             },
                             {
-                                "$ref": f"#/$defs/{Basic2.__name__}"
-                                f"_discriminated_string_"
-                                f"b"
+                                "$ref": (
+                                    f"#/$defs/{Basic2.__name__}"
+                                    "_discriminated_string_"
+                                    "b"
+                                )
                             },
                         ]
                     }
                 },
                 "required": ["union_basic"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            },
+            json_schema,
+        )
+
+    def test_one_of_inline(self):
+        scope = schema.ScopeType(
+            {},
+            InlineUnion.__name__,
+        )
+        scope.objects = {
+            InlineUnion.__name__: schema.ObjectType(
+                InlineUnion,
+                {
+                    "union": schema.PropertyType(
+                        schema.OneOfStringType(
+                            {
+                                "a": schema.RefType(InlineStr.__name__, scope),
+                                "b": schema.RefType(
+                                    InlineStr2.__name__, scope
+                                ),
+                                "a2": schema.RefType(
+                                    DoubleInlineStr.__name__, scope
+                                ),
+                            },
+                            scope,
+                            discriminator_inlined=True,
+                            discriminator_field_name=discriminator_field_name,
+                        )
+                    )
+                },
+            ),
+            InlineStr.__name__: schema.ObjectType(
+                InlineStr,
+                {
+                    "a": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                },
+            ),
+            InlineStr2.__name__: schema.ObjectType(
+                InlineStr2,
+                {
+                    "code": schema.PropertyType(schema.IntType()),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                },
+            ),
+            DoubleInlineStr.__name__: schema.ObjectType(
+                DoubleInlineStr,
+                {
+                    default_discriminator: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                    "msg": schema.PropertyType(schema.StringType()),
+                },
+            ),
+        }
+
+        defs = schema._JSONSchemaDefs()
+        json_schema = scope._to_jsonschema_fragment(scope, defs)
+        self.assertEqual(
+            {
+                "$defs": {
+                    InlineUnion.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "union": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineStr.__name__}"
+                                            "_discriminated_string_"
+                                            "a"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineStr2.__name__}"
+                                            "_discriminated_string_"
+                                            "b"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            "#/$defs/"
+                                            f"{DoubleInlineStr.__name__}"
+                                            "_discriminated_string_"
+                                            "a2"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["union"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineStr.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "a",
+                            },
+                        },
+                        "required": [discriminator_field_name, "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineStr.__name__}_discriminated_string_a": {
+                        "type": "object",
+                        "properties": {
+                            "a": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "a",
+                            },
+                        },
+                        "required": [discriminator_field_name, "a"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineStr2.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "code": {"type": "integer"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "b",
+                            },
+                        },
+                        "required": [discriminator_field_name, "code"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineStr2.__name__}_discriminated_string_b": {
+                        "type": "object",
+                        "properties": {
+                            "code": {"type": "integer"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "b",
+                            },
+                        },
+                        "required": [discriminator_field_name, "code"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    DoubleInlineStr.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "a2",
+                            },
+                            default_discriminator: {"type": "string"},
+                        },
+                        "required": [
+                            discriminator_field_name,
+                            default_discriminator,
+                            "msg",
+                        ],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{DoubleInlineStr.__name__}_discriminated_string_a2": {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": "a2",
+                            },
+                            default_discriminator: {"type": "string"},
+                        },
+                        "required": [
+                            discriminator_field_name,
+                            default_discriminator,
+                            "msg",
+                        ],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "union": {
+                        "oneOf": [
+                            {
+                                "$ref": (
+                                    f"#/$defs/{InlineStr.__name__}"
+                                    "_discriminated_string_"
+                                    "a"
+                                )
+                            },
+                            {
+                                "$ref": (
+                                    f"#/$defs/{InlineStr2.__name__}"
+                                    "_discriminated_string_"
+                                    "b"
+                                )
+                            },
+                            {
+                                "$ref": (
+                                    f"#/$defs/{DoubleInlineStr.__name__}"
+                                    "_discriminated_string_"
+                                    "a2"
+                                )
+                            },
+                        ]
+                    }
+                },
+                "required": ["union"],
                 "additionalProperties": False,
                 "dependentRequired": {},
             },
