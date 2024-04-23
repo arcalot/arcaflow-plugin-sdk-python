@@ -2577,6 +2577,116 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
+StrInt = typing.Union[int, str]
+
+
+@dataclass
+class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
+    types: Dict[
+        StrInt, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+    ]
+    discriminator_inlined: typing.Annotated[
+        bool,
+        _name("Discriminator field inlined"),
+        _description(
+            "Whether or not the discriminator is inlined in the underlying"
+            " objects' schema"
+        ),
+    ]
+    discriminator_field_name: typing.Annotated[
+        str,
+        _name("Discriminator field name"),
+        _description(
+            "Name of the field used to discriminate between possible values."
+            " If this field ispresent on any of the component objects it must"
+            " also be an int."
+        ),
+    ] = "_type"
+
+    def _insert_discriminator(
+        self,
+        discriminated_object: typing.Dict[str, typing.Any],
+        discriminator_val: str,
+    ) -> typing.Dict[str, typing.Any]:
+        """Add a discriminator field as a property of a member type.
+
+        This function adds a member type's discriminator field as a property
+        with a constant value equal to its discriminated value. The
+        discriminator field is moved to the zeroth index of the list of
+        required fields in a data packet.
+
+        :param discriminated_object: A Python dict which represents the
+            relevant fragment of the scope's JSON definition.
+        :param discriminator_val: The value that represents the given object in
+            its discriminated union.
+        """
+        if self.discriminator_inlined:
+            # update the object's schema to show the only valid value
+            # for this object's discriminator
+            discriminated_object["properties"][
+                self.discriminator_field_name
+            ] = {
+                "type": "string",
+                "const": discriminator_val,
+            }
+            # discriminator field is already present in the required
+            # list when the discriminator is inlined
+            discriminated_object["required"].remove(
+                self.discriminator_field_name
+            )
+        # discriminator must have the first position
+        discriminated_object["required"].insert(
+            0, self.discriminator_field_name
+        )
+
+    def _to_jsonschema_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    ) -> any:
+        one_of = []
+        for k, v in self.types.items():
+            # noinspection PyProtectedMember
+            scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
+
+            self._insert_discriminator(defs.defs[v.id], str(k))
+            if v.display is not None:
+                if v.display.name is not None:
+                    defs.defs[v.id]["title"] = v.display.name
+                if v.display.description is not None:
+                    defs.defs[v.id]["description"] = v.display.description
+            name = v.id + "_discriminated_int_" + str(k)
+            defs.defs[name] = defs.defs[v.id]
+            one_of.append({"$ref": "#/$defs/" + name})
+        return {"oneOf": one_of}
+
+    def _to_openapi_fragment(
+        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    ) -> any:
+        one_of = []
+        discriminator_mapping = {}
+        for k, v in self.types.items():
+            # noinspection PyProtectedMember
+            scope.objects[v.id]._to_openapi_fragment(scope, defs)
+            name = v.id + "_discriminated_int_" + str(k)
+            discriminator_mapping[k] = "#/components/schemas/" + name
+
+            self._insert_discriminator(defs.defs[v.id], str(k))
+            if v.display is not None:
+                if v.display.name is not None:
+                    defs.defs[v.id]["title"] = v.display.name
+                if v.display.description is not None:
+                    defs.defs[v.id]["description"] = v.display.description
+
+            defs.components[name] = defs.defs[v.id]
+            one_of.append({"$ref": "#/components/schemas/" + name})
+        return {
+            "oneOf": one_of,
+            "discriminator": {
+                "propertyName": self.discriminator_field_name,
+                "mapping": discriminator_mapping,
+            },
+        }
+
+
 @dataclass
 class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     """This class holds the definition of variable types with a string
