@@ -2842,37 +2842,37 @@ class OneOfStringSchema(OneOfSchema, _JSONSchemaGenerator, _OpenAPIGenerator):
             oneof_type=self.oneof_type,
             discriminator_field_name=discriminator_field_name)
 
-    def _insert_discriminator(
-        self,
-        discriminated_object: typing.Dict[str, typing.Any],
-        discriminator_val: str,
-    ) -> typing.Dict[str, typing.Any]:
-        """Add a discriminator field as a property of a member type.
+    # def _insert_discriminator(
+    #     self,
+    #     discriminated_object: typing.Dict[str, typing.Any],
+    #     discriminator_val: str,
+    # ) -> typing.Dict[str, typing.Any]:
+    #     """Add a discriminator field as a property of a member type.
+    #
+    #     This function adds a member type's discriminator field as a property
+    #     with a constant value equal to its discriminated value. The
+    #     discriminator field is moved to the zeroth index of the list of
+    #     required fields in a data packet.
+    #
+    #     :param discriminated_object: A Python dict which represents the
+    #         relevant fragment of the scope's JSON definition.
+    #     :param discriminator_val: The value that represents the given object in
+    #         its discriminated union.
+    #     """
+    #     OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
 
-        This function adds a member type's discriminator field as a property
-        with a constant value equal to its discriminated value. The
-        discriminator field is moved to the zeroth index of the list of
-        required fields in a data packet.
-
-        :param discriminated_object: A Python dict which represents the
-            relevant fragment of the scope's JSON definition.
-        :param discriminator_val: The value that represents the given object in
-            its discriminated union.
-        """
-        OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
-
-    def _to_jsonschema_fragment(
-        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
-    ) -> any:
-        return OneOfSchema._to_jsonschema_fragment(
-            self, scope, defs
-        )
+    # def _to_jsonschema_fragment(
+    #     self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    # ) -> any:
+    #     return OneOfSchema._to_jsonschema_fragment(
+    #         self, scope, defs
+    #     )
 
 
-    def _to_openapi_fragment(
-        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
-    ) -> any:
-        return OneOfSchema._to_openapi_fragment(self, scope, defs)
+    # def _to_openapi_fragment(
+    #     self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    # ) -> any:
+    #     return OneOfSchema._to_openapi_fragment(self, scope, defs)
 
 
 @dataclass
@@ -3012,34 +3012,34 @@ class OneOfIntSchema(OneOfSchema, _JSONSchemaGenerator, _OpenAPIGenerator):
             oneof_type=self.oneof_type,
             discriminator_field_name=discriminator_field_name)
 
-    def _insert_discriminator(
-        self,
-        discriminated_object: typing.Dict[str, typing.Any],
-        discriminator_val: str,
-    ) -> typing.Dict[str, typing.Any]:
-        """Add a discriminator field as a property of a member type.
-
-        This function adds a member type's discriminator field as a property
-        with a constant value equal to its discriminated value. The
-        discriminator field is moved to the zeroth index of the list of
-        required fields in a data packet.
-
-        :param discriminated_object: A Python dict which represents the
-            relevant fragment of the scope's JSON definition.
-        :param discriminator_val: The value that represents the given object in
-            its discriminated union.
-        """
-        OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
-
-    def _to_jsonschema_fragment(
-        self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
-    ) -> any:
-        return OneOfSchema._to_jsonschema_fragment(self, scope, defs)
-
-    def _to_openapi_fragment(
-        self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
-    ) -> any:
-        return OneOfSchema._to_openapi_fragment(self, scope, defs)
+    # def _insert_discriminator(
+    #     self,
+    #     discriminated_object: typing.Dict[str, typing.Any],
+    #     discriminator_val: str,
+    # ) -> typing.Dict[str, typing.Any]:
+    #     """Add a discriminator field as a property of a member type.
+    #
+    #     This function adds a member type's discriminator field as a property
+    #     with a constant value equal to its discriminated value. The
+    #     discriminator field is moved to the zeroth index of the list of
+    #     required fields in a data packet.
+    #
+    #     :param discriminated_object: A Python dict which represents the
+    #         relevant fragment of the scope's JSON definition.
+    #     :param discriminator_val: The value that represents the given object in
+    #         its discriminated union.
+    #     """
+    #     OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
+    #
+    # def _to_jsonschema_fragment(
+    #     self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
+    # ) -> any:
+    #     return OneOfSchema._to_jsonschema_fragment(self, scope, defs)
+    #
+    # def _to_openapi_fragment(
+    #     self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
+    # ) -> any:
+    #     return OneOfSchema._to_openapi_fragment(self, scope, defs)
 
 
 @dataclass
