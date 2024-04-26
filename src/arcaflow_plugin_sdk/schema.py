@@ -2593,6 +2593,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " objects' schema"
         ),
     ]
+    oneof_type: typing.Annotated[str, _name("One Of Type Name")]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2602,6 +2603,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be an int."
         ),
     ] = "_type"
+
 
     def _insert_discriminator(
         self,
@@ -2653,7 +2655,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     defs.defs[v.id]["title"] = v.display.name
                 if v.display.description is not None:
                     defs.defs[v.id]["description"] = v.display.description
-            name = v.id + "_discriminated_int_" + str(k)
+            name = v.id + self.oneof_type + str(k)
             defs.defs[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/$defs/" + name})
         return {"oneOf": one_of}
@@ -2666,7 +2668,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         for k, v in self.types.items():
             # noinspection PyProtectedMember
             scope.objects[v.id]._to_openapi_fragment(scope, defs)
-            name = v.id + "_discriminated_int_" + str(k)
+            name = v.id + self.oneof_type + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
 
             self._insert_discriminator(defs.defs[v.id], str(k))
@@ -2688,7 +2690,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 
 @dataclass
-class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
+class OneOfStringSchema(OneOfSchema, _JSONSchemaGenerator, _OpenAPIGenerator):
     """This class holds the definition of variable types with a string
     discriminator. This type acts as a split for a case where multiple possible
     object types can be present in a field. This type requires that there be a
@@ -2828,6 +2830,17 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " subobjects it must have a type of string."
         ),
     ] = "_type"
+    oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = "_discriminated_string_"
+
+    def __init__(self, types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]], discriminator_inlined: bool, oneof_type: str, discriminator_field_name: str):
+        # self.types = types
+        # self.discriminator_inlined = discriminator_inlined
+        # self.discriminator_field_name = discriminator_field_name
+        OneOfSchema.__init__(
+            self, types,
+            discriminator_inlined=discriminator_inlined,
+            oneof_type=self.oneof_type,
+            discriminator_field_name=discriminator_field_name)
 
     def _insert_discriminator(
         self,
@@ -2846,77 +2859,24 @@ class OneOfStringSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         :param discriminator_val: The value that represents the given object in
             its discriminated union.
         """
-        if self.discriminator_inlined:
-            # update the object's schema to show the only valid value
-            # for this object's discriminator
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": discriminator_val,
-            }
-            # discriminator field is already present in the required
-            # list when the discriminator is inlined
-            discriminated_object["required"].remove(
-                self.discriminator_field_name
-            )
-        # discriminator must have the first position
-        discriminated_object["required"].insert(
-            0, self.discriminator_field_name
-        )
+        OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        one_of = []
-        for k, v in self.types.items():
-            # noinspection PyProtectedMember
-            scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
+        return OneOfSchema._to_jsonschema_fragment(
+            self, scope, defs
+        )
 
-            self._insert_discriminator(defs.defs[v.id], k)
-
-            if v.display is not None:
-                if v.display.name is not None:
-                    defs.defs[v.id]["title"] = v.display.name
-                if v.display.description is not None:
-                    defs.defs[v.id]["description"] = v.display.description
-
-            name = v.id + "_discriminated_string_" + _id_typeize(k)
-            defs.defs[name] = defs.defs[v.id]
-            one_of.append({"$ref": "#/$defs/" + name})
-        return {"oneOf": one_of}
 
     def _to_openapi_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
     ) -> any:
-        one_of = []
-        discriminator_mapping = {}
-        for k, v in self.types.items():
-            # noinspection PyProtectedMember
-            scope.objects[v.id]._to_openapi_fragment(scope, defs)
-
-            name = v.id + "_discriminated_string_" + _id_typeize(k)
-            discriminator_mapping[k] = "#/components/schemas/" + name
-            self._insert_discriminator(defs.defs[v.id], k)
-            if v.display is not None:
-                if v.display.name is not None:
-                    defs.defs[v.id]["title"] = v.display.name
-                if v.display.description is not None:
-                    defs.defs[v.id]["description"] = v.display.description
-
-            defs.components[name] = defs.defs[v.id]
-            one_of.append({"$ref": "#/components/schemas/" + name})
-        return {
-            "oneOf": one_of,
-            "discriminator": {
-                "propertyName": self.discriminator_field_name,
-                "mapping": discriminator_mapping,
-            },
-        }
+        return OneOfSchema._to_openapi_fragment(self, scope, defs)
 
 
 @dataclass
-class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
+class OneOfIntSchema(OneOfSchema, _JSONSchemaGenerator, _OpenAPIGenerator):
     """This class holds the definition of variable types with an integer
     discriminator. This type acts as a split for a case where multiple possible
     object types can be present in a field. This type requires that there be a
@@ -3039,6 +2999,18 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " also be an int."
         ),
     ] = "_type"
+    oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = "_discriminated_int_"
+
+    def __init__(self, types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]], discriminator_inlined: bool, oneof_type: str, discriminator_field_name: str, ):
+        # self.types = types
+        # self.discriminator_inlined = discriminator_inlined
+        # self.discriminator_field_name = discriminator_field_name
+        # OneOfSchema.__init__(self, types, discriminator_inlined, discriminator_field_name, oneof_type="_discriminated_int_")
+        OneOfSchema.__init__(
+            self, types,
+            discriminator_inlined=discriminator_inlined,
+            oneof_type=self.oneof_type,
+            discriminator_field_name=discriminator_field_name)
 
     def _insert_discriminator(
         self,
@@ -3057,71 +3029,17 @@ class OneOfIntSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         :param discriminator_val: The value that represents the given object in
             its discriminated union.
         """
-        if self.discriminator_inlined:
-            # update the object's schema to show the only valid value
-            # for this object's discriminator
-            discriminated_object["properties"][
-                self.discriminator_field_name
-            ] = {
-                "type": "string",
-                "const": discriminator_val,
-            }
-            # discriminator field is already present in the required
-            # list when the discriminator is inlined
-            discriminated_object["required"].remove(
-                self.discriminator_field_name
-            )
-        # discriminator must have the first position
-        discriminated_object["required"].insert(
-            0, self.discriminator_field_name
-        )
+        OneOfSchema._insert_discriminator(self, discriminated_object, discriminator_val)
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
     ) -> any:
-        one_of = []
-        for k, v in self.types.items():
-            # noinspection PyProtectedMember
-            scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
-
-            self._insert_discriminator(defs.defs[v.id], str(k))
-            if v.display is not None:
-                if v.display.name is not None:
-                    defs.defs[v.id]["title"] = v.display.name
-                if v.display.description is not None:
-                    defs.defs[v.id]["description"] = v.display.description
-            name = v.id + "_discriminated_int_" + str(k)
-            defs.defs[name] = defs.defs[v.id]
-            one_of.append({"$ref": "#/$defs/" + name})
-        return {"oneOf": one_of}
+        return OneOfSchema._to_jsonschema_fragment(self, scope, defs)
 
     def _to_openapi_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _OpenAPIComponents
     ) -> any:
-        one_of = []
-        discriminator_mapping = {}
-        for k, v in self.types.items():
-            # noinspection PyProtectedMember
-            scope.objects[v.id]._to_openapi_fragment(scope, defs)
-            name = v.id + "_discriminated_int_" + str(k)
-            discriminator_mapping[k] = "#/components/schemas/" + name
-
-            self._insert_discriminator(defs.defs[v.id], str(k))
-            if v.display is not None:
-                if v.display.name is not None:
-                    defs.defs[v.id]["title"] = v.display.name
-                if v.display.description is not None:
-                    defs.defs[v.id]["description"] = v.display.description
-
-            defs.components[name] = defs.defs[v.id]
-            one_of.append({"$ref": "#/components/schemas/" + name})
-        return {
-            "oneOf": one_of,
-            "discriminator": {
-                "propertyName": self.discriminator_field_name,
-                "mapping": discriminator_mapping,
-            },
-        }
+        return OneOfSchema._to_openapi_fragment(self, scope, defs)
 
 
 @dataclass
@@ -5731,7 +5649,10 @@ class OneOfStringType(
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(
-            self, types, discriminator_inlined, discriminator_field_name
+            self, types=types,
+            discriminator_inlined=discriminator_inlined,
+            discriminator_field_name=discriminator_field_name,
+            oneof_type="_discriminated_string_"
         )
         _OneOfType.__init__(
             self,
@@ -5769,7 +5690,10 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(
-            self, types, discriminator_inlined, discriminator_field_name
+            self, types=types,
+            discriminator_inlined=discriminator_inlined,
+            oneof_type="_discriminated_int_",
+            discriminator_field_name=discriminator_field_name,
         )
         _OneOfType.__init__(
             self,
@@ -7129,12 +7053,12 @@ class _SchemaBuilder:
             types[discriminator_value] = f.type
         if discriminator_type is str:
             return OneOfStringType(
-                types,
-                scope,
+                types=types,
+                scope=scope,
                 discriminator_inlined=False,
             )
         else:
-            return OneOfIntType(types, scope, discriminator_inlined=False)
+            return OneOfIntType(types=types, scope=scope, discriminator_inlined=False)
 
     @classmethod
     def _resolve_pattern(cls, t, type_hints: type, path, scope: ScopeType):
