@@ -2604,7 +2604,6 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-
     def _insert_discriminator(
         self,
         discriminated_object: typing.Dict[str, typing.Any],
@@ -2830,14 +2829,26 @@ class OneOfStringSchema(OneOfSchema):
             " subobjects it must have a type of string."
         ),
     ] = "_type"
-    oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = "_discriminated_string_"
+    oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = (
+        "_discriminated_string_"
+    )
 
-    def __init__(self, types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]], discriminator_inlined: bool, oneof_type: str, discriminator_field_name: str):
+    def __init__(
+        self,
+        types: Dict[
+            str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+        ],
+        discriminator_inlined: bool,
+        oneof_type: str,
+        discriminator_field_name: str,
+    ):
         OneOfSchema.__init__(
-            self, types,
+            self,
+            types,
             discriminator_inlined=discriminator_inlined,
             oneof_type=self.oneof_type,
-            discriminator_field_name=discriminator_field_name)
+            discriminator_field_name=discriminator_field_name,
+        )
 
 
 @dataclass
@@ -2947,14 +2958,26 @@ class OneOfIntSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-    oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = "_discriminated_int_"
+    oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = (
+        "_discriminated_int_"
+    )
 
-    def __init__(self, types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]], discriminator_inlined: bool, oneof_type: str, discriminator_field_name: str, ):
+    def __init__(
+        self,
+        types: Dict[
+            int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+        ],
+        discriminator_inlined: bool,
+        oneof_type: str,
+        discriminator_field_name: str,
+    ):
         OneOfSchema.__init__(
-            self, types,
+            self,
+            types,
             discriminator_inlined=discriminator_inlined,
             oneof_type=self.oneof_type,
-            discriminator_field_name=discriminator_field_name)
+            discriminator_field_name=discriminator_field_name,
+        )
 
 
 @dataclass
@@ -5564,10 +5587,11 @@ class OneOfStringType(
     ):
         # noinspection PyArgumentList
         OneOfStringSchema.__init__(
-            self, types=types,
+            self,
+            types=types,
             discriminator_inlined=discriminator_inlined,
             discriminator_field_name=discriminator_field_name,
-            oneof_type="_discriminated_string_"
+            oneof_type="_discriminated_string_",
         )
         _OneOfType.__init__(
             self,
@@ -5605,7 +5629,8 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
     ):
         # noinspection PyArgumentList
         OneOfIntSchema.__init__(
-            self, types=types,
+            self,
+            types=types,
             discriminator_inlined=discriminator_inlined,
             oneof_type="_discriminated_int_",
             discriminator_field_name=discriminator_field_name,
@@ -6973,7 +6998,9 @@ class _SchemaBuilder:
                 discriminator_inlined=False,
             )
         else:
-            return OneOfIntType(types=types, scope=scope, discriminator_inlined=False)
+            return OneOfIntType(
+                types=types, scope=scope, discriminator_inlined=False
+            )
 
     @classmethod
     def _resolve_pattern(cls, t, type_hints: type, path, scope: ScopeType):
