@@ -2577,9 +2577,6 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
-StrInt = typing.Union[int, str]
-
-
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: Dict[
