@@ -2826,8 +2826,8 @@ class OneOfStringSchema(OneOfSchema):
         super().__init__(
             types=types,
             discriminator_inlined=discriminator_inlined,
-            oneof_type=self.oneof_type,
             discriminator_field_name=discriminator_field_name,
+            oneof_type=self.oneof_type,
         )
 
 
@@ -2954,8 +2954,8 @@ class OneOfIntSchema(OneOfSchema):
         super().__init__(
             types=types,
             discriminator_inlined=discriminator_inlined,
-            oneof_type=self.oneof_type,
             discriminator_field_name=discriminator_field_name,
+            oneof_type=self.oneof_type,
         )
 
 
