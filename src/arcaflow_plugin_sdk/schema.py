@@ -2577,14 +2577,15 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
-StrInt = typing.Union[int, str]
-
-
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
-    types: Dict[
-        StrInt, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+    types: typing.Union[
+        Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+        ],
+        Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
+        ]
     ]
+
     discriminator_inlined: typing.Annotated[
         bool,
         _name("Discriminator field inlined"),
