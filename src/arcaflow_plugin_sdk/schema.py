@@ -2580,10 +2580,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
-        Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
-        ],
-        Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
-        ]
+        Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
+        Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
     ]
 
     discriminator_inlined: typing.Annotated[
