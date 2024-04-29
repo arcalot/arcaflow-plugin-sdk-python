@@ -5565,7 +5565,6 @@ class OneOfStringType(
             types=types,
             discriminator_inlined=discriminator_inlined,
             discriminator_field_name=discriminator_field_name,
-            # oneof_type="_discriminated_string_",
         )
         _OneOfType.__init__(
             self,
@@ -5606,7 +5605,6 @@ class OneOfIntType(OneOfIntSchema, _OneOfType[OneOfT, int], Generic[OneOfT]):
             self,
             types=types,
             discriminator_inlined=discriminator_inlined,
-            # oneof_type="_discriminated_int_",
             discriminator_field_name=discriminator_field_name,
         )
         _OneOfType.__init__(
