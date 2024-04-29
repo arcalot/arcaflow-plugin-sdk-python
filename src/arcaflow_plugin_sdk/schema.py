@@ -2593,14 +2593,12 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " objects' schema"
         ),
     ]
-    oneof_type: typing.Annotated[str, _name("One Of Type Name")]
+    oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
         _description(
             "Name of the field used to discriminate between possible values."
-            " If this field ispresent on any of the component objects it must"
-            " also be an int."
         ),
     ] = "_type"
 
@@ -2812,23 +2810,6 @@ class OneOfStringSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-    discriminator_inlined: typing.Annotated[
-        bool,
-        _name("Discriminator field inlined"),
-        _description(
-            "True if the discriminator is a field in each schema of the"
-            " underlying objects"
-        ),
-    ]
-    discriminator_field_name: typing.Annotated[
-        str,
-        _name("Discriminator field name"),
-        _description(
-            "Name of the field whose value is used to discriminate between"
-            " possible subobject types. If this field is present in any of the"
-            " subobjects it must have a type of string."
-        ),
-    ] = "_type"
     oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = (
         "_discriminated_string_"
     )
