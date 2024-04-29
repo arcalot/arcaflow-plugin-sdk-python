@@ -2809,22 +2809,6 @@ class OneOfStringSchema(OneOfSchema):
         "_discriminated_string_"
     )
 
-    def __init__(
-        self,
-        types: Dict[
-            str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
-        ],
-        discriminator_inlined: bool,
-        discriminator_field_name: str = None,
-        oneof_type: str = None,
-    ):
-        super().__init__(
-            types=types,
-            discriminator_inlined=discriminator_inlined,
-            discriminator_field_name=discriminator_field_name,
-            oneof_type=self.oneof_type,
-        )
-
 
 @dataclass
 class OneOfIntSchema(OneOfSchema):
@@ -2936,22 +2920,6 @@ class OneOfIntSchema(OneOfSchema):
     oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = (
         "_discriminated_int_"
     )
-
-    def __init__(
-        self,
-        types: Dict[
-            int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]
-        ],
-        discriminator_inlined: bool,
-        discriminator_field_name: str = None,
-        oneof_type: str = None,
-    ):
-        super().__init__(
-            types=types,
-            discriminator_inlined=discriminator_inlined,
-            discriminator_field_name=discriminator_field_name,
-            oneof_type=self.oneof_type,
-        )
 
 
 @dataclass
