@@ -2577,13 +2577,15 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
+StrInt = typing.Union[int, str]
+StrIntType = typing.TypeVar("StrIntType", bound=StrInt)
+
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
         Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
         Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
     ]
-
     discriminator_inlined: typing.Annotated[
         bool,
         _name("Discriminator field inlined"),
@@ -2600,6 +2602,9 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Name of the field used to discriminate between possible values."
         ),
     ] = "_type"
+
+    # def discriminator_type(self):
+        # self.types.
 
     def _insert_discriminator(
         self,
@@ -2619,12 +2624,20 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             its discriminated union.
         """
         if self.discriminator_inlined:
+            discriminator_type = None
+            if isinstance(self, OneOfStringSchema):
+                discriminator_type = "string"
+            elif isinstance(self, OneOfIntSchema):
+                discriminator_type = "integer"
+            else:
+                funcname = inspect.currentframe().f_code.co_name
+                raise NotImplementedError(f'{inspect.currentframe().f_code.co_name}() is not implemented for {type(self).__name__}')
             # update the object's schema to show the only valid value
             # for this object's discriminator
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
-                "type": "string",
+                "type": discriminator_type,
                 "const": discriminator_val,
             }
             # discriminator field is already present in the required

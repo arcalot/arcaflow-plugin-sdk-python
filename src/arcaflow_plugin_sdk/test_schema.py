@@ -56,6 +56,7 @@ class InlineStr2:
 class InlineInt:
     type_: int
     msg: str
+    code: int
 
 
 @dataclasses.dataclass
@@ -589,6 +590,34 @@ class OneOfTest(unittest.TestCase):
             },
             "a",
         )
+        self.scope_inlined_int = schema.ScopeType(
+            {
+                "a": schema.ObjectType(
+                    InlineInt,
+                    {
+                        discriminator_field_name: PropertyType(
+                            schema.StringType(),
+                        ),
+                        "msg": PropertyType(schema.StringType()),
+                        "code": PropertyType(schema.IntType()),
+                    }),
+                "b": schema.ObjectType(
+                    InlineInt2,
+                    {
+                        discriminator_field_name: PropertyType(
+                            schema.StringType(),
+                        ),
+                        # TODO
+                        # simplify and improve and error message when
+                        # a property is specified in the Schema, but
+                        # does not exist on the source dataclass
+                        # "code": PropertyType(schema.IntType()),
+                        "msg2": PropertyType(schema.StringType()),
+                    })
+            },
+            "a",
+        )
+
 
     def test_inline_discriminator_missing(self):
         with self.assertRaises(BadArgumentException) as cm:
@@ -783,6 +812,24 @@ class OneOfTest(unittest.TestCase):
         )
         self.assertIsInstance(unserialized_data2, DoubleInlineStr)
         self.assertEqual(unserialized_data2.msg, "Hi again")
+
+        s = schema.OneOfIntType(
+            {
+                1: schema.RefType("a", self.scope_inlined_int),
+                2: schema.RefType("b", self.scope_inlined_int),
+            },
+            scope=self.scope_inlined_int,
+            discriminator_field_name=discriminator_field_name,
+            discriminator_inlined=True,
+        )
+        unserialized_data: InlineInt = s.unserialize({
+            discriminator_field_name: 1,
+            "msg": "Hi again",
+            "code": 101
+        })
+        self.assertIsInstance(unserialized_data, InlineInt)
+
+
 
     def test_validation(self):
         s = schema.OneOfStringType[Basic](
@@ -1564,6 +1611,8 @@ class SchemaBuilderTest(unittest.TestCase):
             t.serialize(TestData(type(dict[str, str])))
 
 
+from pprint import pprint
+
 class JSONSchemaTest(unittest.TestCase):
 
     def _execute_test_cases(self, test_cases):
@@ -2153,8 +2202,9 @@ class JSONSchemaTest(unittest.TestCase):
                 InlineInt,
                 {
                     "msg": schema.PropertyType(schema.StringType()),
+                    "code": schema.PropertyType(schema.IntType()),
                     discriminator_field_name: schema.PropertyType(
-                        schema.StringType()
+                        schema.IntType()
                     ),
                 },
             ),
@@ -2163,7 +2213,7 @@ class JSONSchemaTest(unittest.TestCase):
                 {
                     "msg2": schema.PropertyType(schema.StringType()),
                     discriminator_field_name: schema.PropertyType(
-                        schema.StringType()
+                        schema.IntType()
                     ),
                 },
             ),
@@ -2204,12 +2254,13 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
+                            "code": {"type": "integer"},
                             discriminator_field_name: {
-                                "type": "string",
+                                "type": "integer",
                                 "const": str(inline_int_key),
                             },
                         },
-                        "required": [discriminator_field_name, "msg"],
+                        "required": [discriminator_field_name, "msg", "code"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -2217,12 +2268,13 @@ class JSONSchemaTest(unittest.TestCase):
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
+                            "code": {"type": "integer"},
                             discriminator_field_name: {
-                                "type": "string",
+                                "type": "integer",
                                 "const": str(inline_int_key),
                             },
                         },
-                        "required": [discriminator_field_name, "msg"],
+                        "required": [discriminator_field_name, "msg", "code"],
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
@@ -2231,7 +2283,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "properties": {
                             "msg2": {"type": "string"},
                             discriminator_field_name: {
-                                "type": "string",
+                                "type": "integer",
                                 "const": str(inline_int2_key),
                             },
                         },
@@ -2244,7 +2296,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "properties": {
                             "msg2": {"type": "string"},
                             discriminator_field_name: {
-                                "type": "string",
+                                "type": "integer",
                                 "const": str(inline_int2_key),
                             },
                         },
