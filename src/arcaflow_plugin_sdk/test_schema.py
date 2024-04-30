@@ -81,6 +81,11 @@ class InlineUnion:
     union: typing.Union[InlineStr, InlineStr2, DoubleInlineStr]
 
 
+@dataclasses.dataclass
+class IntInlineUnion:
+    union: typing.Union[InlineInt, InlineInt2]
+
+
 class Color(enum.Enum):
     GREEN = "green"
     RED = "red"
@@ -2105,6 +2110,165 @@ class JSONSchemaTest(unittest.TestCase):
                                     f"#/$defs/{DoubleInlineStr.__name__}"
                                     "_discriminated_string_"
                                     "a2"
+                                )
+                            },
+                        ]
+                    }
+                },
+                "required": ["union"],
+                "additionalProperties": False,
+                "dependentRequired": {},
+            },
+            json_schema,
+        )
+
+    def test_oneof_int_inline(self):
+        scope = schema.ScopeType(
+            {},
+            IntInlineUnion.__name__,
+        )
+        inline_int_key = 1
+        inline_int2_key = 2
+
+        scope.objects = {
+            IntInlineUnion.__name__: schema.ObjectType(
+                IntInlineUnion,
+                {
+                    "union": schema.PropertyType(
+                        schema.OneOfIntType(
+                            {
+                                inline_int_key: schema.RefType(InlineInt.__name__, scope),
+                                inline_int2_key: schema.RefType(
+                                    InlineInt2.__name__, scope
+                                ),
+                            },
+                            scope,
+                            discriminator_inlined=True,
+                            discriminator_field_name=discriminator_field_name,
+                        )
+                    )
+                },
+            ),
+            InlineInt.__name__: schema.ObjectType(
+                InlineInt,
+                {
+                    "msg": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                },
+            ),
+            InlineInt2.__name__: schema.ObjectType(
+                InlineInt2,
+                {
+                    "msg2": schema.PropertyType(schema.StringType()),
+                    discriminator_field_name: schema.PropertyType(
+                        schema.StringType()
+                    ),
+                },
+            ),
+        }
+
+        defs = schema._JSONSchemaDefs()
+        json_schema = scope._to_jsonschema_fragment(scope, defs)
+        self.assertEqual(
+            {
+                "$defs": {
+                    IntInlineUnion.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "union": {
+                                "oneOf": [
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineInt.__name__}"
+                                            "_discriminated_int_"
+                                            f"{inline_int_key}"
+                                        )
+                                    },
+                                    {
+                                        "$ref": (
+                                            f"#/$defs/{InlineInt2.__name__}"
+                                            "_discriminated_int_"
+                                            f"{inline_int2_key}"
+                                        )
+                                    },
+                                ]
+                            }
+                        },
+                        "required": ["union"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineInt.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": str(inline_int_key),
+                            },
+                        },
+                        "required": [discriminator_field_name, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineInt.__name__}_discriminated_int_{inline_int_key}": {
+                        "type": "object",
+                        "properties": {
+                            "msg": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": str(inline_int_key),
+                            },
+                        },
+                        "required": [discriminator_field_name, "msg"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    InlineInt2.__name__: {
+                        "type": "object",
+                        "properties": {
+                            "msg2": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": str(inline_int2_key),
+                            },
+                        },
+                        "required": [discriminator_field_name, "msg2"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                    f"{InlineInt2.__name__}_discriminated_int_{inline_int2_key}": {
+                        "type": "object",
+                        "properties": {
+                            "msg2": {"type": "string"},
+                            discriminator_field_name: {
+                                "type": "string",
+                                "const": str(inline_int2_key),
+                            },
+                        },
+                        "required": [discriminator_field_name, "msg2"],
+                        "additionalProperties": False,
+                        "dependentRequired": {},
+                    },
+                },
+                "type": "object",
+                "properties": {
+                    "union": {
+                        "oneOf": [
+                            {
+                                "$ref": (
+                                    f"#/$defs/{InlineInt.__name__}"
+                                    "_discriminated_int_"
+                                    f"{inline_int_key}"
+                                )
+                            },
+                            {
+                                "$ref": (
+                                    f"#/$defs/{InlineInt2.__name__}"
+                                    "_discriminated_int_"
+                                    f"{inline_int2_key}"
                                 )
                             },
                         ]
