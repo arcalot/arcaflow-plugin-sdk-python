@@ -2631,7 +2631,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                 discriminator_type = "integer"
             else:
                 funcname = inspect.currentframe().f_code.co_name
-                raise NotImplementedError(f'{inspect.currentframe().f_code.co_name}() is not implemented for {type(self).__name__}')
+                raise NotImplementedError(f'{funcname}() is not implemented for {type(self).__name__}')
             # update the object's schema to show the only valid value
             # for this object's discriminator
             discriminated_object["properties"][
