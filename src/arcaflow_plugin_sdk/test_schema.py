@@ -600,7 +600,8 @@ class OneOfTest(unittest.TestCase):
                         ),
                         "msg": PropertyType(schema.StringType()),
                         "code": PropertyType(schema.IntType()),
-                    }),
+                    },
+                ),
                 "b": schema.ObjectType(
                     InlineInt2,
                     {
@@ -613,11 +614,11 @@ class OneOfTest(unittest.TestCase):
                         # does not exist on the source dataclass
                         # "code": PropertyType(schema.IntType()),
                         "msg2": PropertyType(schema.StringType()),
-                    })
+                    },
+                ),
             },
             "a",
         )
-
 
     def test_inline_discriminator_missing(self):
         with self.assertRaises(BadArgumentException) as cm:
@@ -822,14 +823,10 @@ class OneOfTest(unittest.TestCase):
             discriminator_field_name=discriminator_field_name,
             discriminator_inlined=True,
         )
-        unserialized_data: InlineInt = s.unserialize({
-            discriminator_field_name: 1,
-            "msg": "Hi again",
-            "code": 101
-        })
+        unserialized_data: InlineInt = s.unserialize(
+            {discriminator_field_name: 1, "msg": "Hi again", "code": 101}
+        )
         self.assertIsInstance(unserialized_data, InlineInt)
-
-
 
     def test_validation(self):
         s = schema.OneOfStringType[Basic](
@@ -1611,8 +1608,6 @@ class SchemaBuilderTest(unittest.TestCase):
             t.serialize(TestData(type(dict[str, str])))
 
 
-from pprint import pprint
-
 class JSONSchemaTest(unittest.TestCase):
 
     def _execute_test_cases(self, test_cases):
@@ -2186,7 +2181,9 @@ class JSONSchemaTest(unittest.TestCase):
                     "union": schema.PropertyType(
                         schema.OneOfIntType(
                             {
-                                inline_int_key: schema.RefType(InlineInt.__name__, scope),
+                                inline_int_key: schema.RefType(
+                                    InlineInt.__name__, scope
+                                ),
                                 inline_int2_key: schema.RefType(
                                     InlineInt2.__name__, scope
                                 ),
@@ -2264,7 +2261,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{InlineInt.__name__}_discriminated_int_{inline_int_key}": {
+                    f"{InlineInt.__name__}"
+                    + f"_discriminated_int_{inline_int_key}": {
                         "type": "object",
                         "properties": {
                             "msg": {"type": "string"},
@@ -2291,7 +2289,8 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{InlineInt2.__name__}_discriminated_int_{inline_int2_key}": {
+                    f"{InlineInt2.__name__}"
+                    + f"_discriminated_int_{inline_int2_key}": {
                         "type": "object",
                         "properties": {
                             "msg2": {"type": "string"},

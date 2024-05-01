@@ -2580,6 +2580,7 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 StrInt = typing.Union[int, str]
 StrIntType = typing.TypeVar("StrIntType", bound=StrInt)
 
+
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
@@ -2810,7 +2811,9 @@ class OneOfStringSchema(OneOfSchema):
     oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = (
         "_discriminated_string_"
     )
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = "string"
+    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
+        "string"
+    )
 
 
 @dataclass
@@ -2923,7 +2926,9 @@ class OneOfIntSchema(OneOfSchema):
     oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = (
         "_discriminated_int_"
     )
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = "integer"
+    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
+        "integer"
+    )
 
 
 @dataclass
