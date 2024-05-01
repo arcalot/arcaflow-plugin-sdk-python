@@ -596,7 +596,7 @@ class OneOfTest(unittest.TestCase):
                     InlineInt,
                     {
                         discriminator_field_name: PropertyType(
-                            schema.StringType(),
+                            schema.IntType(),
                         ),
                         "msg": PropertyType(schema.StringType()),
                         "code": PropertyType(schema.IntType()),
@@ -606,7 +606,7 @@ class OneOfTest(unittest.TestCase):
                     InlineInt2,
                     {
                         discriminator_field_name: PropertyType(
-                            schema.StringType(),
+                            schema.IntType(),
                         ),
                         "msg2": PropertyType(schema.StringType()),
                     },
