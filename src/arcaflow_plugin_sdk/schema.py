@@ -2577,10 +2577,6 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         return {"$ref": "#/components/schemas/" + self.id}
 
 
-StrInt = typing.Union[int, str]
-StrIntType = typing.TypeVar("StrIntType", bound=StrInt)
-
-
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
