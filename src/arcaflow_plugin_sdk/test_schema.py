@@ -608,11 +608,6 @@ class OneOfTest(unittest.TestCase):
                         discriminator_field_name: PropertyType(
                             schema.StringType(),
                         ),
-                        # TODO
-                        # simplify and improve and error message when
-                        # a property is specified in the Schema, but
-                        # does not exist on the source dataclass
-                        # "code": PropertyType(schema.IntType()),
                         "msg2": PropertyType(schema.StringType()),
                     },
                 ),
