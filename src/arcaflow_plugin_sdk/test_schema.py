@@ -2256,7 +2256,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{InlineInt.__name__}"
+                    InlineInt.__name__
                     + f"_discriminated_int_{inline_int_key}": {
                         "type": "object",
                         "properties": {
@@ -2284,7 +2284,7 @@ class JSONSchemaTest(unittest.TestCase):
                         "additionalProperties": False,
                         "dependentRequired": {},
                     },
-                    f"{InlineInt2.__name__}"
+                    InlineInt2.__name__
                     + f"_discriminated_int_{inline_int2_key}": {
                         "type": "object",
                         "properties": {
