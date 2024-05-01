@@ -2595,6 +2595,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ]
     oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")]
+    discriminator_type: typing.Annotated[str, _name("Discriminator Type")]
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2603,8 +2604,15 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-    # def discriminator_type(self):
-        # self.types.
+    def __post_init__(self):
+        if isinstance(self, OneOfStringSchema):
+            self.discriminator_type = "string"
+            self.oneof_type = "_discriminated_string_"
+        elif isinstance(self, OneOfIntSchema):
+            self.discriminator_type = "integer"
+            self.oneof_type = "_discriminated_int_"
+        else:
+            raise BadArgumentException(f'{type(self).__name__} is not a subclass of OneOfSchema')
 
     def _insert_discriminator(
         self,
@@ -2624,20 +2632,12 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             its discriminated union.
         """
         if self.discriminator_inlined:
-            discriminator_type = None
-            if isinstance(self, OneOfStringSchema):
-                discriminator_type = "string"
-            elif isinstance(self, OneOfIntSchema):
-                discriminator_type = "integer"
-            else:
-                funcname = inspect.currentframe().f_code.co_name
-                raise NotImplementedError(f'{funcname}() is not implemented for {type(self).__name__}')
             # update the object's schema to show the only valid value
             # for this object's discriminator
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
-                "type": discriminator_type,
+                "type": self.discriminator_type,
                 "const": discriminator_val,
             }
             # discriminator field is already present in the required
