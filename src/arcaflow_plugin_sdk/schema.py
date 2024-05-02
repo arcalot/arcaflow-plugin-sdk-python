@@ -2592,7 +2592,9 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ]
     oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = None
+    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
+        None
+    )
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2810,7 +2812,6 @@ class OneOfStringSchema(OneOfSchema):
     def __post_init__(self):
         self.oneof_type = "_discriminated_string_"
         self.discriminator_type = "string"
-
 
 
 @dataclass
