@@ -2645,7 +2645,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         one_of = []
         for k, v in self.types.items():
             # noinspection PyProtectedMember
-            scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
+            _ = scope.objects[v.id]._to_jsonschema_fragment(scope, defs)
             self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
                 if v.display.name is not None:
@@ -2664,7 +2664,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         discriminator_mapping = {}
         for k, v in self.types.items():
             # noinspection PyProtectedMember
-            scope.objects[v.id]._to_openapi_fragment(scope, defs)
+            _ = scope.objects[v.id]._to_openapi_fragment(scope, defs)
             name = v.id + self.oneof_type + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
             self._insert_discriminator(defs.defs[v.id], str(k))
