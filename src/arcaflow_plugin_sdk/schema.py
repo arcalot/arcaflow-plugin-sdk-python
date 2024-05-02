@@ -2591,8 +2591,8 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " objects' schema"
         ),
     ]
-    oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")]
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")]
+    oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
+    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = None
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2806,12 +2806,11 @@ class OneOfStringSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-    oneof_type: typing.Annotated[str, _name("One Of String Type Name")] = (
-        "_discriminated_string_"
-    )
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
-        "string"
-    )
+
+    def __post_init__(self):
+        self.oneof_type = "_discriminated_string_"
+        self.discriminator_type = "string"
+
 
 
 @dataclass
@@ -2921,12 +2920,10 @@ class OneOfIntSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-    oneof_type: typing.Annotated[str, _name("One Of Int Type Name")] = (
-        "_discriminated_int_"
-    )
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
-        "integer"
-    )
+
+    def __post_init__(self):
+        self.oneof_type = "_discriminated_int_"
+        self.discriminator_type = "integer"
 
 
 @dataclass
