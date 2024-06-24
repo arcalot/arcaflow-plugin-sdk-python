@@ -55,7 +55,7 @@ class StdoutTest(unittest.TestCase):
 @plugin.step(
     "incorrect-return",
     "Incorrect Return",
-    "A test that doesn't include the output ID.",
+    "A step that returns a bad output which omits the output ID.",
     {"success": EmptyTestOutput},
 )
 def incorrect_return_step(

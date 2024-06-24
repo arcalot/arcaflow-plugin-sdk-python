@@ -5991,14 +5991,15 @@ class StepType(StepSchema):
         result = self._handler(step_local_data.initialized_object, params)
         if not isinstance(result, tuple):
             raise BadArgumentException(
-                "The step returned type {};".format(type(result))
-                + "  expected a tuple with two values: output ID string"
-                  " and a step-specific value."
+                f"The implementation of step {run_id}/{self.id} returned"
+                f" type {type(result)}; expected a tuple with two"
+                " values: output ID string and a step-specific value."
             )
         if len(result) != 2:
             raise BadArgumentException(
-                "The step returned {} results instead of 2. Did your step"
-                " return the correct results?".format(len(result))
+                f"The implementation of step {run_id}/{self.id} returned"
+                f"{len(result)} results instead of 2. Did your step"
+                " return the correct results?"
             )
         output_id, output_data = result
         if output_id not in self.outputs:
