@@ -5,15 +5,16 @@ import typing
 import unittest
 
 from arcaflow_plugin_sdk import plugin
+from arcaflow_plugin_sdk import schema
 
 
 @dataclasses.dataclass
-class StdoutTestInput:
+class EmptyTestInput:
     pass
 
 
 @dataclasses.dataclass
-class StdoutTestOutput:
+class EmptyTestOutput:
     pass
 
 
@@ -21,13 +22,13 @@ class StdoutTestOutput:
     "stdout-test",
     "Stdout test",
     "A test for writing to stdout.",
-    {"success": StdoutTestOutput},
+    {"success": EmptyTestOutput},
 )
 def stdout_test_step(
-    input: StdoutTestInput,
-) -> typing.Tuple[str, StdoutTestOutput]:
+    _: EmptyTestInput,
+) -> typing.Tuple[str, EmptyTestOutput]:
     print("Hello world!")
-    return "success", StdoutTestOutput()
+    return "success", EmptyTestOutput()
 
 
 class StdoutTest(unittest.TestCase):
@@ -50,6 +51,26 @@ class StdoutTest(unittest.TestCase):
         )
         self.assertEqual(0, exit_code)
         self.assertEqual("Hello world!\n", e.getvalue())
+
+
+@plugin.step(
+    "incorrect-return",
+    "Incorrect Return",
+    "A test that doesn't include the output ID.",
+    {"success": EmptyTestOutput},
+)
+def incorrect_return_step(
+    _: EmptyTestInput,
+):  # Skip return type, since we're purposefully not doing it right.
+    return EmptyTestOutput()
+
+
+class CallStepTest(unittest.TestCase):
+    def test_incorrect_return_args_count(self):
+        s = plugin.build_schema(incorrect_return_step)
+
+        with self.assertRaises(schema.BadArgumentException):
+            s.call_step(self.id(), "incorrect-return", EmptyTestInput())
 
 
 if __name__ == "__main__":

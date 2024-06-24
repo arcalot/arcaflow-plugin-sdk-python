@@ -5989,6 +5989,11 @@ class StepType(StepSchema):
             input.validate(params, tuple(["input"]))
         # Run the step
         result = self._handler(step_local_data.initialized_object, params)
+        if not isinstance(result, tuple):
+            raise BadArgumentException(
+                "The step returned type {};".format(type(result))
+                + " expected a tuple with two values: output ID string and a step-specific value."
+            )
         if len(result) != 2:
             raise BadArgumentException(
                 "The step returned {} results instead of 2. Did your step"
