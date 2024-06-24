@@ -5998,8 +5998,7 @@ class StepType(StepSchema):
         if len(result) != 2:
             raise BadArgumentException(
                 f"The implementation of step {run_id}/{self.id} returned"
-                f"{len(result)} results instead of 2. Did your step"
-                " return the correct results?"
+                f"{len(result)} results instead of 2. Got {result}."
             )
         output_id, output_data = result
         if output_id not in self.outputs:

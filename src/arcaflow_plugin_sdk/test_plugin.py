@@ -60,7 +60,8 @@ class StdoutTest(unittest.TestCase):
 )
 def incorrect_return_step(
     _: EmptyTestInput,
-):  # Skip return type, since we're purposefully not doing it right.
+) -> typing.Tuple[str, EmptyTestOutput]:
+    # noinspection PyTypeChecker
     return EmptyTestOutput()
 
 
