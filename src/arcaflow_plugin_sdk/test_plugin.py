@@ -4,8 +4,7 @@ import tempfile
 import typing
 import unittest
 
-from arcaflow_plugin_sdk import plugin
-from arcaflow_plugin_sdk import schema
+from arcaflow_plugin_sdk import plugin, schema
 
 
 @dataclasses.dataclass
