@@ -5994,6 +5994,7 @@ class StepType(StepSchema):
                 f"The implementation of step {run_id}/{self.id} returned"
                 f" type {type(result)}; expected a tuple with two"
                 " values: output ID string and a step-specific value."
+                f"\nValue returned: {result}"
             )
         if len(result) != 2:
             raise BadArgumentException(
