@@ -5991,8 +5991,9 @@ class StepType(StepSchema):
         result = self._handler(step_local_data.initialized_object, params)
         if not isinstance(result, tuple):
             raise BadArgumentException(
-                "The step returned type {}; expected a tuple with".format(type(result))
-                + " two values: output ID string and a step-specific value."
+                "The step returned type {};".format(type(result))
+                + "  expected a tuple with two values: output ID string"
+                  " and a step-specific value."
             )
         if len(result) != 2:
             raise BadArgumentException(
