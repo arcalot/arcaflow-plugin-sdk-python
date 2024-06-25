@@ -6793,8 +6793,12 @@ class _SchemaBuilder:
     ) -> AbstractType:
         t: typing.ForwardRef
         # TODO is there a better way to directly evaluate a forward ref?
-        # noinspection PyArgumentList,PyProtectedMember
-        resolved = t._evaluate(None, None, frozenset())
+        # Note: This is an unstable API.
+        # noinspection PyProtectedMember
+        resolved = t._evaluate(
+            globalns=None,
+            localns=None,
+            recursive_guard=frozenset())
         return cls._resolve(resolved, resolved, path, scope)
 
     @classmethod
