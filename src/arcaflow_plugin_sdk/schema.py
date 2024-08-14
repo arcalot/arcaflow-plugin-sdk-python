@@ -2592,7 +2592,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ]
     oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
+    _discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
         None
     )
     discriminator_field_name: typing.Annotated[
@@ -2626,7 +2626,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
-                "type": self.discriminator_type,
+                "type": self._discriminator_type,
                 "const": discriminator_val,
             }
             # discriminator field is already present in the required
@@ -2811,7 +2811,7 @@ class OneOfStringSchema(OneOfSchema):
 
     def __post_init__(self):
         self.oneof_type = "_discriminated_string_"
-        self.discriminator_type = "string"
+        self._discriminator_type = "string"
 
 
 @dataclass
@@ -2924,7 +2924,7 @@ class OneOfIntSchema(OneOfSchema):
 
     def __post_init__(self):
         self.oneof_type = "_discriminated_int_"
-        self.discriminator_type = "integer"
+        self._discriminator_type = "integer"
 
 
 @dataclass
@@ -4841,6 +4841,27 @@ class PropertyType(PropertySchema, Generic[PropertyT]):
 
 ObjectT = TypeVar("ObjectT", bound=object)
 
+def invalid_attr_identifier(name: str) -> bool:
+    return name.startswith("_")
+
+
+def dataclasses_fields(dc) -> typing.Iterator[dataclasses.Field]:
+    return [
+        f for f in dataclasses.fields(dc) if not invalid_attr_identifier(f.name)
+    ]
+
+def get_type_hints(obj: typing.Any) -> dict[str, typing.Any]:
+    # hints = typing.get_type_hints(obj)
+    # publicHints = {}
+    # for key, val in hints.items():
+    #     if not invalid_attr_identifier(key):
+    #         publicHints[key] = val
+    # return publicHints
+    return {
+        k: v for k, v in typing.get_type_hints(obj).items()
+        if not invalid_attr_identifier(k)
+    }
+
 
 @dataclass
 class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
@@ -4917,15 +4938,16 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
             )
         try:
             # noinspection PyDataclass
-            dataclasses.fields(cls_type)
+            # dataclasses.fields(cls_type)
+            dataclasses_fields(cls_type)
         except Exception as e:
             raise BadArgumentException(
                 "The passed class '{}' is not a dataclass. Please use a"
                 " dataclass.".format(cls_type.__name__)
             ) from e
 
-        class_type_hints = typing.get_type_hints(cls_type)
-        init_type_hints = typing.get_type_hints(cls_type.__init__)
+        class_type_hints = get_type_hints(cls_type)
+        init_type_hints = get_type_hints(cls_type.__init__)
         if (
             len(init_type_hints) == len(properties) + 1
             and "return" in init_type_hints
@@ -5018,7 +5040,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
         try:
             class_type_hints = {}
             if hasattr(cls_type, "__dict__"):
-                class_type_hints = typing.get_type_hints(cls_type)
+                class_type_hints = get_type_hints(cls_type)
             if hasattr(cls_type, "__bases__"):
                 for base in cls_type.__bases__:
                     base_class_type_hints = cls._resolve_class_type_hints(
@@ -6489,7 +6511,8 @@ class _SchemaBuilder:
         final_fields: Dict[str, PropertyType] = {}
 
         try:
-            fields_list = dataclasses.fields(t)
+            # fields_list = dataclasses.fields(t)
+            fields_list = dataclasses_fields(t)
         except TypeError as e:
             unsupported_types = {
                 tuple: "tuples",
@@ -6531,7 +6554,7 @@ class _SchemaBuilder:
         # noinspection PyTypeChecker
         scope.objects[t.__name__] = None
 
-        type_hints = typing.get_type_hints(t)
+        type_hints = get_type_hints(t)
         for f in fields_list:
             new_path = list(path)
             new_path.append(f.name)
