@@ -76,7 +76,7 @@ class ATPServer:
     step_ids: typing.Dict[str, str]  # Run ID to step IDs
     encoder: cbor2.CBOREncoder
     decoder: cbor2.CBORDecoder
-    user_out_buffer: io.StringIO
+    user_out_wrapper: io.TextIOWrapper
     encoder_lock: threading.Lock
     plugin_schema: schema.SchemaType
     running_threads: typing.List[threading.Thread]
@@ -114,9 +114,9 @@ class ATPServer:
         # potentially interfering with the atp pipes.
         original_stdout = sys.stdout
         original_stderr = sys.stderr
-        self.user_out_buffer = io.StringIO()
-        sys.stdout = self.user_out_buffer
-        sys.stderr = self.user_out_buffer
+        self.user_out_wrapper = io.TextIOWrapper(io.BytesIO(), sys.stdout.encoding)
+        sys.stdout = self.user_out_wrapper
+        sys.stderr = self.user_out_wrapper
 
         # Run the read loop. This blocks to wait for the loop to finish.
         self.run_server_read_loop()
@@ -324,6 +324,8 @@ class ATPServer:
                 self.plugin_schema.unserialize_step_input(step_id, config),
             )
 
+            self.user_out_wrapper.flush()
+            self.user_out_wrapper.seek(0)  # go to start so that we can read stdout.
             # Send WorkDoneMessage
             self.send_runtime_message(
                 MessageType.WORK_DONE,
@@ -333,7 +335,7 @@ class ATPServer:
                     "output_data": self.plugin_schema.serialize_output(
                         step_id, output_id, output_data
                     ),
-                    "debug_logs": self.user_out_buffer.getvalue(),
+                    "debug_logs": self.user_out_wrapper.read(),
                 },
             )
         except Exception as e:
