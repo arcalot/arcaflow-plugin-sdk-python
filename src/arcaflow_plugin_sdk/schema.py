@@ -4851,12 +4851,6 @@ def dataclasses_fields(dc) -> typing.Iterator[dataclasses.Field]:
     ]
 
 def get_type_hints(obj: typing.Any) -> dict[str, typing.Any]:
-    # hints = typing.get_type_hints(obj)
-    # publicHints = {}
-    # for key, val in hints.items():
-    #     if not invalid_attr_identifier(key):
-    #         publicHints[key] = val
-    # return publicHints
     return {
         k: v for k, v in typing.get_type_hints(obj).items()
         if not invalid_attr_identifier(k)
