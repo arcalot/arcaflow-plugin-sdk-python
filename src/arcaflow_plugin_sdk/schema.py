@@ -2605,6 +2605,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Name of the field used to discriminate between possible values."
         ),
     ] = "_type"
+    myoneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
 
     def schema_metadata(self) -> OneOfTypeMetadata:
         raise NotImplementedError("schema_metadata() is not implemented in the subclass")
@@ -2815,6 +2816,9 @@ class OneOfStringSchema(OneOfSchema):
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
+    def __post_init__(self):
+        self.myoneof_type = "my_oneof_string"
+
     def schema_metadata(self) -> OneOfTypeMetadata:
         return OneOfTypeMetadata(
             oneof_type="_discriminated_string_",
@@ -2929,6 +2933,9 @@ class OneOfIntSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
+
+    def __post_init__(self):
+        self.myoneof_type = "my_oneof_int"
 
     def schema_metadata(self) -> OneOfTypeMetadata:
         return OneOfTypeMetadata(
