@@ -2381,9 +2381,7 @@ class TestStepSchema(unittest.TestCase):
         step_schemaType = plugin.build_schema(stdout_test_step)
         step_schema_serialized = schema.SCHEMA_SCHEMA.serialize(step_schemaType)
         step_schema_unserialized = schema.SCHEMA_SCHEMA.unserialize(step_schema_serialized)
-        # self.assertEqual(step_schema, step_schema_unserialized)
-        # out = step_schema_serialized == step_schema_unserialized
-        # self.assertTrue(out)
+        self.assertEqual(step_schemaType, step_schema_unserialized)
         self.assertDictEqual(step_schemaType, step_schema_unserialized)
         # print(yaml.dump(step_schema_serialized))
         # pprint(schema.SCHEMA_SCHEMA.serialize(step_))
