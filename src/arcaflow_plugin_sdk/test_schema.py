@@ -902,44 +902,6 @@ class OneOfTest(unittest.TestCase):
             str(cm.exception),
         )
 
-    def test_serialize_scope(self):
-        s = schema.OneOfStringType(
-            {
-                "a": schema.RefType("a", self.scope_basic),
-                "b": schema.RefType("b", self.scope_basic),
-            },
-            scope=self.scope_basic,
-            discriminator_field_name=discriminator_field_name,
-        )
-        s.__name__ = "test_oneofstring"
-        # print(s.__name__)
-        s2 = schema.build_object_schema(s)
-        print(s2)
-        # scope = schema.ScopeType(
-        #     {
-        #         "BasicUnion": schema.ObjectType(
-        #             schema.OneOfStringType,
-        #             {
-        #             # "a": schema.PropertyType(schema.RefType("a", self.scope_basic)),
-        #             # "b": schema.PropertyType(schema.RefType("b", self.scope_basic)),
-        #             "types": schema.PropertyType(
-        #                 schema.MapType(keys=schema.StringType, values=schema._OBJECT_LIKE),
-        #             ),
-        #             #     {
-        #             #     "a": schema.RefType("a", self.scope_basic),
-        #             #     "b": schema.RefType("b", self.scope_basic),
-        #             # },
-        #             #     "scope": schema.PropertyType(schema.ScopeType),
-        #                 "discriminator_inlined": schema.PropertyType(schema.BoolType),
-        #                 "discriminator_field_name": schema.StringType,
-        #         })
-        #     },
-        #     root="BasicUnion"
-        # )
-        # print(scope.serialize(BasicUnion(Basic(msg='hello world'))))
-
-        # print(self.scope_basic.serialize(BasicUnion(Basic(msg='hello world'))))
-
     def test_serialize_inline(self):
         s = schema.OneOfStringType(
             {
