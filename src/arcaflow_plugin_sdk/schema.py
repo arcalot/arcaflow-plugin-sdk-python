@@ -2610,18 +2610,19 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         ),
     ] = "_type"
 
-    def metadata(self) -> OneOfTypeMetadata:
-        if isinstance(self, OneOfStringType):
-            return OneOfTypeMetadata(
-                oneof_type="_discriminated_string_",
-                discriminator_type="string",
-            )
-        elif isinstance(self, OneOfIntType):
-            return OneOfTypeMetadata(
-                oneof_type="_discriminated_int_",
-                discriminator_type="integer",
-            )
-        return None
+    def schema_metadata(self) -> OneOfTypeMetadata:
+        # if isinstance(self, OneOfStringType):
+        #     return OneOfTypeMetadata(
+        #         oneof_type="_discriminated_string_",
+        #         discriminator_type="string",
+        #     )
+        # elif isinstance(self, OneOfIntType):
+        #     return OneOfTypeMetadata(
+        #         oneof_type="_discriminated_int_",
+        #         discriminator_type="integer",
+        #     )
+        # return None
+        raise NotImplementedError("Method not implemented in parent class")
 
     def _insert_discriminator(
         self,
@@ -2646,7 +2647,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             discriminated_object["properties"][
                 self.discriminator_field_name
             ] = {
-                "type": self.metadata().discriminator_type,
+                "type": self.schema_metadata().discriminator_type,
                 "const": discriminator_val,
             }
             # discriminator field is already present in the required
@@ -2672,7 +2673,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
                     defs.defs[v.id]["title"] = v.display.name
                 if v.display.description is not None:
                     defs.defs[v.id]["description"] = v.display.description
-            name = v.id + self.metadata().oneof_type + str(k)
+            name = v.id + self.schema_metadata().oneof_type + str(k)
             defs.defs[name] = defs.defs[v.id]
             one_of.append({"$ref": "#/$defs/" + name})
         return {"oneOf": one_of}
@@ -2685,7 +2686,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         for k, v in self.types.items():
             # noinspection PyProtectedMember
             _ = scope.objects[v.id]._to_openapi_fragment(scope, defs)
-            name = v.id + self.metadata().oneof_type + str(k)
+            name = v.id + self.schema_metadata().oneof_type + str(k)
             discriminator_mapping[k] = "#/components/schemas/" + name
             self._insert_discriminator(defs.defs[v.id], str(k))
             if v.display is not None:
@@ -2832,6 +2833,11 @@ class OneOfStringSchema(OneOfSchema):
     # def __post_init__(self):
     #     self.oneof_type = "_discriminated_string_"
     #     self.discriminator_type = "string"
+    def schema_metadata(self) -> OneOfTypeMetadata:
+        return OneOfTypeMetadata(
+            oneof_type="_discriminated_string_",
+            discriminator_type="string",
+        )
 
 
 @dataclass
@@ -2945,6 +2951,12 @@ class OneOfIntSchema(OneOfSchema):
     # def __post_init__(self):
     #     self.oneof_type = "_discriminated_int_"
     #     self.discriminator_type = "integer"
+
+    def schema_metadata(self) -> OneOfTypeMetadata:
+        return OneOfTypeMetadata(
+            oneof_type="_discriminated_int_",
+            discriminator_type="integer",
+        )
 
 
 @dataclass
