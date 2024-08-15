@@ -2378,8 +2378,14 @@ class TestStepSchema(unittest.TestCase):
         # print(yaml.dump(scope.serialize(bu)))
         # pprint(scope.serialize(bu))
 
-        step_ = plugin.build_schema(stdout_test_step)
-        print(yaml.dump(schema.SCHEMA_SCHEMA.serialize(step_)))
+        step_schemaType = plugin.build_schema(stdout_test_step)
+        step_schema_serialized = schema.SCHEMA_SCHEMA.serialize(step_schemaType)
+        step_schema_unserialized = schema.SCHEMA_SCHEMA.unserialize(step_schema_serialized)
+        # self.assertEqual(step_schema, step_schema_unserialized)
+        # out = step_schema_serialized == step_schema_unserialized
+        # self.assertTrue(out)
+        self.assertDictEqual(step_schemaType, step_schema_unserialized)
+        # print(yaml.dump(step_schema_serialized))
         # pprint(schema.SCHEMA_SCHEMA.serialize(step_))
 #
 #     def test_step_type(self):
