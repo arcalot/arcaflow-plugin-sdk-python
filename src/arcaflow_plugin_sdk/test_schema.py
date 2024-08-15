@@ -2363,7 +2363,7 @@ class EmptyTestOutput:
     {"success": EmptyTestOutput},
 )
 def stdout_test_step(
-    _: BasicUnion,
+    _: InlineUnion,
 ) -> typing.Tuple[str, EmptyTestOutput]:
     print("Hello world!")
     return "success", EmptyTestOutput()
