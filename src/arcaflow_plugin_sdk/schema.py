@@ -2598,10 +2598,6 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " objects' schema"
         ),
     ]
-    # oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
-    # discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
-    #     None
-    # )
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
