@@ -114,7 +114,9 @@ class ATPServer:
         # potentially interfering with the atp pipes.
         original_stdout = sys.stdout
         original_stderr = sys.stderr
-        self.user_out_wrapper = io.TextIOWrapper(io.BytesIO(), sys.stdout.encoding)
+        self.user_out_wrapper = io.TextIOWrapper(
+            io.BytesIO(), sys.stdout.encoding
+        )
         sys.stdout = self.user_out_wrapper
         sys.stderr = self.user_out_wrapper
 
@@ -325,7 +327,7 @@ class ATPServer:
             )
 
             self.user_out_wrapper.flush()
-            self.user_out_wrapper.seek(0)  # go to start so that we can read stdout.
+            self.user_out_wrapper.seek(0)  # go to start to read stdout.
             # Send WorkDoneMessage
             self.send_runtime_message(
                 MessageType.WORK_DONE,
