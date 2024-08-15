@@ -2611,7 +2611,7 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     ] = "_type"
 
     def schema_metadata(self) -> OneOfTypeMetadata:
-        raise NotImplementedError("schema_metadata() is not implemented in the parent class")
+        raise NotImplementedError("schema_metadata() is not implemented in the subclass")
 
     def _insert_discriminator(
         self,
