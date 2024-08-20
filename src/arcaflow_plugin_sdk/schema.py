@@ -2525,8 +2525,8 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     loose_id: typing.Annotated[
         typing.Optional[bool],
         _name("Loose ID Check"),
-        _description("If true, the ID does not need to match another object for "
-                     "them to be considered compatible."),
+        _description("If true, the ID does not need to match another object "
+                     "for them to be considered compatible."),
     ] = None
 
     def _to_jsonschema_fragment(
