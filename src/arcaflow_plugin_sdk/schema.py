@@ -2527,7 +2527,7 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _name("Loose ID Check"),
         _description("If true, the ID does not need to match another object for "
                      "them to be considered compatible."),
-    ] = False
+    ] = None
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
@@ -4893,13 +4893,14 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     You can now use the object_type to unserialize, validate, and serialize properties.
     """  # noqa: E501
 
-    _cls: Type[ObjectT]
-    properties: Dict[str, PropertyType]
+    _cls: Type[ObjectT] = None
+    properties: Dict[str, PropertyType] = None
+    loose_id: Optional[bool] = None
 
     def __init__(
         self, cls: Type[ObjectT], properties: Dict[str, PropertyType]
     ):
-        super().__init__(cls.__name__, properties)
+        super().__init__(cls.__name__, properties, False)
         self._cls = cls
         self._validate_config(cls, properties)
 
