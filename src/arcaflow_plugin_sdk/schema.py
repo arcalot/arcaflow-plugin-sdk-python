@@ -2522,6 +2522,12 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _name("Properties"),
         _description("Properties of this object."),
     ]
+    loose_id: typing.Annotated[
+        typing.Optional[bool],
+        _name("Loose ID Check"),
+        _description("If true, the ID does not need to match another object for "
+                     "them to be considered compatible."),
+    ] = False
 
     def _to_jsonschema_fragment(
         self, scope: typing.ForwardRef("ScopeSchema"), defs: _JSONSchemaDefs
