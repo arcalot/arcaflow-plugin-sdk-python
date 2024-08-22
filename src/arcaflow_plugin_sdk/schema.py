@@ -2522,9 +2522,9 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
         _name("Properties"),
         _description("Properties of this object."),
     ]
-    loose_id: typing.Annotated[
+    id_unenforced: typing.Annotated[
         typing.Optional[bool],
-        _name("Loose ID Check"),
+        _name("ID Unenforced"),
         _description("If true, the ID does not need to match another object "
                      "for them to be considered compatible."),
     ] = None
@@ -4895,7 +4895,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
 
     _cls: Type[ObjectT] = None
     properties: Dict[str, PropertyType] = None
-    loose_id: Optional[bool] = None
+    id_unenforced: Optional[bool] = None
 
     def __init__(
         self, cls: Type[ObjectT], properties: Dict[str, PropertyType]
