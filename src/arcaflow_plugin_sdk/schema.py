@@ -4900,7 +4900,7 @@ class ObjectType(ObjectSchema, AbstractType, Generic[ObjectT]):
     def __init__(
         self, cls: Type[ObjectT], properties: Dict[str, PropertyType]
     ):
-        super().__init__(cls.__name__, properties, False)
+        super().__init__(cls.__name__, properties, self.id_unenforced)
         self._cls = cls
         self._validate_config(cls, properties)
 
