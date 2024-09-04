@@ -2816,9 +2816,6 @@ class OneOfStringSchema(OneOfSchema):
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
-    def __post_init__(self):
-        self.myoneof_type = "my_oneof_string"
-
     def schema_metadata(self) -> OneOfTypeMetadata:
         return OneOfTypeMetadata(
             oneof_type="_discriminated_string_",
@@ -2933,9 +2930,6 @@ class OneOfIntSchema(OneOfSchema):
     """  # noqa: E501
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
-
-    def __post_init__(self):
-        self.myoneof_type = "my_oneof_int"
 
     def schema_metadata(self) -> OneOfTypeMetadata:
         return OneOfTypeMetadata(
