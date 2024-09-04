@@ -2525,8 +2525,10 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     id_unenforced: typing.Annotated[
         typing.Optional[bool],
         _name("ID Unenforced"),
-        _description("If true, the ID does not need to match another object "
-                     "for them to be considered compatible."),
+        _description(
+            "If true, the ID does not need to match another object "
+            "for them to be considered compatible."
+        ),
     ] = None
 
     def _to_jsonschema_fragment(
@@ -2590,6 +2592,7 @@ class OneOfTypeMetadata:
         None
     )
 
+
 @dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
@@ -2611,10 +2614,14 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Name of the field used to discriminate between possible values."
         ),
     ] = "_type"
-    myoneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
+    myoneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = (
+        None
+    )
 
     def schema_metadata(self) -> OneOfTypeMetadata:
-        raise NotImplementedError("schema_metadata() is not implemented in the subclass")
+        raise NotImplementedError(
+            "schema_metadata() is not implemented in the subclass"
+        )
 
     def _insert_discriminator(
         self,
@@ -6814,9 +6821,8 @@ class _SchemaBuilder:
         # Note: This is an unstable API.
         # noinspection PyProtectedMember
         resolved = t._evaluate(
-            globalns=None,
-            localns=None,
-            recursive_guard=frozenset())
+            globalns=None, localns=None, recursive_guard=frozenset()
+        )
         return cls._resolve(resolved, resolved, path, scope)
 
     @classmethod
