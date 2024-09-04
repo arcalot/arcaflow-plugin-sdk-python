@@ -6,7 +6,6 @@ import typing
 import unittest
 from dataclasses import dataclass
 from re import Pattern
-import yaml
 
 from arcaflow_plugin_sdk import schema
 from arcaflow_plugin_sdk.schema import (
@@ -16,7 +15,6 @@ from arcaflow_plugin_sdk.schema import (
     SchemaBuildException, step_object_constructor_param,
 )
 
-from pprint import pprint
 
 # default discriminator field name used by the OneOfType
 # when no discriminator field name is declared
@@ -2010,7 +2008,6 @@ class JSONSchemaTest(unittest.TestCase):
 
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
-        pprint(json_schema)
         self.assertEqual(
             {
                 "$defs": {
@@ -2343,114 +2340,6 @@ def load_tests(loader, tests, ignore):
     """This function adds the doctests to the discovery process."""
     tests.addTests(doctest.DocTestSuite(schema))
     return tests
-
-from arcaflow_plugin_sdk import plugin
-#
-# # @dataclasses.dataclass
-# # class EmptyTestInput:
-# #     pass
-#
-#
-@dataclasses.dataclass
-class EmptyTestOutput:
-    pass
-
-
-@plugin.step(
-    "stdout-test",
-    "Stdout test",
-    "A test for writing to stdout.",
-    {"success": EmptyTestOutput},
-)
-def stdout_test_step(
-    _: InlineUnion,
-) -> typing.Tuple[str, EmptyTestOutput]:
-    print("Hello world!")
-    return "success", EmptyTestOutput()
-
-class TestStepSchema(unittest.TestCase):
-    def test_build_schema_step(self):
-        # pprint(scope.objects['BasicUnion'].properties)
-        # for k, v in scope.objects['BasicUnion'].properties.items():
-        #     print(f'k: {k}, v: {v}')
-        # scope = schema.build_object_schema(BasicUnion)
-        # bu = BasicUnion(Basic(msg='hello world'))
-        # print(yaml.dump(scope.serialize(bu)))
-        # pprint(scope.serialize(bu))
-
-        step_schemaType = plugin.build_schema(stdout_test_step)
-        step_schema_serialized = schema.SCHEMA_SCHEMA.serialize(step_schemaType)
-        step_schema_unserialized = schema.SCHEMA_SCHEMA.unserialize(step_schema_serialized)
-        step_schemaType_serialized = schema.SCHEMA_SCHEMA.serialize(step_schema_unserialized)
-        schema.SCHEMA_SCHEMA.unserialize(step_schemaType_serialized)
-        # self.assertEqual(step_schemaType, step_schema_unserialized)
-        # self.assertDictEqual(step_schemaType, step_schema_unserialized)
-        print(yaml.dump(step_schema_serialized))
-        # pprint(schema.SCHEMA_SCHEMA.serialize(step_))
-#
-#     def test_step_type(self):
-#         scope = schema.ScopeType(
-#             {},
-#             BasicUnion.__name__,
-#         )
-#         scope.objects = {
-#             BasicUnion.__name__: schema.ObjectType(
-#                 BasicUnion,
-#                 {
-#                     "union_basic": schema.PropertyType(
-#                         schema.OneOfStringType(
-#                             {
-#                                 "a": schema.RefType(Basic.__name__, scope),
-#                                 "b": schema.RefType(Basic2.__name__, scope),
-#                             },
-#                             scope,
-#                             discriminator_inlined=False,
-#                         )
-#                     )
-#                 },
-#             ),
-#             Basic.__name__: schema.ObjectType(
-#                 Basic, {"msg": schema.PropertyType(schema.StringType())}
-#             ),
-#             Basic2.__name__: schema.ObjectType(
-#                 Basic2, {"msg2": schema.PropertyType(schema.StringType())}
-#             ),
-#         }
-#         outputScope = schema.ScopeType(
-#             {'EmptyTestOutput': schema.ObjectType(EmptyTestOutput, properties={})},
-#             root='EmptyTestOutput',
-#         )
-#         stepOutput = schema.StepOutputType(outputScope)
-#         step_t = schema.StepType(
-#             id="test_step_type",
-#             input=scope,
-#             outputs={'stdout-test': stepOutput},
-#             signal_handler_method_names=[],
-#             handler=stdout_test_step,
-#             step_object_constructor=None,
-#         )
-#         schema_type = schema.SchemaType({'first': step_t})
-#         # pprint(schema.SCHEMA_SCHEMA.serialize(schema_type))
-#         # pprint(schema_type)
-#
-#         scopedStep = schema.ScopeType(
-#             {
-#                 'step_0': schema.ObjectType(
-#                     schema.StepType,
-#                     properties={
-#                         # 'step_0p': schema.PropertyType(step_t)
-#                         'id': schema.PropertyType(schema.StringType()),
-#                         'input': schema.PropertyType(schema.ScopeType({}, root='')),
-#                         'outputs': schema.PropertyType(schema.MapType(keys=schema.StringType(), values=schema.ScopeType({}, root=''))),
-#                         'handler': schema.PropertyType(schema.Callable),
-#                         'step_object_constructor': schema.PropertyType(schema.MapType(keys=schema.StringType(), values=schema.ScopeType({}, root='')),)
-#                     }
-#
-#                 )
-#             },
-#             root='step_0',
-#         )
-#         pprint(scopedStep.to_jsonschema())
 
 
 if __name__ == "__main__":
