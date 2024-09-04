@@ -459,7 +459,8 @@ def _execute_file(
         data = serialization.load_from_file(filename)
     original_stdout = sys.stdout
     original_stderr = sys.stderr
-    out_buffer = io.StringIO()
+    buffer = io.BytesIO()
+    out_buffer = io.TextIOWrapper(buffer)
     if options.debug:
         # Redirect stdout to stderr for debug logging
         sys.stdout = stderr
@@ -469,10 +470,12 @@ def _execute_file(
         sys.stderr = out_buffer
     try:
         output_id, output_data = s("file_run", step_id, data)
+        out_buffer.flush()
+        out_buffer.seek(0)  # go to start so that we can read stdout.
         output = {
             "output_id": output_id,
             "output_data": output_data,
-            "debug_logs": out_buffer.getvalue(),
+            "debug_logs": out_buffer.read(),
         }
         stdout.write(yaml.dump(output, sort_keys=False))
         return 0

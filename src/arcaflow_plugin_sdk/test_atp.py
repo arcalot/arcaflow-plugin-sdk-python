@@ -26,7 +26,7 @@ class Output:
     outputs={"success": Output},
 )
 def hello_world(params: Input) -> Tuple[str, Output]:
-    print("Hello world!")
+    print("printed message")
     return "success", Output("Hello, {}!".format(params.name))
 
 
@@ -182,7 +182,7 @@ class ATPTest(unittest.TestCase):
             self.assertEqual(result.run_id, self.id())
             client.send_client_done()
             self.assertEqual(result.output_id, "success")
-            self.assertEqual("Hello world!\n", result.debug_logs)
+            self.assertEqual("printed message\n", result.debug_logs)
         finally:
             self._cleanup(pid, stdin_writer, stdout_reader)
 
