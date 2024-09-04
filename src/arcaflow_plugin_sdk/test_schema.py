@@ -15,7 +15,6 @@ from arcaflow_plugin_sdk.schema import (
     SchemaBuildException, step_object_constructor_param,
 )
 
-
 # default discriminator field name used by the OneOfType
 # when no discriminator field name is declared
 default_discriminator = "_type"
@@ -521,12 +520,6 @@ class ObjectTest(unittest.TestCase):
 
 class OneOfTest(unittest.TestCase):
     def setUp(self):
-        # self.obj_oneof_str = schema.ObjectSchema(
-        #     {
-        #         'oneof': schema.PropertyType()
-        #     },
-        #     root='basic'
-        # )
         self.obj_basic = schema.ObjectType(
             Basic,
             {"msg": PropertyType(schema.StringType())},
@@ -2004,7 +1997,6 @@ class JSONSchemaTest(unittest.TestCase):
                 },
             ),
         }
-
 
         defs = schema._JSONSchemaDefs()
         json_schema = scope._to_jsonschema_fragment(scope, defs)
