@@ -12,7 +12,7 @@ from arcaflow_plugin_sdk.schema import (
     BadArgumentException,
     ConstraintException,
     PropertyType,
-    SchemaBuildException, step_object_constructor_param,
+    SchemaBuildException,
 )
 
 # default discriminator field name used by the OneOfType
