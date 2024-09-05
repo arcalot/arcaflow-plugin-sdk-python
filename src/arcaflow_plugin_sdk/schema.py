@@ -2614,9 +2614,6 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Name of the field used to discriminate between possible values."
         ),
     ] = "_type"
-    myoneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = (
-        None
-    )
 
     def schema_metadata(self) -> OneOfTypeMetadata:
         raise NotImplementedError(
