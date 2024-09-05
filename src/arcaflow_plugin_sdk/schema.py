@@ -2586,14 +2586,6 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
 
 @dataclass
-class OneOfTypeMetadata:
-    oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
-        None
-    )
-
-
-@dataclass
 class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     types: typing.Union[
         Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]],
@@ -2617,20 +2609,21 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
 
     @property
     def oneof_type(self) -> str:
+        """This internal state is implemented as a property because ALL of this
+        class's attributes (public and hidden) are used to define the
+        specification of this Arcaflow type."""
         raise NotImplementedError(
             "oneof_type() is not implemented in the subclass"
         )
 
     @property
     def discriminator_type(self) -> str:
+        """This internal state is implemented as a property because ALL of this
+        class's attributes (public and hidden) are used to define the
+        specification of this Arcaflow type."""
         raise NotImplementedError(
             "discriminator_type() is not implemented in the subclass"
         )
-
-    # def schema_metadata(self) -> OneOfTypeMetadata:
-    #     raise NotImplementedError(
-    #         "schema_metadata() is not implemented in the subclass"
-    #     )
 
     def _insert_discriminator(
         self,
@@ -2838,12 +2831,6 @@ class OneOfStringSchema(OneOfSchema):
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
-    # def schema_metadata(self) -> OneOfTypeMetadata:
-    #     return OneOfTypeMetadata(
-    #         oneof_type="_discriminated_string_",
-    #         discriminator_type="string",
-    #     )
-
     @property
     def oneof_type(self) -> str:
         return "_discriminated_string_"
@@ -2961,11 +2948,6 @@ class OneOfIntSchema(OneOfSchema):
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
-    # def schema_metadata(self) -> OneOfTypeMetadata:
-    #     return OneOfTypeMetadata(
-    #         oneof_type="_discriminated_int_",
-    #         discriminator_type="integer",
-    #     )
     @property
     def oneof_type(self) -> str:
         return "_discriminated_int_"
