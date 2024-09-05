@@ -2525,8 +2525,10 @@ class ObjectSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
     id_unenforced: typing.Annotated[
         typing.Optional[bool],
         _name("ID Unenforced"),
-        _description("If true, the ID does not need to match another object "
-                     "for them to be considered compatible."),
+        _description(
+            "If true, the ID does not need to match another object "
+            "for them to be considered compatible."
+        ),
     ] = None
 
     def _to_jsonschema_fragment(
@@ -2597,10 +2599,6 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             " objects' schema"
         ),
     ]
-    oneof_type: typing.Annotated[str, _name("One Of Type Schema Name")] = None
-    discriminator_type: typing.Annotated[str, _name("Discriminator Type")] = (
-        None
-    )
     discriminator_field_name: typing.Annotated[
         str,
         _name("Discriminator field name"),
@@ -2608,6 +2606,24 @@ class OneOfSchema(_JSONSchemaGenerator, _OpenAPIGenerator):
             "Name of the field used to discriminate between possible values."
         ),
     ] = "_type"
+
+    @property
+    def oneof_type(self) -> str:
+        """This internal state is implemented as a property because ALL of this
+        class's attributes (public and hidden) are used to define the
+        specification of this Arcaflow type."""
+        raise NotImplementedError(
+            "oneof_type() is not implemented in the subclass"
+        )
+
+    @property
+    def discriminator_type(self) -> str:
+        """This internal state is implemented as a property because ALL of this
+        class's attributes (public and hidden) are used to define the
+        specification of this Arcaflow type."""
+        raise NotImplementedError(
+            "discriminator_type() is not implemented in the subclass"
+        )
 
     def _insert_discriminator(
         self,
@@ -2815,9 +2831,13 @@ class OneOfStringSchema(OneOfSchema):
 
     types: Dict[str, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
-    def __post_init__(self):
-        self.oneof_type = "_discriminated_string_"
-        self.discriminator_type = "string"
+    @property
+    def oneof_type(self) -> str:
+        return "_discriminated_string_"
+
+    @property
+    def discriminator_type(self) -> str:
+        return "string"
 
 
 @dataclass
@@ -2928,9 +2948,13 @@ class OneOfIntSchema(OneOfSchema):
 
     types: Dict[int, typing.Annotated[_OBJECT_LIKE, discriminator("type_id")]]
 
-    def __post_init__(self):
-        self.oneof_type = "_discriminated_int_"
-        self.discriminator_type = "integer"
+    @property
+    def oneof_type(self) -> str:
+        return "_discriminated_int_"
+
+    @property
+    def discriminator_type(self) -> str:
+        return "integer"
 
 
 @dataclass
@@ -6803,9 +6827,8 @@ class _SchemaBuilder:
         # Note: This is an unstable API.
         # noinspection PyProtectedMember
         resolved = t._evaluate(
-            globalns=None,
-            localns=None,
-            recursive_guard=frozenset())
+            globalns=None, localns=None, recursive_guard=frozenset()
+        )
         return cls._resolve(resolved, resolved, path, scope)
 
     @classmethod
