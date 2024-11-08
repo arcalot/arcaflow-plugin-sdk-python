@@ -967,7 +967,14 @@ class SerializationTest(unittest.TestCase):
                 = dataclasses.field(default_factory=list)
 
         schema.test_object_serialization(
-            TestData1(A="Hello world!", B=5, C={}, D=[], H=3.14, J=[{"a": "b"}]),
+            TestData1(
+                A="Hello world!",
+                B=5,
+                C={},
+                D=[],
+                H=3.14,
+                J=[{"a": "b"}],
+            ),
             self.fail,
         )
 
