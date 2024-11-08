@@ -963,6 +963,7 @@ class SerializationTest(unittest.TestCase):
                 default="", metadata={"id": "test-field", "name": "G"}
             )
             I: typing.Any = None
+            J: typing.List[typing.Dict[str, str]] = dataclasses.field(default_factory=list)
 
         schema.test_object_serialization(
             TestData1(A="Hello world!", B=5, C={}, D=[], H=3.14),

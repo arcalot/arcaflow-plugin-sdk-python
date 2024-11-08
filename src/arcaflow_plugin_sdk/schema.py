@@ -6787,12 +6787,14 @@ class _SchemaBuilder:
                 "List type without item type definition encountered, please"
                 " declare your lists like this: typing.List[str]",
             )
+        sub_type = args[0]
+
         new_path = list(path)
         new_path.append("items")
         try:
             return ListType(
                 cls._resolve_abstract_type(
-                    args[0], type_hints, tuple(new_path), scope
+                    sub_type, sub_type, tuple(new_path), scope
                 )
             )
         except Exception as e:
