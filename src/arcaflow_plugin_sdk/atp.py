@@ -43,6 +43,7 @@ class MessageType(IntEnum):
     SIGNAL = 3
     CLIENT_DONE = 4
     ERROR = 5
+    WORK_STARTED = 6
 
 
 @dataclasses.dataclass
@@ -317,6 +318,7 @@ class ATPServer:
             run_thread
         )  # Save so that we can join with it at the end.
         run_thread.start()
+        self.send_work_started(run_id)
 
     def start_step(self, run_id: str, step_id: str, config: typing.Any):
         try:
@@ -380,6 +382,9 @@ class ATPServer:
                 "server_fatal": server_fatal,
             },
         )
+
+    def send_work_started(self, run_id: str):
+        self.send_runtime_message(MessageType.WORK_STARTED, run_id, {})
 
 
 class PluginClientStateException(Exception):
