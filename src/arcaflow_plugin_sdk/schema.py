@@ -3416,8 +3416,8 @@ class AbstractType(Generic[TypeT]):
         :param data: the raw data.
         :param path: the list of structural elements that lead to this point
             for error messages.
-        :return: the advanced datatype. :raise ConstraintException: if the
-            passed data was not valid.
+        :return: the advanced datatype.
+        :raise ConstraintException: if the passed data was not valid.
         """
         pass
 
@@ -3428,8 +3428,8 @@ class AbstractType(Generic[TypeT]):
 
         :param data: the unserialized data.
         :param path: the path that lead to this validation call, in order to
-            produce a nice error message :raise ConstraintException: if the
-            passed data was not valid.
+            produce a nice error message
+        :raise ConstraintException: if the passed data was not valid.
         """
 
     @abstractmethod
@@ -3442,8 +3442,8 @@ class AbstractType(Generic[TypeT]):
         :param data: the underlying data type to be serialized.
         :param path: the list of structural elements that lead to this point
             for error messages.
-        :return: the raw datatype. :raise ConstraintException: if the passed
-            data was not valid.
+        :return: the raw datatype.
+        :raise ConstraintException: if the passed data was not valid.
         """
         pass
 

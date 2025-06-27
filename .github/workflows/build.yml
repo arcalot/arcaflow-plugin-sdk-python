@@ -14,11 +14,8 @@ jobs:
     name: Build
     strategy:
       matrix:
-        python-version:
-          - ${{ vars.ARCALOT_PYTHON_VERSION }}
-          - '3.10'
-          - 'pypy3.9'
-    runs-on: ubuntu-22.04
+        python-version: ${{ fromJSON(vars.ARCALOT_PYTHON_SUPPORTED_VERSIONS) }}
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4
