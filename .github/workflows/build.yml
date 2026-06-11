@@ -27,15 +27,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: install python style and linting tools
-        # docformatter 1.7.8 crashes on schema.py
-        # https://github.com/PyCQA/docformatter/issues/355
-        run: pip install black flake8 autoflake isort 'docformatter<1.7.8'
+        run: pip install black flake8 autoflake isort docformatter
       - name: Check unused code
         run: autoflake --remove-all-unused-imports --remove-unused-variables --check .
       - name: Check import order (isort)
         run: isort --check --profile black --line-length 79 .
       - name: Check docstring formatting
-        run: docformatter --check --recursive --black --wrap-descriptions 79 --wrap-summaries 79 .
+        # schema.py excluded: docformatter 1.7.8 crashes on it
+        # Upstream: https://github.com/PyCQA/docformatter/issues/355
+        # Tracking: https://github.com/arcalot/arcaflow-plugin-sdk-python/issues/147
+        run: >-
+          docformatter --check --black
+          --wrap-descriptions 79 --wrap-summaries 79
+          $(find . -name '*.py' -not -path './.venv/*'
+          -not -path './docs/*' -not -name 'schema.py')
       - name: Error and style linting
         id: flake8
         run: flake8 --max-line-length 79 --ignore E203,W503 .
