@@ -6825,12 +6825,23 @@ class _SchemaBuilder:
         scope: ScopeType,
     ) -> AbstractType:
         t: typing.ForwardRef
-        # TODO is there a better way to directly evaluate a forward ref?
-        # Note: This is an unstable API.
-        # noinspection PyProtectedMember
-        resolved = t._evaluate(
-            globalns=None, localns=None, recursive_guard=frozenset()
-        )
+        # Resolve ForwardRef to its actual type. We must pass
+        # this module's globals so the ref can find schema
+        # classes defined here (e.g. StringEnumSchema).
+        # Python 3.14+ (PEP 649) provides a stable public API;
+        # older versions require the internal _evaluate method.
+        if sys.version_info >= (3, 14):
+            resolved = typing.evaluate_forward_ref(
+                t, globals=globals()
+            )
+        else:
+            # noinspection PyProtectedMember
+            resolved = t._evaluate(
+                globalns=globals(),
+                localns=None,
+                type_params=(),
+                recursive_guard=frozenset(),
+            )
         return cls._resolve(resolved, resolved, path, scope)
 
     @classmethod

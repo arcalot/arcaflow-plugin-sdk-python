@@ -258,9 +258,10 @@ def run(
     stdout: io.TextIOWrapper = stdout,
     stderr: io.TextIOWrapper = stderr,
 ) -> int:
-    """Run takes a schema and runs it as a command line utility. It returns the
-    exit code of the program. It is intended to be used as an entry point for
-    your plugin.
+    """Run takes a schema and runs it as a command line utility.
+
+    It returns the exit code of the program. It is intended to be used as an
+    entry point for your plugin.
 
     :param s: the schema to run
     :param argv: command line arguments
