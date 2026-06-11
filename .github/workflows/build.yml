@@ -27,7 +27,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: install python style and linting tools
-        run: pip install black flake8 autoflake isort docformatter
+        # docformatter 1.7.8 crashes on schema.py
+        # https://github.com/PyCQA/docformatter/issues/355
+        run: pip install black flake8 autoflake isort 'docformatter<1.7.8'
       - name: Check unused code
         run: autoflake --remove-all-unused-imports --remove-unused-variables --check .
       - name: Check import order (isort)
