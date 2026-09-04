@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Update version number
         if: startsWith(github.ref, 'refs/tags/')
         run: sed -i -e "s/0.0.0/${GITHUB_REF##*/}/" pyproject.toml
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: install python style and linting tools
@@ -54,13 +54,13 @@ jobs:
         run: |
           python -m poetry config virtualenvs.in-project true
       - name: Upload logs on failure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: logs-${{ matrix.python-version }}
           path: "*.log"
       - name: Cache the virtualenv
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ./.venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
@@ -89,14 +89,14 @@ jobs:
       - name: Build
         run: poetry build
       - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-${{ matrix.python-version }}
           path: dist
           if-no-files-found: error
       - name: Upload coverage HTML artifact
         if: ${{ matrix.python-version == vars.ARCALOT_PYTHON_VERSION }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.python-version }}
           path: htmlcov
@@ -109,9 +109,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dist-${{ vars.ARCALOT_PYTHON_VERSION }}
           path: dist
